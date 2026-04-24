@@ -18,6 +18,8 @@ FitLC 需要一个结构化的训练动作库，支持：
 
 ## 数据库结构
 
+使用 Prisma ORM 管理，数据表与模型一一对应。
+
 ### muscles（肌肉层级树）
 
 | 字段 | 类型 | 说明 |
@@ -100,14 +102,76 @@ FitLC 需要一个结构化的训练动作库，支持：
 
 ---
 
-## 核心查询场景
+## 技术实现
 
-| 场景 | SQL |
-|------|-----|
-| 查找"胸"所有肌肉 | `WHERE group = 'chest'` |
-| 查找"胸大肌"相关动作 | `JOIN exercise_muscles ON ... WHERE muscleId = ? AND role = 'primary'` |
-| 查找"胸部"相关动作 | `JOIN exercise_muscles em ON ... JOIN muscles m ON em.muscleId = m.id WHERE m.group = 'chest'` |
-| 复合查询（肌肉+器械+难度） | `JOIN ... WHERE ... AND ...` |
+使用 **Prisma ORM** 管理数据库，无需手写原始 SQL。
+
+### Prisma 模型定义
+
+```prisma
+model Muscle {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(100)
+  group       MuscleGroup  // chest/back/legs/shoulders/arms/core
+  parentId    Int?   // 自关联，指向肌肉群
+  sortOrder   Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent      Muscle?  @relation("MuscleHierarchy", fields: [parentId], references: [id])
+  children    Muscle[]  @relation("MuscleHierarchy")
+  exercises   ExerciseMuscle[]
+}
+
+model Exercise {
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(200)
+  category        MuscleGroup
+  equipment       Equipment // barbell/dumbbell/cable/machine/bodyweight/other
+  difficulty      Difficulty // beginner/intermediate/advanced
+  description     String? @db.Text
+  adjustmentNotes String? @db.Text
+  videoUrl        String? @db.VarChar(500)
+  isVariant       Boolean @default(false)
+  parentId        Int?    // 变体所属主动作
+  tags            Json?   // 标签数组
+  status          Status  @default(draft) // draft/published
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  parent          Exercise?  @relation("ExerciseVariant", fields: [parentId], references: [id])
+  variants        Exercise[] @relation("ExerciseVariant")
+  muscles         ExerciseMuscle[]
+}
+
+model ExerciseMuscle {
+  id         Int      @id @default(autoincrement())
+  exerciseId Int
+  muscleId   Int
+  role       MuscleRole // primary/secondary
+
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  muscle     Muscle   @relation(fields: [muscleId], references: [id])
+
+  @@unique([exerciseId, muscleId, role])
+}
+
+enum MuscleGroup { chest back legs shoulders arms core }
+enum Equipment   { barbell dumbbell cable machine bodyweight other }
+enum Difficulty  { beginner intermediate advanced }
+enum MuscleRole  { primary secondary }
+enum Status      { draft published }
+```
+
+### 核心查询场景（Prisma API）
+
+| 场景 | Prisma 查询 |
+|------|-------------|
+| 查找"胸部"相关动作 | `prisma.exercise.findMany({ where: { muscles: { some: { muscle: { group: 'chest' } } } } })` |
+| 查找"胸大肌"相关动作 | `prisma.exercise.findMany({ where: { muscles: { some: { muscleId: 2, role: 'primary' } } } })` |
+| 查找"杠铃"入门动作 | `prisma.exercise.findMany({ where: { equipment: 'barbell', difficulty: 'beginner' } })` |
+| 复合查询（肌肉+器械+难度） | `prisma.exercise.findMany({ where: { category: 'chest', equipment: 'barbell', difficulty: 'intermediate' } })` |
+| 获取动作及其肌肉关联 | `prisma.exercise.findUnique({ include: { muscles: { include: { muscle: true } } } })` |
 
 ---
 
