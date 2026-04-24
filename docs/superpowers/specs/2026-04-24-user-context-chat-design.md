@@ -100,11 +100,10 @@ router.post('/message', async (req, res) => {
     // 2. 注入上下文调用 AI
     const { reply, savedData } = await runAgent(userId, message, userContext);
 
-    // 3. 异步保存消息并更新上下文（不阻塞响应）
+    // 3. 异步保存消息并增量更新上下文（不阻塞响应）
     setImmediate(() => {
-      chatHistoryService.saveMessage(userId, 'user', message);
-      chatHistoryService.saveMessage(userId, 'assistant', reply, savedData);
-      userContextService.refreshContext(userId);
+      const dialogue = `用户：${message}\nAI：${reply}${savedData ? '\n[保存了' + savedData.type + '记录]' : ''}`;
+      userContextService.refreshContext(userId, dialogue);
     });
 
     res.json({ reply, savedData });
@@ -130,16 +129,15 @@ ${userContext.context_text}
 - 健身目标：${profile.goal}
 - 健身经验：${profile.experience}
 - 训练频率：每周${profile.frequency}次
-- 当前体重：${profile.body_weight}kg
-- 当前计划：${planName}（${planStatus}）
+- 当前体重：${profile.body_weight || '未知'}kg
+- 当前计划：${activePlan?.name || '无'}（${activePlan?.status || 'N/A'}）
 ```
 
-`context_text` 示例（AI 生成）：
+`context_text` 示例（AI 增量生成）：
 ```
-用户是一位有6个月力量训练经验的健身者，目标增肌，每周训练4次。
-训练以深蹲、卧推、硬拉三大项为主。近3个月深蹲从80kg进步到100kg（+25%），
-卧推从60kg进步到75kg（+25%），硬拉从100kg进步到120kg（+20%）。
-训练频率稳定，每周深蹲和卧推各2次，硬拉1次。最近一次训练是4月24日的深蹲100kg 5x8。
+用户是一位有6个月力量训练经验的健身者，目标增肌。训练以深蹲、卧推、硬拉三大项为主。
+近3个月深蹲从80kg进步到120kg（+50%），卧推从60kg进步到75kg（+25%）。
+训练频率稳定在每周4次。最近一次训练是4月25日的深蹲120kg 5x8。
 体脂率约15%，胸围95cm，腰围80cm。
 ```
 
@@ -170,24 +168,74 @@ export const chatHistoryApi = {
 
 ## 更新压缩上下文的时机
 
-1. **每次对话后** - `chatHistoryService.saveMessage()` 之后异步调用 `userContextService.refreshContext()`
-2. **用户保存新记录后** - `saveWorkout` 或 `saveMeasurement` 工具执行后
+1. **每次对话后** - 将"用户消息 + AI 回复"作为整体传入 `refreshContext()`，AI 增量更新压缩上下文
+2. **用户保存新记录后** - 同上，对话本身就是包含记录信息的
 
-## 压缩上下文生成逻辑
+**核心原则**：每次对话后都进行增量压缩，上下文始终保持最新。
+
+## 压缩上下文生成逻辑（增量更新）
+
+采用**增量压缩**而非全量重算：每次对话后，将当前压缩上下文 + 最新对话信息发送给 AI，让 AI 增量更新。
 
 ```javascript
-async function generateContextText(userId) {
-  // 1. 获取用户 profile
+async function refreshContext(userId, latestDialogue) {
+  // 1. 获取当前压缩上下文
+  const currentContext = await userContextRepository.getByUserId(userId);
+
+  // 2. 组装增量压缩 prompt
+  const prompt = `【当前用户压缩上下文】
+${currentContext.context_text || '（首次生成，无历史上下文）'}
+
+【本次对话信息】
+${latestDialogue}
+
+【任务】
+请根据"本次对话信息"，更新"当前用户压缩上下文"。规则：
+- 如果本次对话包含新的训练记录，更新训练趋势（动作、重量、频率）
+- 如果本次对话包含新的围度数据，更新体型数据
+- 如果本次对话涉及训练计划变化，更新计划信息
+- 保持上下文简洁精炼，控制在 200 字以内
+- 只输出更新后的完整上下文，不要解释`;
+
+  const response = await model.invoke([new HumanMessage(prompt)]);
+  const newContextText = extractText(response);
+
+  // 3. 保存新的压缩上下文
+  await userContextRepository.updateContextText(userId, newContextText);
+}
+```
+
+**增量更新示例：**
+
+输入：
+```
+【当前用户压缩上下文】
+用户是一位有6个月力量训练经验的健身者，目标增肌。训练以深蹲、卧推、硬拉为主。
+近3个月深蹲从80kg进步到100kg，卧推从60kg进步到75kg。
+
+【本次对话信息】
+用户：2026年4月25日深蹲120kg 5组8个
+AI：已记录！深蹲重量又创新高了！
+```
+
+输出：
+```
+用户是一位有6个月力量训练经验的健身者，目标增肌。训练以深蹲、卧推、硬拉为主。
+近3个月深蹲从80kg进步到120kg（+50%），卧推从60kg进步到75kg（+25%）。
+训练频率稳定在每周4次。最近一次训练是4月25日的深蹲120kg 5x8。
+```
+
+## 初始压缩上下文生成
+
+首次生成时没有历史上下文，需要全量拉取数据：
+
+```javascript
+async function generateInitialContext(userId) {
   const profile = await userRepository.findById(userId);
-
-  // 2. 获取最近训练历史（近3个月）
   const workouts = await workoutRepository.findRecent(userId, 90);
-  const measurements = await measurementRepository.findRecent(userId, 90);
-
-  // 3. 获取当前活跃计划
+  const measurements = await workoutRepository.findRecent(userId, 90);
   const activePlan = await planRepository.findActive(userId);
 
-  // 4. 组装数据调用 AI 生成总结
   const prompt = `根据以下用户数据，生成一段简洁的用户背景描述（100-200字）：
   ${JSON.stringify({ profile, workouts, measurements, activePlan })}
   重点描述：训练经验、目标、训练频率、主要动作及重量趋势、体型数据。`;
