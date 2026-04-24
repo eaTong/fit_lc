@@ -2,6 +2,7 @@ import { Page, Locator, expect } from '@playwright/test';
 
 export class BasePage {
   protected page: Page;
+  protected baseURL = 'http://localhost:5173';
 
   constructor(page: Page) {
     this.page = page;
@@ -16,7 +17,7 @@ export class BasePage {
   };
 
   async navigate(path: string): Promise<void> {
-    await this.page.goto(path);
+    await this.page.goto(new URL(path, this.baseURL).toString());
   }
 
   async waitForSelector(selector: string): Promise<Locator> {

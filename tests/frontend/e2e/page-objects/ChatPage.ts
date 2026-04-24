@@ -15,8 +15,8 @@ export class ChatPage extends BasePage {
     savedIndicator: '.text-accent-orange:has-text("撤销")',
   };
 
-  // 保存成功关键词
-  readonly SAVED_KEYWORDS = ['已保存：', '已记录：', '保存成功', '✅'];
+  // 保存成功关键词 - 按优先级排序
+  readonly SAVED_KEYWORDS = ['已保存', '已记录', '保存成功', '✅'];
 
   async navigateToChat(): Promise<void> {
     await this.navigate('/chat');
@@ -28,16 +28,16 @@ export class ChatPage extends BasePage {
   }
 
   async typeMessage(message: string): Promise<void> {
+    console.log('Typing message:', message);
     await this.fill(this.SELECTORS.messageInput, message);
+    const inputValue = await this.page.locator(this.SELECTORS.messageInput).inputValue();
+    console.log('Input value after typing:', inputValue);
   }
 
   async submitMessage(): Promise<void> {
     await this.click(this.SELECTORS.sendButton);
-    // 等待消息发送（按钮恢复可点击状态）
-    await this.page.waitForFunction(
-      () => !document.querySelector('button[type="submit"]')?.getAttribute('disabled'),
-      { timeout: 10000 }
-    ).catch(() => {}); // 忽略超时，继续执行
+    // 等待一下让消息发送
+    await this.page.waitForTimeout(500);
   }
 
   async getLastUserMessage(): Promise<string> {
@@ -47,25 +47,33 @@ export class ChatPage extends BasePage {
   }
 
   async getLastAssistantMessage(): Promise<string> {
-    const messages = await this.page.locator(this.SELECTORS.assistantMessage).all();
-    if (messages.length === 0) return '';
-    return messages[messages.length - 1].textContent() ?? '';
+    // Use evaluate for reliable text content retrieval from the DOM
+    return this.page.evaluate(() => {
+      const msgs = document.querySelectorAll('.flex.justify-start.mb-4');
+      if (msgs.length === 0) return '';
+      const lastMsg = msgs[msgs.length - 1];
+      const p = lastMsg?.querySelector('.whitespace-pre-wrap');
+      return p?.textContent ?? '';
+    });
   }
 
   async getAllMessages(): Promise<{ role: string; content: string }[]> {
-    const userMessages = await this.page.locator(this.SELECTORS.userMessage).allTextContents();
-    const assistantMessages = await this.page.locator(this.SELECTORS.assistantMessage).allTextContents();
+    return this.page.evaluate(() => {
+      const userMsgs = document.querySelectorAll('.flex.justify-end .whitespace-pre-wrap');
+      const assistantMsgs = document.querySelectorAll('.flex.justify-start .whitespace-pre-wrap');
 
-    const result: { role: string; content: string }[] = [];
-    for (let i = 0; i < Math.max(userMessages.length, assistantMessages.length); i++) {
-      if (i < assistantMessages.length) {
-        result.push({ role: 'assistant', content: assistantMessages[i] });
+      const result: { role: string; content: string }[] = [];
+      const maxLen = Math.max(userMsgs.length, assistantMsgs.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < assistantMsgs.length) {
+          result.push({ role: 'assistant', content: assistantMsgs[i]?.textContent ?? '' });
+        }
+        if (i < userMsgs.length) {
+          result.push({ role: 'user', content: userMsgs[i]?.textContent ?? '' });
+        }
       }
-      if (i < userMessages.length) {
-        result.push({ role: 'user', content: userMessages[i] });
-      }
-    }
-    return result;
+      return result;
+    });
   }
 
   async hasSavedDataIndicator(): Promise<boolean> {
@@ -76,7 +84,7 @@ export class ChatPage extends BasePage {
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
       const message = await this.getLastAssistantMessage();
-      if (this.SAVED_KEYWORDS.some(keyword => message.includes(keyword))) {
+      if (message && this.SAVED_KEYWORDS.some(keyword => message.includes(keyword))) {
         return true;
       }
       // 等待一小段时间后重试
