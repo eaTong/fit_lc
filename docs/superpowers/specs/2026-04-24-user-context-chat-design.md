@@ -73,9 +73,74 @@ CREATE TABLE chat_messages (
 ### 2. 新增 Service
 
 **`src/services/userContextService.js`**
-- `getUserContext(userId)` - 获取用户上下文用于注入 prompt
-- `refreshContext(userId)` - 调用 AI 生成新压缩总结
-- `appendMessageAndRefreshContext(userId, role, content, savedData)` - 保存消息并刷新上下文
+```javascript
+// 内存锁，防止并发更新
+const locks = new Map();
+
+export const userContextService = {
+  // 获取或创建用户上下文（首次时生成初始压缩上下文）
+  async getOrCreateContext(userId) {
+    let ctx = await userContextRepository.getByUserId(userId);
+    if (!ctx) {
+      // 首次：创建记录并生成初始上下文
+      await userContextRepository.create(userId);
+      ctx = await userContextRepository.getByUserId(userId);
+      // 异步生成初始压缩上下文
+      setImmediate(() => this.generateInitialContext(userId));
+    }
+    return ctx;
+  },
+
+  // 增量刷新上下文（带锁，防止并发）
+  async refreshContextWithLock(userId, latestDialogue) {
+    // 等待锁
+    while (locks.get(userId)) {
+      await sleep(100);
+    }
+    locks.set(userId, true);
+    try {
+      await this.refreshContext(userId, latestDialogue);
+    } finally {
+      locks.delete(userId);
+    }
+  },
+
+  // 获取用户上下文用于注入 prompt
+  async getUserContext(userId) {
+    return userContextRepository.getByUserId(userId);
+  },
+
+  // 增量更新压缩上下文
+  async refreshContext(userId, latestDialogue) {
+    const currentContext = await userContextRepository.getByUserId(userId);
+    if (!currentContext) return;
+
+    const prompt = buildRefreshPrompt(currentContext.context_text, latestDialogue);
+    const response = await model.invoke([new HumanMessage(prompt)]);
+    const newContextText = extractText(response);
+
+    await userContextRepository.updateContextText(userId, newContextText);
+  },
+
+  // 全量生成初始上下文（首次调用或上下文丢失时）
+  async generateInitialContext(userId) {
+    const profile = await userRepository.findById(userId);
+    const workouts = await workoutRepository.findRecent(userId, 90);
+    const measurements = await measurementRepository.findRecent(userId, 90);
+    const activePlan = await planRepository.findActive(userId);
+
+    const prompt = `根据以下用户数据，生成一段简洁的用户背景描述（100-200字）：
+    ${JSON.stringify({ profile, workouts, measurements, activePlan })}
+    重点描述：训练经验、目标、训练频率、主要动作及重量趋势、体型数据。`;
+
+    const response = await model.invoke([new HumanMessage(prompt)]);
+    const contextText = extractText(response);
+
+    await userContextRepository.updateContextText(userId, contextText);
+    await userContextRepository.updateSnapshot(userId, profile, activePlan);
+  }
+};
+```
 
 **`src/services/chatHistoryService.js`**
 - `saveMessage(userId, role, content, savedData)` - 保存单条消息
@@ -84,8 +149,49 @@ CREATE TABLE chat_messages (
 ### 3. 修改现有代码
 
 **`src/agents/fitnessAgent.js`**
-- 修改 `runAgent(userId, message)` 返回完整的消息对象
-- 保持工具调用逻辑不变
+```javascript
+// 修改函数签名，增加 userContext 参数
+export async function runAgent(userId, message, userContext = null) {
+  const model = await getModel();
+
+  // System prompt 组装
+  let systemPrompt = buildSystemPrompt(userContext); // 见下方
+
+  // ... 其余逻辑保持不变 ...
+}
+
+// 新增：构建带用户上下文的 system prompt
+function buildSystemPrompt(userContext) {
+  const dateInfo = calculateDateInfo(); // 日期计算逻辑
+
+  let contextSection = '';
+  if (userContext?.context_text) {
+    contextSection = `【用户背景】
+${userContext.context_text}
+
+【当前状态】
+- 健身目标：${userContext.profile_snapshot?.goal || '未知'}
+- 健身经验：${userContext.profile_snapshot?.experience || '未知'}
+- 训练频率：每周${userContext.profile_snapshot?.frequency || 0}次
+- 当前体重：${userContext.profile_snapshot?.body_weight || '未知'}kg
+- 当前计划：${userContext.active_plan_name || '无'}`;
+  }
+
+  return `你是健身数据记录助手。用中文回答。
+
+${contextSection}
+
+【日期参考 - 今天：${dateInfo.today}】
+当用户使用相对日期时，必须根据以下规则计算实际日期：
+- "今天" = ${dateInfo.today}
+- "昨天" = ${dateInfo.yesterday}
+- "明天" = ${dateInfo.tomorrow}
+...（其余日期规则保持不变）
+
+【必须严格执行的工具调用规则】：
+...（工具调用规则保持不变）`;
+}
+```
 
 **`src/routes/chat.js`**
 ```javascript
@@ -94,16 +200,17 @@ router.post('/message', async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
 
-    // 1. 获取用户上下文
-    const userContext = await userContextService.getUserContext(userId);
+    // 1. 获取或初始化用户上下文
+    let userContext = await userContextService.getOrCreateContext(userId);
 
     // 2. 注入上下文调用 AI
     const { reply, savedData } = await runAgent(userId, message, userContext);
 
-    // 3. 异步保存消息并增量更新上下文（不阻塞响应）
+    // 3. 异步增量更新上下文（不阻塞响应）
+    // 使用锁机制防止并发更新导致数据错乱
     setImmediate(() => {
       const dialogue = `用户：${message}\nAI：${reply}${savedData ? '\n[保存了' + savedData.type + '记录]' : ''}`;
-      userContextService.refreshContext(userId, dialogue);
+      userContextService.refreshContextWithLock(userId, dialogue);
     });
 
     res.json({ reply, savedData });
@@ -123,15 +230,17 @@ router.post('/message', async (req, res) => {
 
 ```
 【用户背景】
-${userContext.context_text}
+${userContext.context_text || '（暂无背景信息）'}
 
-【当前状态】
-- 健身目标：${profile.goal}
-- 健身经验：${profile.experience}
-- 训练频率：每周${profile.frequency}次
-- 当前体重：${profile.body_weight || '未知'}kg
-- 当前计划：${activePlan?.name || '无'}（${activePlan?.status || 'N/A'}）
+${userContext.profile_snapshot ? `【当前状态】
+- 健身目标：${userContext.profile_snapshot.goal || '未知'}
+- 健身经验：${userContext.profile_snapshot.experience || '未知'}
+- 训练频率：每周${userContext.profile_snapshot.frequency || 0}次
+- 当前体重：${userContext.profile_snapshot.body_weight || '未知'}kg
+- 当前计划：${userContext.profile_snapshot.active_plan_name || '无'}` : ''}
 ```
+
+**说明**：`context_text` 由 AI 生成增量更新，`profile_snapshot` 在初始生成时写入、后续保存新记录时更新。
 
 `context_text` 示例（AI 增量生成）：
 ```
@@ -168,8 +277,9 @@ export const chatHistoryApi = {
 
 ## 更新压缩上下文的时机
 
-1. **每次对话后** - 将"用户消息 + AI 回复"作为整体传入 `refreshContext()`，AI 增量更新压缩上下文
-2. **用户保存新记录后** - 同上，对话本身就是包含记录信息的
+**每次对话后** - 将"用户消息 + AI 回复"作为整体传入 `refreshContextWithLock()`，AI 增量更新压缩上下文。
+
+`savedData`（如 `已保存深蹲记录`）会包含在对话信息中，AI 会据此更新训练趋势。
 
 **核心原则**：每次对话后都进行增量压缩，上下文始终保持最新。
 
@@ -247,9 +357,10 @@ async function generateInitialContext(userId) {
 
 ## 错误处理
 
-1. **用户上下文不存在** - 首次对话时自动创建空的 user_contexts
-2. **AI 生成总结失败** - 使用上一次成功的总结，不阻塞用户
-3. **异步更新失败** - 不影响主流程，下次对话时重试
+1. **用户上下文不存在** - `getOrCreateContext()` 自动创建并触发初始生成
+2. **AI 生成总结失败** - 使用上一次成功的总结，异步更新失败不影响主流程
+3. **并发更新冲突** - 使用内存锁 `locks` 保证同一用户串行更新
+4. **初始上下文生成中** - 此时 `context_text` 为空，AI 对话仍可正常进行，只是没有背景信息
 
 ## 测试要点
 
