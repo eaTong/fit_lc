@@ -283,13 +283,13 @@ git commit -m "feat: Exercises 管理页面添加 AI 增强按钮"
 
 ---
 
-## Task 5: 创建批量生成脚本 ai-generate-exercise-details.js
+## Task 5: 创建批量生成脚本 ai-generate-exercise-details.js（可断点续传）
 
 **Files:**
 - Create: `backend/scripts/ai-generate-exercise-details.js`
 - Reference: `backend/scripts/ai-generate-muscle-details.js`
 
-- [ ] **Step 1: 创建脚本文件**
+- [ ] **Step 1: 创建支持断点续传的脚本文件**
 
 ```javascript
 import { exerciseAIService } from '../src/services/exerciseAIService.js';
@@ -303,6 +303,35 @@ if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
+function getOutputFile() {
+  const date = new Date().toISOString().split('T')[0];
+  return path.join(OUTPUT_DIR, `exercise-details-${date}.json`);
+}
+
+function loadExistingResults() {
+  const outputFile = getOutputFile();
+  if (fs.existsSync(outputFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(outputFile, 'utf-8'));
+      console.log(`发现已有文件，加载 ${data.exercises?.length || 0} 条记录`);
+      return new Set(data.exercises.map(e => e.id));
+    } catch (e) {
+      console.log('已有文件解析失败，将重新开始');
+    }
+  }
+  return new Set();
+}
+
+function saveResults(results) {
+  const outputFile = getOutputFile();
+  const output = {
+    generatedAt: new Date().toISOString().split('T')[0],
+    exercises: results,
+  };
+  fs.writeFileSync(outputFile, JSON.stringify(output, null, 2), 'utf-8');
+  console.log(`  [保存进度] ${results.length} 条记录已写入`);
+}
+
 async function main() {
   console.log('开始生成动作详情...');
 
@@ -312,9 +341,26 @@ async function main() {
 
   console.log(`找到 ${exercises.length} 个动作`);
 
+  const completedIds = loadExistingResults();
   const results = [];
 
+  // 如果已有文件，先加载现有结果
+  const outputFile = getOutputFile();
+  if (fs.existsSync(outputFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(outputFile, 'utf-8'));
+      results.push(...data.exercises);
+    } catch (e) {}
+  }
+
+  let newCount = 0;
   for (const exercise of exercises) {
+    // 跳过已完成的
+    if (completedIds.has(exercise.id)) {
+      console.log(`跳过(已完成): ${exercise.name}`);
+      continue;
+    }
+
     console.log(`正在生成: ${exercise.name}...`);
 
     try {
@@ -324,15 +370,20 @@ async function main() {
       );
 
       if (details) {
-        results.push({
+        const record = {
           id: exercise.id,
           name: exercise.name,
           category: exercise.category,
           equipment: exercise.equipment,
           difficulty: exercise.difficulty,
           ...details,
-        });
-        console.log(`  ✓ 完成: ${exercise.name}`);
+        };
+        results.push(record);
+        newCount++;
+        console.log(`  ✓ 完成: ${exercise.name} (${newCount} 新增)`);
+
+        // 每生成一条就保存一次
+        saveResults(results);
       } else {
         console.log(`  ✗ 失败: ${exercise.name}`);
       }
@@ -344,18 +395,9 @@ async function main() {
     }
   }
 
-  const date = new Date().toISOString().split('T')[0];
-  const outputFile = path.join(OUTPUT_DIR, `exercise-details-${date}.json`);
-
-  const output = {
-    generatedAt: date,
-    exercises: results,
-  };
-
-  fs.writeFileSync(outputFile, JSON.stringify(output, null, 2), 'utf-8');
-
   console.log(`\n完成！生成文件: ${outputFile}`);
-  console.log(`成功: ${results.length}/${exercises.length}`);
+  console.log(`本次新增: ${newCount}/${exercises.length}`);
+  console.log(`总记录: ${results.length}`);
 }
 
 main().catch(console.error);
@@ -365,7 +407,7 @@ main().catch(console.error);
 
 ```bash
 git add backend/scripts/ai-generate-exercise-details.js
-git commit -m "feat: 添加动作详情批量生成脚本"
+git commit -m "feat: 添加动作详情批量生成脚本(支持断点续传)"
 ```
 
 ---
