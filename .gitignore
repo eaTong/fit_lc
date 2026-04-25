@@ -37,6 +37,10 @@ coverage/
 backend/node_modules/
 backend/logs/
 
+# AI 生成的数据
+backend/output/*.json
+!backend/output/.gitkeep
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
