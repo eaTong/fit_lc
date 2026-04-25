@@ -106,14 +106,23 @@ routes/
 
 ### 2.4 JWT Token 扩展
 
-JWT Payload 扩展：
+登录时从数据库查询用户角色，签发到 JWT 中：
+
 ```javascript
-jwt.sign(
-  { userId, email, roles: ['admin', 'normal'] },
+// authService.login
+const userRoles = await roleRepository.findByUserId(userId);
+const roles = userRoles.map(ur => ur.role.name);
+const token = jwt.sign(
+  { userId, email, roles },
   JWT_SECRET,
   { expiresIn: '7d' }
 );
+
+// authMiddleware 扩展
+req.user = { id, email, roles };
 ```
+
+**注意**：如果管理员权限在数据库中被修改，已签发的 JWT 在过期前仍保有旧权限。接受这个限制直到 token 过期。
 
 ## 3. 前端设计
 
