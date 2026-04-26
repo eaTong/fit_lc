@@ -13,7 +13,7 @@ build/
 # IDE
 .idea/
 .vscode/
-*.swp
+*.swpjixu
 *.swo
 
 # OS

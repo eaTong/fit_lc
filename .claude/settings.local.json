@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(lsof:*)",
-      "Bash(kill 20925:*)"
+      "Bash(kill 20925:*)",
+      "Bash(npx prisma:*)",
+      "mcp__MiniMax__web_search"
     ]
   }
 }
