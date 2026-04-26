@@ -1,0 +1,242 @@
+import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
+import { saveWorkoutTool } from '../tools/saveWorkout';
+import { saveMeasurementTool } from '../tools/saveMeasurement';
+import { queryWorkoutTool } from '../tools/queryWorkout';
+import { queryMeasurementTool } from '../tools/queryMeasurement';
+import { generatePlanTool } from '../tools/generatePlan';
+import { adjustPlanTool } from '../tools/adjustPlan';
+import { analyzeExecutionTool } from '../tools/analyzeExecution';
+import { createModel } from './chatMiniMax';
+import { getWeekBounds, addDays, toDateStr } from '../utils/dateUtils';
+
+const tools = [
+  saveWorkoutTool,
+  saveMeasurementTool,
+  queryWorkoutTool,
+  queryMeasurementTool,
+  generatePlanTool,
+  adjustPlanTool,
+  analyzeExecutionTool
+];
+
+let cachedModel = null;
+let modelPromise = null;
+
+async function getModel() {
+  if (cachedModel) {
+    return cachedModel;
+  }
+  if (modelPromise) {
+    return modelPromise;
+  }
+  modelPromise = (async () => {
+    const model = await createModel();
+    cachedModel = model.bindTools(tools);
+    return cachedModel;
+  })();
+  return modelPromise;
+}
+
+function extractToolCallsFromContent(content) {
+  if (!Array.isArray(content)) {
+    return [];
+  }
+
+  const toolCalls = [];
+  for (const part of content) {
+    if (part.type === 'tool_use' && part.name && part.input) {
+      toolCalls.push({
+        name: part.name,
+        input: part.input,
+        id: part.id
+      });
+    }
+  }
+  return toolCalls;
+}
+
+function extractSavedDataFromToolResult(result) {
+  // Format: __SAVED_ID__:id:type__message
+  const match = result.match(/__SAVED_ID__:(\d+):(\w+)__/);
+  if (match) {
+    return {
+      id: parseInt(match[1], 10),
+      type: match[2]
+    };
+  }
+  return null;
+}
+
+async function executeToolCall(toolName, toolInput, userId) {
+  const toolMap = {
+    save_workout: saveWorkoutTool,
+    save_measurement: saveMeasurementTool,
+    query_workout: queryWorkoutTool,
+    query_measurement: queryMeasurementTool,
+    generate_plan: generatePlanTool,
+    adjust_plan: adjustPlanTool,
+    analyze_execution: analyzeExecutionTool
+  };
+
+  const tool = toolMap[toolName];
+  if (!tool) {
+    throw new Error(`Unknown tool: ${toolName}`);
+  }
+
+  // Inject userId into the tool input
+  const enrichedInput = { userId, ...toolInput };
+
+  console.log('Executing tool:', toolName, 'with input:', JSON.stringify(enrichedInput));
+
+  // Execute the tool
+  const result = await tool.func(enrichedInput);
+  console.log('Tool result:', result);
+  return result;
+}
+
+export async function runAgent(userId, message, userContext = null, historyMessages = []) {
+  const model = await getModel();
+
+  // 计算相对日期
+  const {
+    today: todayStr,
+    yesterday: yesterdayStr,
+    tomorrow: tomorrowStr,
+    dayAfterTomorrow: dayAfterTomorrowStr,
+    startOfThisWeek: startOfThisWeekStr,
+    startOfLastWeek: startOfLastWeekStr,
+    endOfLastWeek: endOfLastWeekStr
+  } = getWeekBounds();
+
+  function buildSystemPrompt(userContext) {
+    const {
+      today: todayStr,
+      yesterday: yesterdayStr,
+      tomorrow: tomorrowStr,
+      dayAfterTomorrow: dayAfterTomorrowStr,
+      startOfWeekStr
+    } = getWeekBounds();
+
+    let contextSection = '';
+    if (userContext?.context_text) {
+      const snap = userContext.profile_snapshot ? JSON.parse(userContext.profile_snapshot) : {};
+      contextSection = `【用户背景】
+${userContext.context_text}
+
+【当前状态】
+- 健身目标：${snap.goal || '未知'}
+- 健身经验：${snap.experience || '未知'}
+- 训练频率：每周${snap.frequency || 0}次
+- 当前体重：${snap.body_weight || '未知'}kg
+- 当前计划：${userContext.active_plan_name || '无'}（${userContext.active_plan_status || 'N/A'}）`;
+    }
+
+    return `你是健身数据记录助手。用中文回答。
+
+${contextSection}
+
+【日期参考 - 今天：${todayStr}】
+当用户使用相对日期时，必须根据以下规则计算实际日期：
+- "今天" = ${todayStr}
+- "昨天" = ${yesterdayStr}
+- "明天" = ${tomorrowStr}
+- "后天" = ${dayAfterTomorrowStr}
+- "X天前" = ${todayStr} 往前推 X 天
+- "上周X"（如上周三）= 本周一（${startOfWeekStr}）往前推7天，再加 X-1 天
+- "近一周" = ${addDays(new Date(), -7)} 至 ${todayStr}
+- "近一个月" = ${addDays(new Date(), -30)} 至 ${todayStr}
+- "近三个月" = ${addDays(new Date(), -90)} 至 ${todayStr}
+
+注意：如果用户说的日期无法确定，必须调用 query 工具查询，不要瞎猜日期。
+
+【必须严格执行的工具调用规则】：
+当用户询问以下内容时，必须立即调用对应工具，不得自行编造数据：
+- 询问"训练历史"、"训练记录"、"运动记录" → 必须调用 query_workout
+- 询问"围度记录"、"身体数据" → 必须调用 query_measurement
+- 询问"统计"、"分析"类问题 → 先调用 query_workout 或 query_measurement 获取数据
+
+工具调用格式：
+- save_workout: { date: "YYYY-MM-DD", exercises: [...] }
+- save_measurement: { date: "YYYY-MM-DD", measurements: [...] }
+- query_workout: { start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD", exercise_type?: "运动类型" }
+- query_measurement: { start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD" }
+
+日期格式YYYY-MM-DD。`;
+  }
+
+  // Build messages with user context and history
+  const systemPrompt = buildSystemPrompt(userContext);
+  const messages = [
+    new SystemMessage(systemPrompt),
+    ...historyMessages.map(m =>
+      m.role === 'user'
+        ? new HumanMessage(m.content)
+        : new AIMessage(m.content)
+    ),
+    new HumanMessage(message)
+  ];
+
+  // First call - get tool calls if any
+  const response = await model.invoke(messages);
+
+  // Extract tool calls from content (MiniMax returns tools in content array)
+  const toolCalls = extractToolCallsFromContent(response.content);
+
+  // If no tool calls, return the text response with no savedData
+  if (toolCalls.length === 0) {
+    const reply = extractText(response.content);
+    return { reply, savedData: null };
+  }
+
+  // Execute tool calls and get results
+  let savedData = null;
+  const toolMessages = [];
+  for (const toolCall of toolCalls) {
+    try {
+      const result = await executeToolCall(toolCall.name, toolCall.input, userId);
+
+      // Extract savedData from the tool result
+      if (!savedData) {
+        savedData = extractSavedDataFromToolResult(result);
+      }
+
+      // Create ToolMessage with proper format
+      toolMessages.push(new ToolMessage({
+        content: result,
+        tool_call_id: toolCall.id
+      }));
+    } catch (error) {
+      console.error('Tool execution error:', toolCall.name, error);
+      toolMessages.push(new ToolMessage({
+        content: `Error: ${error.message}`,
+        tool_call_id: toolCall.id
+      }));
+    }
+  }
+
+  console.log('Tool messages:', toolMessages.map(m => m.content));
+
+  // Continue conversation with tool results
+  const updatedMessages = [
+    ...messages,
+    response,
+    ...toolMessages
+  ];
+
+  // Second call - get final response after tool execution
+  const finalResponse = await model.invoke(updatedMessages);
+  console.log('Final response content:', JSON.stringify(finalResponse.content));
+
+  // Extract reply text
+  const reply = extractText(finalResponse.content);
+
+  return { reply, savedData };
+}
+
+function extractText(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content.filter(p => p.type === 'text').map(p => p.text).join('');
+  }
+  return '';
+}
