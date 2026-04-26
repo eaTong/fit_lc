@@ -2,14 +2,14 @@
 
 **创建时间：** 2026-04-26
 **功能ID：** F-004
-**状态：** 设计完成
+**状态：** 设计完成（已更新后端转文字方案）
 
 ---
 
 ## 一、概述
 
-**功能名称：** 一键记录模式
-**功能描述：** 在现有聊天界面底部增加"按住说话"按钮，语音转文字后自动发送到 /api/chat，AI 正常回复，保存成功时插入 F-001 视觉卡片。
+**功能名称：** 一键记录模式（语音优先）
+**功能描述：** 在现有聊天界面底部增加"按住说话"按钮，用户录音后松开，音频发送到后端 `/api/voice/transcribe` 转文字，再调用 `/api/chat` 解析，保存成功时插入 F-001 视觉卡片。
 
 **优先级：** P0（L1 基础功能层）
 **依赖关系：** 无依赖，可最先开发
@@ -21,7 +21,11 @@
 ### 2.1 主要流程
 
 ```
-用户按住麦克风 → 录音 → 松开 → 语音转文字 → 自动发送至 /api/chat
+用户按住麦克风 → 录音(WAV) → 松开 → 上传至 /api/voice/transcribe
+                                                      ↓
+                                              后端 MiniMax 转文字
+                                                      ↓
+                                              返回文字 → 前端调 /api/chat
                                                             ↓
                                               Agent 解析 → save_workout 工具
                                                             ↓
@@ -49,25 +53,67 @@
 ### 3.1 数据流
 
 ```
-麦克风 → 语音转文字(Web Speech API) → /api/chat → LangChain Agent → save_workout 工具
-                                                                        ↓
-                                                              reply + savedData
-                                                                        ↓
-                                                    前端判断 savedData → 显示视觉卡片
+麦克风 → 录音(WAV格式) → 松开即上传 → /api/voice/transcribe
+                                                     ↓
+                                           后端 MiniMax 转文字
+                                                     ↓
+                                           返回文字 → 前端调 /api/chat
+                                                         ↓
+                                               LangChain Agent → save_workout
+                                                         ↓
+                                               reply + savedData → 前端显示视觉卡片
 ```
 
 ### 3.2 技术选型
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| 前端语音 | Web Speech API / 第三方SDK | 语音转文字 |
-| 后端接口 | 复用 /api/chat | 无需新增接口 |
+| 前端录音 | MediaRecorder API | 录制 WAV 格式音频 |
+| 后端转文字 | MiniMax API | 复用现有 API Key，/v1/audio/speech 接口 |
+| 后端接口 | /api/voice/transcribe | 新增，专门处理语音转文字 |
+| 业务处理 | 复用 /api/chat | 文字解析和保存 |
 | AI解析 | 复用现有 Agent | LangChain + save_workout tool |
 | 视觉反馈 | F-001 视觉卡片组件 | 已规划功能 |
 
 ---
 
-## 四、状态管理
+## 四、新增接口
+
+### 4.1 POST /api/voice/transcribe
+
+**功能：** 接收音频文件，调用 MiniMax 转文字
+
+**认证：** JWT Token（通过 authMiddleware）
+
+**请求：**
+- Content-Type: multipart/form-data
+- 参数: audio (WAV 文件)
+
+**响应：**
+```json
+{
+  "text": "深蹲100公斤5组8个",
+  "success": true
+}
+```
+
+**错误响应：**
+```json
+{
+  "error": "转写失败",
+  "success": false
+}
+```
+
+### 4.2 前端处理流程
+
+```
+录音完成 → POST /api/voice/transcribe → 获取文字 → POST /api/chat → 获取 reply + savedData → 显示视觉卡片
+```
+
+---
+
+## 五、状态管理
 
 | 状态 | UI表现 | 说明 |
 |------|--------|------|
@@ -80,9 +126,9 @@
 
 ---
 
-## 五、接口契约
+## 六、接口契约（复用 /api/chat）
 
-### 5.1 请求（复用 /api/chat）
+### 6.1 请求
 
 ```json
 POST /api/chat/message
@@ -92,7 +138,7 @@ POST /api/chat/message
 }
 ```
 
-### 5.2 响应
+### 6.2 响应
 
 ```json
 {
@@ -109,15 +155,15 @@ POST /api/chat/message
 
 ---
 
-## 六、解析失败处理
+## 七、解析失败处理
 
-### 6.1 部分可识别
+### 7.1 部分可识别
 
 - 保存能解析的部分（如只识别出"深蹲"但缺少重量）
 - 数据标记为"待补充"状态
 - 显示可编辑卡片，用户可手动补充
 
-### 6.2 完全无法识别
+### 7.2 完全无法识别
 
 - 不保存任何数据
 - 显示"没听清，请再说一次"
@@ -125,23 +171,25 @@ POST /api/chat/message
 
 ---
 
-## 七、前端实现要点
+## 八、前端实现要点
 
-1. **语音组件：** 使用 Web Speech API 或第三方 SDK（推荐讯飞/腾讯语音）
+1. **录音组件：** 使用 MediaRecorder API 录制 WAV 格式
 2. **状态管理：** 使用 React useState 管理 idle/recording/processing/success/partial/failed
-3. **自动发送：** 语音转文字完成后自动填充输入框并提交
+3. **自动发送：** 转文字完成后自动调 /api/chat
 4. **视觉卡片：** 复用 F-001 的视觉卡片组件，通过 savedData 驱动显示
 5. **音效反馈：** 成功时播放简短音效（可使用 Web Audio API）
 
 ---
 
-## 八、后端改动
+## 九、后端改动
 
-**无新增接口。** 复用现有 /api/chat 接口，savedData 由 Agent 返回时自动包含。
+1. **新增接口：** `/api/voice/transcribe` - 接收音频，转写为文字
+2. **集成 MiniMax：** 调用 MiniMax 语音转文字 API（复用现有 API Key）
+3. **复用接口：** `/api/chat/message` 保持不变
 
 ---
 
-## 九、测试场景
+## 十、测试场景
 
 | 场景 | 输入 | 预期结果 |
 |------|------|----------|
@@ -152,7 +200,7 @@ POST /api/chat/message
 
 ---
 
-## 十、后续扩展
+## 十一、后续扩展
 
 - 对话式：AI 追问补全信息
 - 连续记录：多条动作统一确认
@@ -160,7 +208,7 @@ POST /api/chat/message
 
 ---
 
-## 十一、关联功能
+## 十二、关联功能
 
 | 功能ID | 功能名称 | 关系 |
 |--------|---------|------|
@@ -170,8 +218,9 @@ POST /api/chat/message
 
 ---
 
-## 十二、状态
+## 十三、状态
 
 - [x] 设计完成
+- [x] 已更新后端转文字方案（2026-04-26）
 - [ ] 待用户确认
 - [ ] 写入实现计划
