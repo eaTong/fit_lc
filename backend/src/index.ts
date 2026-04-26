@@ -1,0 +1,132 @@
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import authRoutes from './routes/auth';
+import authProtectedRoutes from './routes/authProtected';
+import chatRoutes from './routes/chat';
+import recordsRoutes from './routes/records';
+import plansRoutes from './routes/plans';
+import musclesRoutes from './routes/muscles';
+import exercisesRoutes from './routes/exercises';
+import adminExercisesRouter from './routes/adminExercises';
+import adminMusclesRouter from './routes/adminMuscles';
+import voiceRoutes from './routes/voice';
+import { authMiddleware } from './middleware/auth';
+import multer from 'multer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 确保日志目录存在
+const logDir = path.join(__dirname, '../logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+// 日志文件路径
+const accessLogPath = path.join(logDir, 'access.log');
+const errorLogPath = path.join(logDir, 'error.log');
+
+// 写入日志的函数
+function writeLog(filePath, message) {
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(filePath, `[${timestamp}] ${message}\n`);
+}
+
+// 捕获未处理的错误
+process.on('uncaughtException', (err) => {
+  writeLog(errorLogPath, `Uncaught Exception: ${err.message}\n${err.stack}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  writeLog(errorLogPath, `Unhandled Rejection: ${reason}`);
+});
+
+dotenv.config();
+
+// 环境配置
+const isProduction = process.env.NODE_ENV === 'production';
+
+// 覆盖 console.log 和 console.error
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
+// 格式化日志消息，处理 Error 对象
+function formatMessage(...args) {
+  return args.map(a => {
+    if (a instanceof Error) {
+      return `${a.name}: ${a.message}\n${a.stack}`;
+    }
+    if (typeof a === 'object') {
+      try {
+        return JSON.stringify(a);
+      } catch {
+        return String(a);
+      }
+    }
+    return String(a);
+  }).join(' ');
+}
+
+console.log = (...args) => {
+  const message = formatMessage(...args);
+  writeLog(accessLogPath, message);
+  // 生产环境只记录日志，不输出到 stdout
+  if (!isProduction) {
+    originalConsoleLog.apply(console, args);
+  }
+};
+
+console.error = (...args) => {
+  const message = formatMessage(...args);
+  writeLog(errorLogPath, message);
+  if (!isProduction) {
+    originalConsoleError.apply(console, args);
+  }
+};
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'));
+    }
+  }
+});
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
+
+// 公开路由
+app.use('/api/auth', authRoutes);
+
+// 需认证路由
+app.use('/api/auth', authMiddleware, authProtectedRoutes);
+
+// 需认证路由
+app.use('/api/chat', authMiddleware, chatRoutes);
+app.use('/api/records', authMiddleware, recordsRoutes);
+app.use('/api/plans', authMiddleware, plansRoutes);
+app.use('/api/muscles', authMiddleware, musclesRoutes);
+app.use('/api/exercises', authMiddleware, exercisesRoutes);
+app.use('/api/admin/exercises', adminExercisesRouter);
+app.use('/api/admin/muscles', adminMusclesRouter);
+app.use('/api/voice', authMiddleware, upload.single('audio'), voiceRoutes);
+
+app.listen(PORT, () => {
+  console.log(`FitLC backend running on port ${PORT}`);
+});

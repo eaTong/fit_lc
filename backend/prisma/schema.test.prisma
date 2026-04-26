@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./test.db"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workouts          Workout[]
+  bodyMeasurements  BodyMeasurement[]
+  workoutPlans      WorkoutPlan[]
+  userContext       UserContext?
+  chatMessages      ChatMessage[]
+  roles             UserRole[]
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+
+  users     UserRole[]
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  roleId    Int
+  createdAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model Workout {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  date      DateTime
+  createdAt DateTime   @default(now())
+  deletedAt DateTime?
+
+  user      User              @relation(fields: [userId], references: [id])
+  exercises WorkoutExercise[]
+}
+
+model WorkoutExercise {
+  id           Int      @id @default(autoincrement())
+  workoutId    Int
+  exerciseName String
+  sets         Int?
+  reps         Int?
+  weight       Float?
+  duration     Int?
+  distance     Float?
+  createdAt    DateTime @default(now())
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+}
+
+model BodyMeasurement {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  date      DateTime
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  user  User              @relation(fields: [userId], references: [id])
+  items MeasurementItem[]
+}
+
+model MeasurementItem {
+  id            Int     @id @default(autoincrement())
+  measurementId Int
+  bodyPart      String
+  value         Float
+
+  measurement BodyMeasurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+}
+
+model WorkoutPlan {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  name         String
+  goal         String
+  frequency    Int      @default(3)
+  experience   String
+  equipment    String
+  conditions   String?
+  bodyWeight   Float?
+  bodyFat      Float?
+  height       Float?
+  durationWeeks Int
+  status       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id])
+  exercises PlanExercise[]
+  executions PlanExecution[]
+}
+
+model PlanExercise {
+  id           Int      @id @default(autoincrement())
+  planId       Int
+  dayOfWeek    Int
+  exerciseId   Int?
+  exerciseName String
+  targetMuscles String?
+  sets         Int      @default(3)
+  reps         String
+  weight       Float?
+  duration     Int?
+  restSeconds  Int      @default(60)
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  plan       WorkoutPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  exercise   Exercise?      @relation(fields: [exerciseId], references: [id])
+  executions PlanExecution[]
+}
+
+model PlanExecution {
+  id              Int       @id @default(autoincrement())
+  planId          Int
+  planExerciseId Int
+  scheduledDate  DateTime
+  completedAt     DateTime?
+  completedReps   Int?
+  completedWeight Float?
+  status          String
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  plan         WorkoutPlan  @relation(fields: [planId], references: [id])
+  planExercise PlanExercise @relation(fields: [planExerciseId], references: [id])
+}
+
+model UserContext {
+  id                  Int        @id @default(autoincrement())
+  userId              Int        @unique
+  contextText         String?
+  profileSnapshot     String?
+  activePlanName      String?
+  activePlanStatus   String?
+  lastWorkoutDate     DateTime?
+  lastMeasurementDate DateTime?
+  totalWorkouts       Int        @default(0)
+  totalMeasurements   Int        @default(0)
+  updatedAt           DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      String
+  content   String
+  savedData String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Muscle {
+  id        Int       @id @default(autoincrement())
+  name      String
+  group     String
+  parentId  Int?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  origin        String?
+  insertion     String?
+  function      String?
+  trainingTips  String?
+
+  parent    Muscle?   @relation("MuscleHierarchy", fields: [parentId], references: [id])
+  children  Muscle[]  @relation("MuscleHierarchy")
+  exercises ExerciseMuscle[]
+}
+
+model Exercise {
+  id              Int     @id @default(autoincrement())
+  name            String
+  category        String
+  equipment      String
+  difficulty     String
+  description    String?
+  adjustmentNotes String?
+  videoUrl       String?
+  isVariant       Boolean @default(false)
+  parentId        Int?
+  tags           String?
+  status          String  @default("draft")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  steps           String?
+  safetyNotes     String?
+  commonMistakes  String?
+  exerciseType    String?
+  variantType     String?
+  conversionGuide String?
+
+  parent   Exercise?         @relation("ExerciseVariant", fields: [parentId], references: [id])
+  variants Exercise[]        @relation("ExerciseVariant")
+  muscles  ExerciseMuscle[]
+  planExercises PlanExercise[]
+}
+
+model ExerciseMuscle {
+  id         Int     @id @default(autoincrement())
+  exerciseId Int
+  muscleId   Int
+  role       String
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscle   Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+
+  @@unique([exerciseId, muscleId, role])
+}

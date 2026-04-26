@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  workouts          Workout[]
+  bodyMeasurements  BodyMeasurement[]
+  workoutPlans      WorkoutPlan[]
+  userContext       UserContext?
+  chatMessages      ChatMessage[]
+  roles             UserRole[]
+
+  @@map("users")
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @map("name") @db.VarChar(50)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  users     UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  roleId    Int      @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model Workout {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @map("user_id")
+  date      DateTime   @db.Date
+  createdAt DateTime   @default(now()) @map("created_at")
+  deletedAt DateTime?  @map("deleted_at")
+
+  user      User              @relation(fields: [userId], references: [id])
+  exercises WorkoutExercise[]
+
+  @@index([userId])
+  @@index([date])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id           Int      @id @default(autoincrement())
+  workoutId    Int      @map("workout_id")
+  exerciseName String   @map("exercise_name") @db.VarChar(100)
+  sets         Int?
+  reps         Int?
+  weight       Decimal? @db.Decimal(10, 2)
+  duration     Int?
+  distance     Decimal? @db.Decimal(10, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@map("workout_exercises")
+}
+
+model BodyMeasurement {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  date      DateTime  @db.Date
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user  User              @relation(fields: [userId], references: [id])
+  items MeasurementItem[]
+
+  @@index([userId])
+  @@index([date])
+  @@map("body_measurements")
+}
+
+model MeasurementItem {
+  id            Int     @id @default(autoincrement())
+  measurementId Int     @map("measurement_id")
+  bodyPart      String  @map("body_part") @db.VarChar(20)
+  value         Decimal @db.Decimal(10, 2)
+
+  measurement BodyMeasurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+
+  @@map("measurement_items")
+}
+
+model WorkoutPlan {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  name         String   @db.VarChar(100)
+  goal         String   @db.VarChar(20)
+  frequency    Int      @default(3)
+  experience   String   @db.VarChar(20)
+  equipment    String   @db.VarChar(255)
+  conditions   String?  @db.Text
+  bodyWeight   Decimal? @map("body_weight") @db.Decimal(5, 2)
+  bodyFat      Decimal? @map("body_fat") @db.Decimal(4, 1)
+  height       Decimal? @db.Decimal(5, 1)
+  durationWeeks Int     @map("duration_weeks")
+  status       String   @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user      User            @relation(fields: [userId], references: [id])
+  exercises PlanExercise[]
+  executions PlanExecution[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("workout_plans")
+}
+
+model PlanExercise {
+  id           Int      @id @default(autoincrement())
+  planId       Int      @map("plan_id")
+  dayOfWeek    Int      @map("day_of_week")
+  exerciseId   Int?     @map("exercise_id")          // 关联 exercises.id
+  exerciseName String   @map("exercise_name") @db.VarChar(100)  // 保留便于快速展示
+  targetMuscles String?  @map("target_muscles") @db.VarChar(100) // 目标肌肉群，如 "chest,triceps"
+  sets         Int      @default(3)
+  reps         String   @db.VarChar(20)
+  weight       Decimal? @db.Decimal(5, 2)
+  duration     Int?
+  restSeconds  Int      @default(60) @map("rest_seconds")
+  orderIndex   Int      @default(0) @map("order_index")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  plan       WorkoutPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  exercise   Exercise?      @relation(fields: [exerciseId], references: [id])
+  executions PlanExecution[]
+
+  @@index([planId])
+  @@index([dayOfWeek])
+  @@map("plan_exercises")
+}
+
+model PlanExecution {
+  id              Int       @id @default(autoincrement())
+  planId          Int       @map("plan_id")
+  planExerciseId Int       @map("plan_exercise_id")
+  scheduledDate  DateTime  @map("scheduled_date") @db.Date
+  completedAt     DateTime? @map("completed_at")
+  completedReps   Int?      @map("completed_reps")
+  completedWeight Decimal?   @map("completed_weight") @db.Decimal(5, 2)
+  status          String    @db.VarChar(20)
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  plan         WorkoutPlan  @relation(fields: [planId], references: [id])
+  planExercise PlanExercise @relation(fields: [planExerciseId], references: [id])
+
+  @@index([planId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@map("plan_executions")
+}
+
+model UserContext {
+  id                  Int        @id @default(autoincrement())
+  userId              Int        @unique @map("user_id")
+  contextText         String?    @map("context_text") @db.Text
+  profileSnapshot     Json?      @map("profile_snapshot")
+  activePlanName      String?    @map("active_plan_name") @db.VarChar(255)
+  activePlanStatus   String?    @map("active_plan_status") @db.VarChar(50)
+  lastWorkoutDate     DateTime?  @map("last_workout_date") @db.Date
+  lastMeasurementDate DateTime?  @map("last_measurement_date") @db.Date
+  totalWorkouts       Int        @default(0) @map("total_workouts")
+  totalMeasurements   Int        @default(0) @map("total_measurements")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_contexts")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  role      String   @db.VarChar(20)
+  content   String   @db.Text
+  savedData Json?    @map("saved_data")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
+}
+
+// 肌肉层级树：肌肉群(level 1) → 主肌肉(level 2)
+model Muscle {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(100)
+  group     String    // chest/back/legs/shoulders/arms/core
+  parentId  Int?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // 新增：肌肉详情
+  origin        String?  @db.Text  // 起点
+  insertion     String?  @db.Text  // 止点
+  function      String?  @db.Text  // 功能
+  trainingTips  String?  @db.Text  // 训练技巧
+
+  parent    Muscle?   @relation("MuscleHierarchy", fields: [parentId], references: [id])
+  children  Muscle[]  @relation("MuscleHierarchy")
+  exercises ExerciseMuscle[]
+
+  @@index([group])
+  @@index([parentId])
+  @@map("muscles")
+}
+
+// 动作库
+model Exercise {
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(200)
+  category        String  // chest/back/legs/shoulders/arms/core
+  equipment      String  // barbell/dumbbell/cable/machine/bodyweight/other
+  difficulty     String  // beginner/intermediate/advanced
+  description    String? @db.Text
+  adjustmentNotes String? @db.Text
+  videoUrl       String? @db.VarChar(500)
+  isVariant       Boolean @default(false)
+  parentId        Int?
+  tags           Json?
+  status          String  @default("draft") // draft/published
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  parent   Exercise?         @relation("ExerciseVariant", fields: [parentId], references: [id])
+  variants Exercise[]        @relation("ExerciseVariant")
+  muscles  ExerciseMuscle[]
+  planExercises PlanExercise[]
+
+  // 新增：动作详情
+  steps           String?  @db.Text    // 动作步骤说明
+  safetyNotes     String?  @db.Text    // 注意事项
+  commonMistakes  String?  @db.Text   // 常见错误
+  exerciseType    String?             // 'compound' 复合动作 / 'isolation' 孤立动作
+
+  // 新增：变体关系
+  variantType     String?             // 变体类型：equipment / difficulty / posture
+  conversionGuide Json?               // 变体转换指南
+
+  @@index([category])
+  @@index([equipment])
+  @@index([difficulty])
+  @@index([status])
+  @@map("exercises")
+}
+
+// 动作-肌肉关联表
+model ExerciseMuscle {
+  id         Int     @id @default(autoincrement())
+  exerciseId Int     @map("exercise_id")
+  muscleId   Int     @map("muscle_id")
+  role       String  // primary/secondary
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscle   Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+
+  @@unique([exerciseId, muscleId, role])
+  @@map("exercise_muscles")
+}
