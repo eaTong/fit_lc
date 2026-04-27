@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import { workoutRepository } from '../repositories/workoutRepository';
 import { measurementRepository } from '../repositories/measurementRepository';
+import { Decimal } from 'decimal.js';
 
 export const saveService = {
   async saveWorkout(userId, date, exercises) {
@@ -20,9 +21,9 @@ export const saveService = {
             exerciseName: exercise.name,
             sets: exercise.sets ?? null,
             reps: exercise.reps ?? null,
-            weight: exercise.weight ? new (require('@prisma/client/runtime/client').Decimal)(exercise.weight.toString()) : null,
+            weight: exercise.weight ? new Decimal(exercise.weight.toString()) : null,
             duration: exercise.duration ?? null,
-            distance: exercise.distance ? new (require('@prisma/client/runtime/client').Decimal)(exercise.distance.toString()) : null
+            distance: exercise.distance ? new Decimal(exercise.distance.toString()) : null
           }
         });
       }
@@ -60,7 +61,7 @@ export const saveService = {
             data: {
               measurementId: newMeasurement.id,
               bodyPart: m.body_part,
-              value: new (require('@prisma/client/runtime/client').Decimal)(m.value.toString())
+              value: new Decimal(m.value.toString())
             }
           });
         }

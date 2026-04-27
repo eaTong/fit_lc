@@ -14,7 +14,7 @@ test.describe('Admin - Exercise Management', () => {
     await page.goto('/admin/exercises');
 
     // Should show admin exercise management page
-    await expect(page.getByText('动作管理')).toBeVisible();
+    await expect(page.getByText('动作列表')).toBeVisible();
     await expect(page.locator('[data-testid="admin-exercise-table"]')).toBeVisible();
   });
 

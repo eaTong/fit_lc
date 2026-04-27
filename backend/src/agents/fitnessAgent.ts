@@ -150,10 +150,14 @@ ${contextSection}
 注意：如果用户说的日期无法确定，必须调用 query 工具查询，不要瞎猜日期。
 
 【必须严格执行的工具调用规则】：
-当用户询问以下内容时，必须立即调用对应工具，不得自行编造数据：
-- 询问"训练历史"、"训练记录"、"运动记录" → 必须调用 query_workout
-- 询问"围度记录"、"身体数据" → 必须调用 query_measurement
-- 询问"统计"、"分析"类问题 → 先调用 query_workout 或 query_measurement 获取数据
+当用户**记录**健身训练时（如"跑了X公里"、"深蹲X组"、"练了X分钟"），必须立即调用 save_workout 工具。
+当用户**记录**身体围度时（如"胸围X"、"腰围Y"），必须立即调用 save_measurement 工具。
+当用户**询问**训练历史、围度记录时，必须调用 query 工具获取真实数据，不得自行编造。
+
+关键触发词：
+- 记录类："跑了"、"走了"、"练了"、"做了"、"深蹲"、"卧推"、"俯卧撑"、"hiit"等 → save_workout
+- 围度类："胸围"、"腰围"、"臀围"、"臂围"、"腿围" → save_measurement
+- 询问类："历史"、"记录"、"统计"、"变化"、"趋势" → query 工具
 
 工具调用格式：
 - save_workout: { date: "YYYY-MM-DD", exercises: [...] }
@@ -179,8 +183,19 @@ ${contextSection}
   // First call - get tool calls if any
   const response = await model.invoke(messages);
 
-  // Extract tool calls from content (MiniMax returns tools in content array)
-  const toolCalls = extractToolCallsFromContent(response.content);
+  // Extract tool calls - check both response.tool_calls (from bindTools) and content array
+  let toolCalls = extractToolCallsFromContent(response.content);
+
+  // If no tool calls in content, check response.tool_calls (LangChain bindTools format)
+  if (toolCalls.length === 0 && response.tool_calls && response.tool_calls.length > 0) {
+    toolCalls = response.tool_calls.map(tc => ({
+      name: tc.name,
+      input: typeof tc.args === 'string' ? JSON.parse(tc.args) : tc.args,
+      id: tc.id
+    }));
+  }
+
+  console.log('Response tool_calls:', JSON.stringify(toolCalls));
 
   // If no tool calls, return the text response with no savedData
   if (toolCalls.length === 0) {
