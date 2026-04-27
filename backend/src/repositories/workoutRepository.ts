@@ -22,7 +22,7 @@ export const workoutRepository = {
       where: { id: workoutId, userId, deletedAt: null }
     });
     if (!workout) {
-      throw new Error('Workout not found or has been deleted');
+      throw new Error('训练记录不存在或已删除');
     }
     return prisma.workoutExercise.create({
       data: {

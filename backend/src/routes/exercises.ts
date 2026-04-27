@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { exerciseRepository } from '../repositories/exerciseRepository';
 import { muscleRepository } from '../repositories/muscleRepository';
 import { authMiddleware } from '../middleware/auth';
+import prisma from '../lib/prisma';
 
 const router = Router();
 
@@ -55,29 +56,38 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Name, category, equipment, difficulty are required' });
     }
 
-    const exercise = await exerciseRepository.create({
-      name,
-      category,
-      equipment,
-      difficulty,
-      description,
-      adjustmentNotes,
-      videoUrl,
-      isVariant,
-      parentId,
-      tags,
-      status,
-    });
+    // Use transaction to ensure atomicity: create exercise + associate muscles
+    const exercise = await prisma.$transaction(async (tx) => {
+      const newExercise = await tx.exercise.create({
+        data: {
+          name,
+          category,
+          equipment,
+          difficulty,
+          description,
+          adjustmentNotes,
+          videoUrl,
+          isVariant,
+          parentId,
+          tags: tags ? JSON.stringify(tags) : null,
+          status,
+        },
+      });
 
-    if (muscles && Array.isArray(muscles)) {
-      await exerciseRepository.updateMuscles(
-        exercise.id,
-        muscles.map((m: { muscleId: number; role: string }) => ({
-          muscleId: m.muscleId,
-          role: m.role,
-        }))
-      );
-    }
+      if (muscles && Array.isArray(muscles) && muscles.length > 0) {
+        for (const m of muscles) {
+          await tx.exerciseMuscle.create({
+            data: {
+              exerciseId: newExercise.id,
+              muscleId: m.muscleId,
+              role: m.role,
+            },
+          });
+        }
+      }
+
+      return newExercise;
+    });
 
     const result = await exerciseRepository.findById(exercise.id);
     res.json({ exercise: result });
@@ -103,27 +113,39 @@ router.put('/:id', async (req, res) => {
       muscles,
     } = req.body;
 
-    const exercise = await exerciseRepository.update(parseInt(id), {
-      name,
-      category,
-      equipment,
-      difficulty,
-      description,
-      adjustmentNotes,
-      videoUrl,
-      tags,
-      status,
-    });
+    // Use transaction to ensure atomicity: update exercise + update muscles
+    const exercise = await prisma.$transaction(async (tx) => {
+      const updated = await tx.exercise.update({
+        where: { id: parseInt(id) },
+        data: {
+          name,
+          category,
+          equipment,
+          difficulty,
+          description,
+          adjustmentNotes,
+          videoUrl,
+          tags: tags ? JSON.stringify(tags) : null,
+          status,
+        },
+      });
 
-    if (muscles && Array.isArray(muscles)) {
-      await exerciseRepository.updateMuscles(
-        parseInt(id),
-        muscles.map((m: { muscleId: number; role: string }) => ({
-          muscleId: m.muscleId,
-          role: m.role,
-        }))
-      );
-    }
+      if (muscles && Array.isArray(muscles)) {
+        // Delete existing and recreate
+        await tx.exerciseMuscle.deleteMany({ where: { exerciseId: parseInt(id) } });
+        for (const m of muscles) {
+          await tx.exerciseMuscle.create({
+            data: {
+              exerciseId: parseInt(id),
+              muscleId: m.muscleId,
+              role: m.role,
+            },
+          });
+        }
+      }
+
+      return updated;
+    });
 
     const result = await exerciseRepository.findById(parseInt(id));
     res.json({ exercise: result });

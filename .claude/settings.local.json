@@ -4,7 +4,14 @@
       "Bash(lsof:*)",
       "Bash(kill 20925:*)",
       "Bash(npx prisma:*)",
-      "mcp__MiniMax__web_search"
+      "mcp__MiniMax__web_search",
+      "Bash(mysql:*)",
+      "Bash(do sed:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 30 node:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "WebSearch"
     ]
   }
 }

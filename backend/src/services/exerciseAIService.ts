@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ChatAnthropic } from "@langchain/anthropic";
+import { createMiniMaxModel } from '../agents/chatMiniMax';
 
 interface ExerciseInput {
   name: string;
@@ -17,24 +17,41 @@ interface MuscleInput {
  */
 function extractJson(text: string): string {
   let jsonStr = text.trim();
-  const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || text.match(/```json([\s\S]*?)```/);
+
+  // 移除思考标签块（多行格式）
+  // 匹配从 <think>\n 到 \n</think>\ 的完整块
+  jsonStr = jsonStr.replace(/<begin_thinking>\n[\s\S]*?\n<\/end_thinking>\n/gi, '');
+  jsonStr = jsonStr.replace(/<thinking>\n[\s\S]*?\n<\/thinking>\n/gi, '');
+  jsonStr = jsonStr.replace(/<think turn="[^"]*">\n[\s\S]*?\n<\/think>\n/gi, '');
+  jsonStr = jsonStr.replace(/<think>>\n[\s\S]*?\n<\/think>\n/gi, '');
+  jsonStr = jsonStr.replace(/<think>\n[\s\S]*?\n<\/think>\n/gi, '');
+
+  // 移除单行思考标签（备用）
+  jsonStr = jsonStr.replace(/<begin_thinking>[\s\S]*?<\/end_thinking>/gi, '');
+  jsonStr = jsonStr.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+  jsonStr = jsonStr.replace(/<think turn="[^"]*">[\s\S]*?<\/think>/gi, '');
+  jsonStr = jsonStr.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+  // 移除 ```json 代码块
+  const jsonMatch = jsonStr.match(/```json\n([\s\S]*?)\n```/) || jsonStr.match(/```\n([\s\S]*?)\n```/) || jsonStr.match(/```json([\s\S]*?)```/);
   if (jsonMatch) {
     jsonStr = jsonMatch[1].trim();
   }
+
+  // 移除所有剩余的 <...> 标签
+  jsonStr = jsonStr.replace(/<[^>]*>/g, '');
+
+  // 清理尾部逗号
   jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
-  return jsonStr;
+
+  return jsonStr.trim();
 }
 
 /**
  * 生成动作详情
  */
 async function generateExerciseDetails(exercise: ExerciseInput, targetMuscles: MuscleInput[] | null, retries = 3) {
-  const model = new ChatAnthropic({
-    apiKey: process.env.MINIMAX_API_KEY || '',
-    model: "MiniMax-M2.7",
-    temperature: 0.7,
-    maxTokens: 2048,
-  });
+  const model = createMiniMaxModel({ temperature: 0.7, maxTokens: 4096 });
 
   const prompt = `给定动作信息：
 - 名称：${exercise.name}
@@ -76,7 +93,7 @@ ${targetMuscles ? `- 目标肌肉：${targetMuscles.map(m => m.name).join('、')
         text = textPart?.text || '';
       }
       if (!text) {
-        throw new Error('Empty response');
+        throw new Error('AI 返回为空');
       }
       const jsonStr = extractJson(text);
       return JSON.parse(jsonStr);

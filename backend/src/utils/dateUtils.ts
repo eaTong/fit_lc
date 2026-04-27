@@ -7,7 +7,7 @@
 export function toDateStr(d) {
   const date = d instanceof Date ? d : new Date(d);
   if (isNaN(date.getTime())) {
-    throw new Error('Invalid date passed to toDateStr');
+    throw new Error('无效的日期参数');
   }
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -23,7 +23,7 @@ export function toDateStr(d) {
 export function addDays(d, n) {
   const date = d instanceof Date ? d : new Date(d);
   if (isNaN(date.getTime())) {
-    throw new Error('Invalid date passed to addDays');
+    throw new Error('无效的日期参数');
   }
   date.setDate(date.getDate() + n);
   return toDateStr(date);
@@ -37,7 +37,7 @@ export function addDays(d, n) {
 export function getWeekBounds(date = new Date()) {
   const today = date instanceof Date ? date : new Date(date);
   if (isNaN(today.getTime())) {
-    throw new Error('Invalid date passed to getWeekBounds');
+    throw new Error('无效的日期参数');
   }
 
   // Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)

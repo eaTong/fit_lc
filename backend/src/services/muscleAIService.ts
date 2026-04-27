@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ChatAnthropic } from "@langchain/anthropic";
+import { createMiniMaxModel } from '../agents/chatMiniMax';
 
 interface MuscleInput {
   name: string;
@@ -23,12 +23,7 @@ function extractJson(text: string): string {
  * 生成肌肉详情
  */
 async function generateMuscleDetails(muscle: MuscleInput, parentMuscleName: string | null, retries = 3) {
-  const model = new ChatAnthropic({
-    apiKey: process.env.MINIMAX_API_KEY || '',
-    model: "MiniMax-M2.7",
-    temperature: 0.7,
-    maxTokens: 2048,
-  });
+  const model = createMiniMaxModel({ temperature: 0.7, maxTokens: 4096 });
 
   const prompt = `给定肌肉信息：
 - 名称：${muscle.name}
@@ -61,7 +56,7 @@ async function generateMuscleDetails(muscle: MuscleInput, parentMuscleName: stri
         text = textPart?.text || '';
       }
       if (!text) {
-        throw new Error('Empty response');
+        throw new Error('AI 返回为空');
       }
 
       const jsonStr = extractJson(text);

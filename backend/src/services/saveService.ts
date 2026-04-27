@@ -41,7 +41,7 @@ export const saveService = {
   async saveMeasurement(userId, date, measurements) {
     // 防御：确保 userId 不是 undefined
     if (userId === undefined) {
-      throw new Error(`saveMeasurement: invalid userId=${userId}`);
+      throw new Error(`保存围度失败：无效的 userId=${userId}`);
     }
 
     // Use Prisma transaction to ensure atomicity
