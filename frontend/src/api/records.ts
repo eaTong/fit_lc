@@ -1,14 +1,9 @@
 import client from './client';
 
-// Raw API response types (database row format)
-interface RawWorkoutRow {
+// API 返回的嵌套结构
+interface WorkoutExercise {
   id: number;
-  user_id: number;
-  date: string;
-  created_at: string;
-  deleted_at: string | null;
-  exercise_id: number;
-  exercise_name: string;
+  exerciseName: string;
   sets: number | null;
   reps: number | null;
   weight: string | null;
@@ -16,15 +11,20 @@ interface RawWorkoutRow {
   distance: number | null;
 }
 
-interface RawMeasurementRow {
+interface RawWorkout {
   id: number;
-  user_id: number;
   date: string;
-  created_at: string;
-  deleted_at: string | null;
-  item_id: number;
-  body_part: string;
-  value: string;
+  exercises: WorkoutExercise[];
+}
+
+interface RawMeasurement {
+  id: number;
+  date: string;
+  items: {
+    id: number;
+    body_part: string;
+    value: string;
+  }[];
 }
 
 export interface WeeklyStats {
@@ -48,15 +48,15 @@ export interface StatsResponse {
 }
 
 export const recordsApi = {
-  async getWorkouts(start?: string, end?: string): Promise<{ workouts: RawWorkoutRow[] }> {
+  async getWorkouts(start?: string, end?: string): Promise<{ workouts: RawWorkout[] }> {
     const params = start || end ? { start, end } : {};
-    const { data } = await client.get<{ workouts: RawWorkoutRow[] }>('/records/workouts', { params });
+    const { data } = await client.get<{ workouts: RawWorkout[] }>('/records/workouts', { params });
     return data;
   },
 
-  async getMeasurements(start?: string, end?: string): Promise<{ measurements: RawMeasurementRow[] }> {
+  async getMeasurements(start?: string, end?: string): Promise<{ measurements: RawMeasurement[] }> {
     const params = start || end ? { start, end } : {};
-    const { data } = await client.get<{ measurements: RawMeasurementRow[] }>('/records/measurements', { params });
+    const { data } = await client.get<{ measurements: RawMeasurement[] }>('/records/measurements', { params });
     return data;
   },
 

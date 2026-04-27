@@ -249,9 +249,15 @@ ${contextSection}
 }
 
 function extractText(content) {
-  if (typeof content === 'string') return content;
+  if (typeof content === 'string') {
+    // 过滤掉 <think>...</think> 标签内的思考内容
+    return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  }
   if (Array.isArray(content)) {
-    return content.filter(p => p.type === 'text').map(p => p.text).join('');
+    return content
+      .filter(p => p.type === 'text')
+      .map(p => p.text.replace(/<think>[\s\S]*?<\/think>/g, '').trim())
+      .join('');
   }
   return '';
 }
