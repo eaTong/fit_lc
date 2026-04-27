@@ -33,7 +33,7 @@ test.describe('Authentication', () => {
     await loginPage.login('test@example.com', 'WrongPassword');
 
     // Should show error message
-    await expect(page.getByText('密码错误')).toBeVisible();
+    await expect(page.getByText('无效的凭据')).toBeVisible();
     // Should stay on login page
     await expect(page).toHaveURL(/\/login/);
   });
@@ -45,7 +45,7 @@ test.describe('Authentication', () => {
     await loginPage.login('nonexistent@example.com', 'SomePassword');
 
     // Should show error message (same message for security - don't reveal if user exists)
-    await expect(page.getByText('密码错误')).toBeVisible();
+    await expect(page.getByText('无效的凭据')).toBeVisible();
   });
 
   test('AUTH-005: 退出登录 @auth', async ({ page }) => {
