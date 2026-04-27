@@ -55,6 +55,9 @@ test.describe('AI Chat', () => {
   test('CHAT-005: 查询围度历史 @chat', async () => {
     await chatPage.sendMessage('我的围度有什么变化？');
 
+    // Wait for assistant message to appear
+    await chatPage.waitForAssistantMessage();
+
     // Should get a response
     const lastMessage = await chatPage.getLastAssistantMessage();
     expect(lastMessage.length).toBeGreaterThan(0);
