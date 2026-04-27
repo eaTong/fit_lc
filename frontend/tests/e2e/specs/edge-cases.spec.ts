@@ -16,7 +16,7 @@ test.describe('Edge Cases & Error Handling', () => {
     });
 
     await page.goto('/chat');
-    await page.getByPlaceholder('输入消息...').fill('测试消息');
+    await page.getByPlaceholder('输入健身记录或问题...').fill('测试消息');
 
     // Trigger send (may vary based on UI)
     await page.getByRole('button', { name: '发送' }).click();
@@ -33,7 +33,7 @@ test.describe('Edge Cases & Error Handling', () => {
     await page.evaluate(() => localStorage.clear());
 
     // Try to send a message (should trigger auth check)
-    await page.getByPlaceholder('输入消息...').fill('测试');
+    await page.getByPlaceholder('输入健身记录或问题...').fill('测试');
 
     // Should redirect to login
     await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
@@ -43,7 +43,7 @@ test.describe('Edge Cases & Error Handling', () => {
     await page.goto('/chat');
 
     // Try to send empty message
-    await page.getByPlaceholder('输入消息...').fill('');
+    await page.getByPlaceholder('输入健身记录或问题...').fill('');
     await page.getByRole('button', { name: '发送' }).click();
 
     // Should show validation error or prevent sending
@@ -55,7 +55,7 @@ test.describe('Edge Cases & Error Handling', () => {
 
     // Rapidly send multiple messages
     for (let i = 0; i < 3; i++) {
-      await page.getByPlaceholder('输入消息...').fill(`消息 ${i}`);
+      await page.getByPlaceholder('输入健身记录或问题...').fill(`消息 ${i}`);
       await page.getByRole('button', { name: '发送' }).click();
       await page.waitForTimeout(100);
     }

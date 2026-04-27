@@ -144,7 +144,7 @@ export default function Exercises() {
             {filteredExercises.map((exercise) => {
               const { primary, secondary } = getMuscleNames(exercise);
               return (
-                <Card key={exercise.id}>
+                <Card key={exercise.id} data-testid="exercise-card">
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-heading font-semibold text-lg">{exercise.name}</h3>

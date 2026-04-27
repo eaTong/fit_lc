@@ -12,6 +12,8 @@ export class LoginPage extends BasePage {
     await this.page.getByPlaceholder('your@email.com').fill(email);
     await this.page.getByPlaceholder('••••••••').fill(password);
     await this.page.getByRole('button', { name: '登录' }).click();
+    // Wait for navigation after login (skip if already on chat page)
+    await this.page.waitForURL(/\/(chat|register)/, { timeout: 10000 }).catch(() => {});
   }
 
   async goToRegister(): Promise<void> {

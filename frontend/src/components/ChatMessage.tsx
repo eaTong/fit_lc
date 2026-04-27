@@ -16,6 +16,7 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
+        data-testid={`message-${message.role}`}
         className={`max-w-[70%] px-4 py-3 relative group ${
           isUser
             ? `bg-primary-tertiary text-text-primary border-2 border-border ${isRevoked ? 'opacity-50' : ''}`

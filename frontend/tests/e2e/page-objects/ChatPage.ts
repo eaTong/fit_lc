@@ -22,7 +22,8 @@ export class ChatPage extends BasePage {
   }
 
   async expectSaveSuccess(): Promise<void> {
-    await this.page.getByText('已保存').waitFor({ state: 'visible' });
+    // AI may respond with "已保存" or "已记录"
+    await this.page.getByText(/已保存|已记录/).first().waitFor({ state: 'visible' });
   }
 
   async expectMessageContains(text: string): Promise<void> {
