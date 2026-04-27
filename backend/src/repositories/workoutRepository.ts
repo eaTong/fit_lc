@@ -48,7 +48,17 @@ export const workoutRepository = {
         deletedAt: null
       },
       include: {
-        exercises: true
+        exercises: {
+          select: {
+            id: true,
+            exerciseName: true,
+            sets: true,
+            reps: true,
+            weight: true,
+            duration: true,
+            distance: true
+          }
+        }
       },
       orderBy: { date: 'desc' }
     });

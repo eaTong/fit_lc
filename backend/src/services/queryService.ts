@@ -85,13 +85,18 @@ function formatWorkoutResponse(workouts) {
 
   return workouts.map(w => {
     const exerciseList = w.exercises.map(e => {
-      if (e.distance) return `${e.name} ${e.distance}km`;
-      if (e.duration) return `${e.name} ${e.duration}分钟`;
-      if (e.weight) return `${e.name} ${e.weight}kg ${e.sets}组 ${e.reps}次`;
+      if (e.distance) return `${e.name}: ${e.distance}km`;
+      if (e.duration) return `${e.name}: ${e.duration}分钟`;
+      if (e.weight && e.sets && e.reps) {
+        return `${e.name}: ${e.sets}组 x ${e.reps}次 @ ${e.weight}kg`;
+      }
+      if (e.sets && e.reps) {
+        return `${e.name}: ${e.sets}组 x ${e.reps}次`;
+      }
       return e.name;
-    }).join('、');
-    return `${w.date}: ${exerciseList}`;
-  }).join('\n');
+    }).join('\n  ');
+    return `${w.date}:\n  ${exerciseList}`;
+  }).join('\n\n');
 }
 
 function formatMeasurementResponse(measurements) {

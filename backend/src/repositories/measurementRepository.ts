@@ -42,7 +42,13 @@ export const measurementRepository = {
         deletedAt: null
       },
       include: {
-        items: true
+        items: {
+          select: {
+            id: true,
+            bodyPart: true,
+            value: true
+          }
+        }
       },
       orderBy: { date: 'desc' }
     });
