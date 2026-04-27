@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { planRepository } from '../repositories/planRepository';
+import prisma from '../lib/prisma';
 
 export const planService = {
   // Create plan with exercises
@@ -18,14 +19,47 @@ export const planService = {
       status: 'draft'
     };
 
-    const planId = await planRepository.create(userId, planData);
+    // Use transaction to ensure atomicity: create plan + add exercises
+    const planId = await prisma.$transaction(async (tx) => {
+      const plan = await tx.workoutPlan.create({
+        data: {
+          userId,
+          name: planData.name,
+          goal: planData.goal,
+          frequency: planData.frequency,
+          experience: planData.experience,
+          equipment: planData.equipment,
+          conditions: planData.conditions ?? null,
+          bodyWeight: planData.body_weight ? new (require('@prisma/client/runtime/client').Decimal)(planData.body_weight.toString()) : null,
+          bodyFat: planData.body_fat ? new (require('@prisma/client/runtime/client').Decimal)(planData.body_fat.toString()) : null,
+          height: planData.height ? new (require('@prisma/client/runtime/client').Decimal)(planData.height.toString()) : null,
+          durationWeeks: planData.duration_weeks,
+          status: 'draft'
+        }
+      });
 
-    // Add exercises to the plan
-    if (exercises && exercises.length > 0) {
-      for (const exercise of exercises) {
-        await planRepository.addExercise(planId, exercise);
+      if (exercises && exercises.length > 0) {
+        for (const exercise of exercises) {
+          await tx.planExercise.create({
+            data: {
+              planId: plan.id,
+              dayOfWeek: exercise.dayOfWeek,
+              exerciseId: exercise.exerciseId ?? null,
+              exerciseName: exercise.exerciseName,
+              targetMuscles: exercise.targetMuscles ?? null,
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? '8-12',
+              weight: exercise.weight ? new (require('@prisma/client/runtime/client').Decimal)(exercise.weight.toString()) : null,
+              duration: exercise.duration ?? null,
+              restSeconds: exercise.restSeconds ?? 60,
+              orderIndex: exercise.orderIndex ?? 0
+            }
+          });
+        }
       }
-    }
+
+      return plan.id;
+    });
 
     return planId;
   },
@@ -51,7 +85,7 @@ export const planService = {
   async updatePlan(planId, userId, updates) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     const success = await planRepository.update(planId, userId, updates);
@@ -68,7 +102,7 @@ export const planService = {
   async deletePlan(planId, userId) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     const success = await planRepository.delete(planId, userId);
@@ -79,7 +113,7 @@ export const planService = {
   async activatePlan(planId, userId) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     const success = await planRepository.update(planId, userId, { status: 'active' });
@@ -90,7 +124,7 @@ export const planService = {
   async adjustPlan(planId, userId, adjustment) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     // MVP implementation: just update the plan with the adjustment
@@ -124,7 +158,7 @@ export const planService = {
   async recordExecution(planId, executionData) {
     const plan = await planRepository.findById(planId, executionData.userId || executionData.user_id);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     const execution = {
@@ -145,7 +179,7 @@ export const planService = {
   async getPlanAnalysis(planId, userId) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
-      throw new Error('Plan not found');
+      throw new Error('计划不存在');
     }
 
     const stats = await planRepository.getExecutionStats(planId);

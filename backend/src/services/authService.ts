@@ -1,11 +1,12 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import prisma from '../lib/prisma';
 import { userRepository } from '../repositories/userRepository';
 import { roleRepository } from '../repositories/roleRepository';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is not set');
+  throw new Error('JWT_SECRET 环境变量未设置');
 }
 
 // Bcrypt salt rounds, configurable via environment (default 10 for security/performance balance)
@@ -20,19 +21,33 @@ export const authService = {
   async register(email, password) {
     const existing = await userRepository.findByEmail(email);
     if (existing) {
-      throw new Error('Email already registered');
+      throw new Error('邮箱已被注册');
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = await userRepository.create(email, passwordHash);
 
-    // 自动分配 normal 角色
-    const normalRole = await roleRepository.findByName('normal');
-    if (!normalRole) {
-      throw new Error('System error: normal role not found. Please seed database.');
-    }
-    await roleRepository.createUserRole(user.id, normalRole.id);
+    // Use transaction to ensure atomicity: create user + assign role
+    const result = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { email, passwordHash }
+      });
 
+      const normalRole = await tx.role.findUnique({
+        where: { name: 'normal' }
+      });
+
+      if (!normalRole) {
+        throw new Error('系统错误：未找到 normal 角色，请先初始化数据库');
+      }
+
+      await tx.userRole.create({
+        data: { userId: newUser.id, roleId: normalRole.id }
+      });
+
+      return newUser;
+    });
+
+    const user = result;
     const token = this.generateToken(user.id, user.email, ['normal']);
 
     return { token, user: { id: user.id, email: user.email } };
@@ -41,12 +56,12 @@ export const authService = {
   async login(email, password) {
     const user = await userRepository.findByEmail(email);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error('无效的凭据');
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      throw new Error('Invalid credentials');
+      throw new Error('无效的凭据');
     }
 
     const roles = user.roles?.map((ur: UserRole) => ur.role.name) || [];
@@ -61,7 +76,7 @@ export const authService = {
   async getCurrentUser(userId) {
     const user = await userRepository.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('用户不存在');
     }
     return user;
   },

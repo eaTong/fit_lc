@@ -19,7 +19,7 @@ export const measurementRepository = {
       where: { id: measurementId, deletedAt: null }
     });
     if (!measurement) {
-      throw new Error('Measurement not found or has been deleted');
+      throw new Error('围度记录不存在或已删除');
     }
 
     return prisma.measurementItem.create({

@@ -31,7 +31,7 @@ async function getModel() {
   }
   modelPromise = (async () => {
     const model = await createModel();
-    cachedModel = model.bindTools(tools);
+    cachedModel = model.bindTools(tools as any);
     return cachedModel;
   })();
   return modelPromise;
@@ -80,7 +80,7 @@ async function executeToolCall(toolName, toolInput, userId) {
 
   const tool = toolMap[toolName];
   if (!tool) {
-    throw new Error(`Unknown tool: ${toolName}`);
+    throw new Error(`未知的工具: ${toolName}`);
   }
 
   // Inject userId into the tool input
