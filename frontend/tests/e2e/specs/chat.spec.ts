@@ -12,6 +12,8 @@ test.describe('AI Chat', () => {
 
     // Login before each chat test
     await loginPage.login('test@example.com', 'Test123456');
+    // Wait for navigation to complete after login
+    await page.waitForURL(/\/chat/, { timeout: 10000 });
     await chatPage.open();
   });
 
