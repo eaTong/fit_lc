@@ -14,7 +14,11 @@ export class ChatPage extends BasePage {
   async getLastAssistantMessage(): Promise<string> {
     const messages = this.page.locator('[data-testid="message-assistant"]');
     const lastMessage = messages.last();
-    return lastMessage.textContent() || '';
+    return (await lastMessage.textContent()) || '';
+  }
+
+  async waitForAssistantMessage(): Promise<void> {
+    await this.page.waitForSelector('[data-testid="message-assistant"]', { timeout: 30000 });
   }
 
   async clickUndo(): Promise<void> {
