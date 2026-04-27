@@ -52,10 +52,13 @@ test.describe('AI Chat', () => {
     expect(lastMessage.length).toBeGreaterThan(0);
   });
 
-  test('CHAT-005: 查询围度历史 @chat', async () => {
+  test('CHAT-005: 查询围度历史 @chat', async ({ page }) => {
+    // Ensure we're logged in
+    await page.goto('/chat');
+
     await chatPage.sendMessage('我的围度有什么变化？');
 
-    // Wait for assistant message to appear
+    // Wait for assistant message to appear (with longer timeout)
     await chatPage.waitForAssistantMessage();
 
     // Should get a response
