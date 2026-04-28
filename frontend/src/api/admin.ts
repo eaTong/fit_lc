@@ -71,4 +71,23 @@ export const adminApi = {
     const { data } = await client.post('/admin/exercises/generate', { name, category, equipment, difficulty, targetMuscles });
     return data;
   },
+
+  async getExerciseVariants(exerciseId: number) {
+    const { data } = await client.get(`/admin/exercises/${exerciseId}/variants`);
+    return data;
+  },
+
+  async createExerciseVariant(exerciseId: number, variant: { variantId: number; variantType: string; differenceNotes?: string }) {
+    const { data } = await client.post(`/admin/exercises/${exerciseId}/variants`, variant);
+    return data;
+  },
+
+  async updateExerciseVariant(id: number, variant: { variantType?: string; differenceNotes?: string }) {
+    const { data } = await client.put(`/admin/exercises/variants/${id}`, variant);
+    return data;
+  },
+
+  async deleteExerciseVariant(id: number) {
+    await client.delete(`/admin/exercises/variants/${id}`);
+  },
 };
