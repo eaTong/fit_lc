@@ -250,17 +250,17 @@ model Exercise {
   description    String? @db.Text
   adjustmentNotes String? @db.Text
   videoUrl       String? @db.VarChar(500)
-  isVariant       Boolean @default(false)
-  parentId        Int?
   tags           Json?
   status          String  @default("draft") // draft/published
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  parent   Exercise?         @relation("ExerciseVariant", fields: [parentId], references: [id])
-  variants Exercise[]        @relation("ExerciseVariant")
   muscles  ExerciseMuscle[]
   planExercises PlanExercise[]
+
+  // 多对多变体关系
+  variants     ExerciseVariant[] @relation("ExerciseVariants")
+  asVariant    ExerciseVariant[] @relation("ExerciseVariantTargets")
 
   // 新增：动作详情
   steps           String?  @db.Text    // 动作步骤说明
@@ -277,6 +277,23 @@ model Exercise {
   @@index([difficulty])
   @@index([status])
   @@map("exercises")
+}
+
+// 动作变体关联表（多对多）
+model ExerciseVariant {
+  id              Int      @id @default(autoincrement())
+  exerciseId     Int      @map("exercise_id")
+  variantId       Int      @map("variant_id")
+  variantType     String   // 'equipment' | 'difficulty' | 'posture'
+  differenceNotes String? @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  exercise   Exercise @relation("ExerciseVariantTargets", fields: [exerciseId], references: [id], onDelete: Cascade)
+  variant    Exercise @relation("ExerciseVariants", fields: [variantId], references: [id])
+
+  @@unique([exerciseId, variantId])
+  @@index([exerciseId])
+  @@index([variantId])
 }
 
 // 动作-肌肉关联表
