@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 
 interface WorkoutFeedback {
   pr_detected: boolean;
@@ -12,7 +12,17 @@ export async function generateWorkoutFeedback(
   userId: number,
   workoutId: number
 ): Promise<WorkoutFeedback> {
-  const workout = await prisma.workout.findUnique({
+  try {
+    if (!userId || typeof userId !== 'number') {
+      return {
+        pr_detected: false,
+        volume_change: 'same',
+        consistency_streak: 0,
+        personalized_comment: '记录成功！'
+      };
+    }
+
+    const workout = await prisma.workout.findUnique({
     where: { id: workoutId },
     include: { exercises: true }
   });
@@ -44,6 +54,15 @@ export async function generateWorkoutFeedback(
     consistency_streak: streak,
     personalized_comment: comment
   };
+  } catch (error) {
+    console.error('generateWorkoutFeedback error:', error);
+    return {
+      pr_detected: false,
+      volume_change: 'same',
+      consistency_streak: 0,
+      personalized_comment: '记录成功！'
+    };
+  }
 }
 
 async function calculateStreak(userId: number): Promise<number> {
@@ -54,18 +73,19 @@ async function calculateStreak(userId: number): Promise<number> {
   });
 
   let streak = 0;
-  let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  // Use UTC midnight for current date
+  const now = new Date();
+  let currentDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 
   for (const w of workouts) {
     const workoutDate = new Date(w.date);
-    workoutDate.setHours(0, 0, 0, 0);
+    const workoutDateUTC = new Date(Date.UTC(workoutDate.getFullYear(), workoutDate.getMonth(), workoutDate.getDate()));
 
-    const diffDays = Math.floor((currentDate.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((currentDate.getTime() - workoutDateUTC.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 1) {
       streak++;
-      currentDate = workoutDate;
+      currentDate = workoutDateUTC;
     } else {
       break;
     }
@@ -75,24 +95,34 @@ async function calculateStreak(userId: number): Promise<number> {
 }
 
 async function checkPR(userId: number, exercises: any[]): Promise<{ detected: boolean; exercise?: string; oldWeight?: number; newWeight?: number }> {
-  for (const ex of exercises) {
-    if (!ex.weight) continue;
+  // Collect exercise names with weights
+  const exercisesWithWeight = exercises.filter(ex => ex.weight);
+  if (exercisesWithWeight.length === 0) {
+    return { detected: false };
+  }
 
-    const historicalMax = await prisma.workoutExercise.findFirst({
-      where: {
-        workout: { userId, deletedAt: null },
-        exerciseName: ex.exerciseName,
-        weight: { not: null }
-      },
-      orderBy: { weight: 'desc' },
-      select: { weight: true }
-    });
+  const exerciseNames = exercisesWithWeight.map(ex => ex.exerciseName);
 
-    if (historicalMax && Number(ex.weight) > Number(historicalMax.weight)) {
+  // Single batch query to get max weight per exercise
+  const historicalMaxes = await prisma.workoutExercise.groupBy({
+    by: ['exerciseName'],
+    where: {
+      workout: { userId, deletedAt: null },
+      exerciseName: { in: exerciseNames },
+      weight: { not: null }
+    },
+    _max: { weight: true }
+  });
+
+  const maxWeightMap = new Map(historicalMaxes.map(m => [m.exerciseName, m._max.weight]));
+
+  for (const ex of exercisesWithWeight) {
+    const historicalMax = maxWeightMap.get(ex.exerciseName);
+    if (historicalMax && Number(ex.weight) > Number(historicalMax)) {
       return {
         detected: true,
         exercise: ex.exerciseName,
-        oldWeight: Number(historicalMax.weight),
+        oldWeight: Number(historicalMax),
         newWeight: Number(ex.weight)
       };
     }
