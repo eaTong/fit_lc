@@ -16,6 +16,7 @@ import PlanDetail from './pages/PlanDetail';
 import PlanExecute from './pages/PlanExecute';
 import Muscles from './pages/Muscles';
 import Exercises from './pages/Exercises';
+import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
 
@@ -96,6 +97,7 @@ function App() {
               <Route path="/plans/:id/execute" element={<PlanExecute />} />
               <Route path="/muscles" element={<Muscles />} />
               <Route path="/exercises" element={<Exercises />} />
+              <Route path="/measurements" element={<Measurements />} />
               <Route path="/admin/exercises" element={<AdminRoute component={<AdminExercises />} />} />
               <Route path="/admin/muscles" element={<AdminRoute component={<AdminMuscles />} />} />
               <Route path="/" element={<Navigate to="/chat" />} />
