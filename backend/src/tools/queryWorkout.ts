@@ -22,7 +22,7 @@ export const queryWorkoutTool = new DynamicStructuredTool({
   func: async ({ userId, start_date, end_date, exercise_type }) => {
     try {
       const result = await queryService.queryWorkouts(userId, start_date, end_date, exercise_type);
-      return result;
+      return `__SAVED_TYPE__:query:workout:${JSON.stringify({summary:{totalWorkouts: result.workouts?.length || 0, totalVolume: 0}})}__MESSAGE__${JSON.stringify(result)}`;
     } catch (error) {
       throw new Error(`查询训练记录失败: ${error.message}`);
     }

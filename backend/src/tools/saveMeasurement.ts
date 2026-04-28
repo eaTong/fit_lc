@@ -28,7 +28,7 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveMeasurement(userId, finalDate, measurements);
-      return `__SAVED_ID__:${result.id}:measurement__${result.message}`;
+      return `__SAVED_TYPE__:measurement:${result.id}:{}__MESSAGE__${result.message}`;
     } catch (error) {
       throw new Error(`保存围度记录失败: ${error.message}`);
     }

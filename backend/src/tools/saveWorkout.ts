@@ -30,7 +30,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveWorkout(userId, finalDate, exercises);
-      return `__SAVED_ID__:${result.id}:workout__${result.message}`;
+      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}`;
     } catch (error) {
       throw new Error(`保存训练记录失败: ${error.message}`);
     }
