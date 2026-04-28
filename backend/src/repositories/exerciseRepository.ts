@@ -29,7 +29,15 @@ export const exerciseRepository = {
       include: {
         muscles: { include: { muscle: true } },
         parent: { select: { id: true, name: true } },
-        variants: { select: { id: true, name: true, status: true } },
+        variants: {
+        select: {
+          id: true,
+          variantId: true,
+          variantType: true,
+          differenceNotes: true,
+          variant: { select: { id: true, name: true } }
+        }
+      },
       },
     });
   },
