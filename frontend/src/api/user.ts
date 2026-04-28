@@ -22,6 +22,18 @@ export interface MetricsResponse {
   limit: number;
 }
 
+export interface MeasurementLatest {
+  measurements: {
+    [key: string]: { value: number; date: string } | null;
+  };
+}
+
+export interface MeasurementHistory {
+  bodyPart: string;
+  history: { value: number; date: string }[];
+  pagination: { page: number; limit: number; total: number };
+}
+
 export const userApi = {
   async getProfile(): Promise<UserProfile | null> {
     const { data } = await client.get('/users/me/profile');
@@ -56,6 +68,16 @@ export const userApi = {
 
   async deleteAccount(password: string): Promise<void> {
     await client.delete('/users/me/account', { data: { password } });
+  },
+
+  async getMeasurementsLatest(): Promise<MeasurementLatest> {
+    const { data } = await client.get('/users/me/measurements/latest');
+    return data;
+  },
+
+  async getMeasurementsHistory(bodyPart: string, page = 1, limit = 10): Promise<MeasurementHistory> {
+    const { data } = await client.get('/users/me/measurements/history', { params: { bodyPart, page, limit } });
+    return data;
   },
 };
 
