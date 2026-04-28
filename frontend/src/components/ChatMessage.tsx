@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import type { ChatMessage as ChatMessageType } from '../types';
+import PlanCard from './chat/PlanCard';
+import QueryResultCard from './chat/QueryResultCard';
+import AnalysisCard from './chat/AnalysisCard';
+import PlanAdjustCard from './chat/PlanAdjustCard';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -7,11 +11,35 @@ interface ChatMessageProps {
   isRevoked?: boolean;
 }
 
+function canUndo(type?: string): boolean {
+  return type === 'workout' || type === 'measurement' || type === 'plan';
+}
+
 export default function ChatMessage({ message, onUndo, isRevoked = false }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const [showUndo, setShowUndo] = useState(false);
-  // 检查 savedData 或者内容中是否包含保存成功的标记
   const isSaved = message.savedData || message.content.includes('已保存') || message.content.includes('已记录') || message.content.includes('✅');
+
+  const renderCard = () => {
+    if (!message.savedData) return null;
+    const { type, id, meta } = message.savedData;
+
+    if (type === 'plan') {
+      return <PlanCard planId={id!} planName={(meta as any)?.name} />;
+    }
+    if (type === 'query' && meta) {
+      return <QueryResultCard queryType={(meta as any).queryType} summary={(meta as any).summary} />;
+    }
+    if (type === 'analysis' && meta) {
+      return <AnalysisCard {...(meta as any)} />;
+    }
+    if (type === 'adjustment') {
+      return <PlanAdjustCard planId={id!} adjustment={(meta as any)?.description || ''} />;
+    }
+    return null;
+  };
+
+  const showCard = message.savedData && ['plan', 'query', 'analysis', 'adjustment'].includes(message.savedData.type);
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -29,14 +57,15 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
           {message.content}
         </p>
 
+        {showCard && renderCard()}
+
         {isRevoked && (
           <span className="ml-2 px-2 py-0.5 text-xs bg-slate-600/50 text-slate-300 rounded">
             已撤销
           </span>
         )}
 
-        {/* 用户消息hover显示撤销图标 */}
-        {isUser && isSaved && showUndo && !isRevoked && onUndo && (
+        {isUser && isSaved && showUndo && !isRevoked && onUndo && canUndo(message.savedData?.type) && (
           <button
             onClick={onUndo}
             className="absolute -left-10 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-accent-orange transition-colors"
@@ -48,8 +77,7 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
           </button>
         )}
 
-        {/* Assistant消息的撤销按钮保留 */}
-        {!isUser && isSaved && onUndo && !isRevoked && (
+        {!isUser && isSaved && onUndo && !isRevoked && canUndo(message.savedData?.type) && (
           <button
             onClick={onUndo}
             className="mt-2 text-sm text-accent-orange hover:text-accent-red transition-colors"
