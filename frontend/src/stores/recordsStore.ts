@@ -39,7 +39,7 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { measurements } = await recordsApi.getMeasurements(start, end);
-      const transformed = transformMeasurements(measurements);
+      const transformed = transformMeasurements(measurements as any);
       set({ measurements: transformed, latestMeasurement: transformed[0] || null, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });

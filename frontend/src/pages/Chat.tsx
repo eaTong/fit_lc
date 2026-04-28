@@ -25,7 +25,7 @@ export default function Chat() {
     // Get latest messages from store to avoid stale closure
     const latestMessages = useChatStore.getState().messages;
     const savedData = latestMessages.find(m => m.id === messageId)?.savedData;
-    if (savedData) {
+    if (savedData && savedData.id !== undefined) {
       try {
         if (savedData.type === 'workout') {
           await recordsApi.deleteWorkout(savedData.id);

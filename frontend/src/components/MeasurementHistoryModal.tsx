@@ -10,7 +10,7 @@ interface MeasurementHistoryModalProps {
   onPageChange: (page: number) => void;
 }
 
-export default function MeasurementHistoryModal({ isOpen, onClose, bodyPart, label, data, onPageChange }: MeasurementHistoryModalProps) {
+export default function MeasurementHistoryModal({ isOpen, onClose, label, data, onPageChange }: MeasurementHistoryModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`${label}历史记录`} size="sm">
       {data?.history.length === 0 ? (
