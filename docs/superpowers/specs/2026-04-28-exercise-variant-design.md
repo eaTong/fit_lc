@@ -97,13 +97,15 @@ model ExerciseVariant {
 
 变体关系在**展示层**使用，不影响记录逻辑。
 
-### 3.4 历史数据查询
+### 3.4 历史数据
 
-历史记录中的 `workout_exercises.exercise_name` 直接存储动作名称。
+当前 `workout_exercises` 存的是 `exerciseName` 文本，无 FK 关联。
 
-变体关系不改变历史存储方式，历史查询结果直接展示动作名称。
+新记录：动作名称直接文本存储（不变）。
 
-如需展示动作的变体信息（如"查看这条记录的器械类型"），可通过 `exerciseId` join `Exercise` 获取 `variantType`。
+历史数据处理：**后续通过 AI 脚本完成**，AI 根据动作名称匹配 Exercise 表识别 variant，并在有差异时记录。
+
+本次实施不包括历史数据迁移。
 
 ---
 
@@ -193,12 +195,14 @@ model ExerciseVariant {
 
 ## 6. 实施范围
 
-本次实施不包括：
-- 用户端动作详情页（`/exercises/:id` 详情页尚未存在）
-- 历史记录查看变体元数据
+**本次不包括：**
+- 历史数据迁移（后续 AI 脚本处理）
+- 用户端动作详情页
+- 历史记录变体元数据展示
 
-本次实施包括：
-- Prisma schema 修改（新增 ExerciseVariant 表）
+**本次实施：**
+- Prisma schema 修改（新增 ExerciseVariant 表，移除 parentId）
+- 数据库迁移
 - Admin 变体关系 CRUD API
 - Admin 页面增加变体管理 UI
 - 动作详情响应增加 variants 字段
@@ -208,5 +212,5 @@ model ExerciseVariant {
 ## 7. 依赖与风险
 
 - 无新依赖外部服务
-- 移除 `parentId` 字段需做数据库迁移
-- 历史数据中的 `parentId` 无数据可以不管
+- 移除 `parentId` 字段需做数据库迁移（检查无数据后移除）
+- 历史数据迁移作为独立任务后续处理
