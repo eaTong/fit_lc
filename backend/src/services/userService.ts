@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 import bcrypt from 'bcrypt';
 
 export const userService = {
@@ -98,8 +98,14 @@ export const userService = {
     const skip = (page - 1) * limit;
 
     const items = await prisma.measurementItem.findMany({
-      where: { bodyPart },
-      include: { measurement: { where: { userId, deletedAt: null } } },
+      where: {
+        bodyPart,
+        measurement: {
+          userId,
+          deletedAt: null
+        }
+      },
+      include: { measurement: true },
       orderBy: { measurement: { date: 'desc' } },
       skip,
       take: limit,
@@ -113,7 +119,13 @@ export const userService = {
       }));
 
     const total = await prisma.measurementItem.count({
-      where: { bodyPart, measurement: { userId, deletedAt: null } },
+      where: {
+        bodyPart,
+        measurement: {
+          userId,
+          deletedAt: null
+        }
+      },
     });
 
     return { bodyPart, history, pagination: { page, limit, total } };

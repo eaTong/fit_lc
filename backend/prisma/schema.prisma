@@ -22,6 +22,7 @@ model User {
   roles             UserRole[]
   userProfile       UserProfile?
   bodyMetrics       BodyMetrics[]
+  coachConfig       CoachConfig?
 
   @@map("users")
 }
@@ -319,4 +320,18 @@ model BodyMetrics {
   @@unique([userId, date])
   @@index([userId])
   @@map("body_metrics")
+}
+
+model CoachConfig {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @unique @map("user_id")
+  enabled       Boolean @default(true)
+  reminderTime  String? @db.VarChar(5)  // "09:00"
+  maxDailyMessages Int  @default(3)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("coach_configs")
 }

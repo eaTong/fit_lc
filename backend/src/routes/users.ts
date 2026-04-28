@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { userService } from '../services/userService';
 import { uploadAvatar } from '../lib/oss';
+import { getCoachConfig, updateCoachConfig } from '../services/coachConfigService';
 
 const router = Router();
 router.use(authMiddleware);
@@ -79,7 +80,7 @@ router.delete('/me/account', async (req, res) => {
 
 router.get('/me/measurements/latest', async (req, res) => {
   try {
-    const result = await userService.getMeasurementsLatest(req.userId);
+    const result = await userService.getMeasurementsLatest(req.user.id);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -90,10 +91,33 @@ router.get('/me/measurements/history', async (req, res) => {
   try {
     const { bodyPart, page = 1, limit = 10 } = req.query;
     if (!bodyPart) return res.status(400).json({ error: 'bodyPart required' });
-    const result = await userService.getMeasurementsHistory(req.userId, bodyPart as string, parseInt(page as string), parseInt(limit as string));
+    const result = await userService.getMeasurementsHistory(req.user.id, bodyPart as string, parseInt(page as string), parseInt(limit as string));
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/coach-config', async (req, res) => {
+  try {
+    const config = await getCoachConfig(req.user.id);
+    res.json({ success: true, data: config });
+  } catch (error) {
+    res.status(500).json({ error: '获取配置失败' });
+  }
+});
+
+router.put('/coach-config', async (req, res) => {
+  try {
+    const { enabled, reminderTime, maxDailyMessages } = req.body;
+    const config = await updateCoachConfig(req.user.id, {
+      enabled,
+      reminderTime,
+      maxDailyMessages
+    });
+    res.json({ success: true, data: config });
+  } catch (error) {
+    res.status(500).json({ error: '更新配置失败' });
   }
 });
 
