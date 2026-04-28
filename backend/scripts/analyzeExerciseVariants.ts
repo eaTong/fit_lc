@@ -232,7 +232,7 @@ async function analyzePair(
     const content = typeof response.content === 'string'
       ? response.content
       : Array.isArray(response.content)
-        ? response.content.map(c => typeof c === 'string' ? c : c.text).join('')
+        ? response.content.map(c => typeof c === 'string' ? c : 'text' in c ? c.text : '').join('')
         : '';
 
     const result = parseAIResponse(content);
@@ -245,15 +245,16 @@ async function analyzePair(
       differenceNotes: result.differenceNotes || '',
       reasoning: result.reasoning || '',
     };
-  } catch (e) {
-    console.error(`  AI 调用失败: ${exerciseA.name} vs ${exerciseB.name}:`, e.message);
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.error(`  AI 调用失败: ${exerciseA.name} vs ${exerciseB.name}:`, errorMessage);
     return {
       exerciseA,
       exerciseB,
       isVariant: false,
       variantType: null,
       differenceNotes: '',
-      reasoning: `错误: ${e.message}`,
+      reasoning: `错误: ${errorMessage}`,
     };
   }
 }
