@@ -64,4 +64,58 @@ export const userService = {
     });
     return true;
   },
+
+  async getMeasurementsLatest(userId: number) {
+    const measurements = await prisma.bodyMeasurement.findMany({
+      where: { userId, deletedAt: null },
+      orderBy: { date: 'desc' },
+      include: { items: true },
+    });
+
+    const latestByPart: Record<string, { value: number; date: string }> = {};
+
+    for (const m of measurements) {
+      for (const item of m.items) {
+        if (!latestByPart[item.bodyPart]) {
+          latestByPart[item.bodyPart] = {
+            value: Number(item.value),
+            date: m.date.toISOString().split('T')[0],
+          };
+        }
+      }
+    }
+
+    const allParts = ['neck', 'chest', 'shoulder', 'biceps_l', 'biceps_r', 'waist', 'hips', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r'];
+    const result: Record<string, { value: number; date: string } | null> = {};
+    for (const part of allParts) {
+      result[part] = latestByPart[part] || null;
+    }
+
+    return { measurements: result };
+  },
+
+  async getMeasurementsHistory(userId: number, bodyPart: string, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const items = await prisma.measurementItem.findMany({
+      where: { bodyPart },
+      include: { measurement: { where: { userId, deletedAt: null } } },
+      orderBy: { measurement: { date: 'desc' } },
+      skip,
+      take: limit,
+    });
+
+    const history = items
+      .filter(i => i.measurement)
+      .map(i => ({
+        value: Number(i.value),
+        date: i.measurement.date.toISOString().split('T')[0],
+      }));
+
+    const total = await prisma.measurementItem.count({
+      where: { bodyPart, measurement: { userId, deletedAt: null } },
+    });
+
+    return { bodyPart, history, pagination: { page, limit, total } };
+  },
 };
