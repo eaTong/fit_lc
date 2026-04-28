@@ -20,6 +20,8 @@ model User {
   userContext       UserContext?
   chatMessages      ChatMessage[]
   roles             UserRole[]
+  userProfile       UserProfile?
+  bodyMetrics       BodyMetrics[]
 
   @@map("users")
 }
@@ -283,4 +285,33 @@ model ExerciseMuscle {
 
   @@unique([exerciseId, muscleId, role])
   @@map("exercise_muscles")
+}
+
+model UserProfile {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @unique @map("user_id")
+  nickname   String?   @db.VarChar(50)
+  avatar     String?   @db.VarChar(500)
+  height     Float?    @db.Float
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model BodyMetrics {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  date      DateTime @db.Date
+  weight    Float    @db.Float
+  bodyFat   Float?   @db.Float
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("body_metrics")
 }
