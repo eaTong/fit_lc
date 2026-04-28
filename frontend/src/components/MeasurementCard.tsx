@@ -1,42 +1,46 @@
-import type { Measurement } from '../types';
-import Button from './ui/Button';
-
 interface MeasurementCardProps {
-  measurement: Measurement;
-  onDelete: (id: number) => void;
+  bodyPart: string;
+  label: string;
+  value: number | null;
+  date?: string;
+  trend?: 'up' | 'down' | 'flat';
+  onClick?: () => void;
 }
 
-const bodyPartLabels: Record<string, string> = {
-  chest: '胸围',
-  waist: '腰围',
-  hips: '臀围',
-  biceps: '臂围',
-  thighs: '腿围',
-  calves: '小腿围',
-  other: '其他',
+const trendColors = {
+  up: 'text-red-500',
+  down: 'text-green-500',
+  flat: 'text-text-muted',
 };
 
-export default function MeasurementCard({ measurement, onDelete }: MeasurementCardProps) {
-  return (
-    <div className="bg-primary-secondary border-2 border-border p-4 mb-4">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-heading font-semibold text-lg">{measurement.date}</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onDelete(measurement.id)}
-        >
-          删除
-        </Button>
-      </div>
+const trendIcons = {
+  up: '↑',
+  down: '↓',
+  flat: '—',
+};
 
-      <div className="flex flex-wrap gap-4">
-        {measurement.items.map((item, idx) => (
-          <div key={idx} className="text-text-secondary">
-            <span className="text-text-primary">{bodyPartLabels[item.bodyPart]}</span>
-            <span className="ml-1">{item.value}cm</span>
-          </div>
-        ))}
+export default function MeasurementCard({ bodyPart, label, value, date, trend, onClick }: MeasurementCardProps) {
+  return (
+    <div
+      onClick={onClick}
+      className={`flex justify-between items-center py-3 px-4 border-b border-border cursor-pointer hover:bg-primary-tertiary transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+    >
+      <div>
+        <span className="text-text-primary">{label}</span>
+        {date && <span className="text-text-muted text-xs ml-2">{date}</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        {value !== null ? (
+          <>
+            <span className="text-text-primary font-heading">{value}</span>
+            <span className="text-text-muted text-sm">cm</span>
+            {trend && (
+              <span className={`text-lg ${trendColors[trend]}`}>{trendIcons[trend]}</span>
+            )}
+          </>
+        ) : (
+          <span className="text-text-muted">—</span>
+        )}
       </div>
     </div>
   );
