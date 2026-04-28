@@ -298,6 +298,10 @@ async function main() {
 
   ensureOutputDir();
 
+  // Debug: check database connection
+  const dbTest = await prisma.$queryRaw`SELECT DATABASE() as db`;
+  console.log('Connected to database:', dbTest[0].db);
+
   // 读取所有动作 (draft + published)
   const exercises = await prisma.exercise.findMany({
     where: {

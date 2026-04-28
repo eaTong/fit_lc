@@ -1,5 +1,11 @@
 import client from './client';
 
+export interface ConversionGuide {
+  '变体'?: string;
+  '替代动作'?: string;
+  '降级选项'?: string;
+}
+
 export interface Exercise {
   id: number;
   name: string;
@@ -9,6 +15,7 @@ export interface Exercise {
   description: string | null;
   adjustmentNotes: string | null;
   videoUrl: string | null;
+  conversionGuide: ConversionGuide | null;
   isVariant: boolean;
   parentId: number | null;
   tags: string[] | null;
