@@ -77,4 +77,24 @@ router.delete('/me/account', async (req, res) => {
   }
 });
 
+router.get('/me/measurements/latest', async (req, res) => {
+  try {
+    const result = await userService.getMeasurementsLatest(req.userId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/me/measurements/history', async (req, res) => {
+  try {
+    const { bodyPart, page = 1, limit = 10 } = req.query;
+    if (!bodyPart) return res.status(400).json({ error: 'bodyPart required' });
+    const result = await userService.getMeasurementsHistory(req.userId, bodyPart as string, parseInt(page as string), parseInt(limit as string));
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
