@@ -594,7 +594,7 @@ export default function AdminExercises() {
               >
                 <option value="">选择变体动作</option>
                 {exercises
-                  .filter((ex) => ex.id !== variantModalExerciseId)
+                  .filter((ex) => ex.id !== variantModalExerciseId && !exerciseVariants.asSource.some(v => v.variantId === ex.id))
                   .map((ex) => (
                     <option key={ex.id} value={ex.id}>{ex.name}</option>
                   ))}
