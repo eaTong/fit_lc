@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
+import { generateWorkoutFeedback } from '../services/coachFeedbackService';
 
 export const saveWorkoutTool = new DynamicStructuredTool({
   name: "save_workout",
@@ -30,7 +31,13 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveWorkout(userId, finalDate, exercises);
-      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}`;
+
+      // 生成 AI 即时反馈
+      const feedback = await generateWorkoutFeedback(userId, result.id);
+
+      // 将反馈信息附加到返回消息
+      const feedbackMsg = feedback.personalized_comment;
+      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}\n\n${feedbackMsg}`;
     } catch (error) {
       throw new Error(`保存训练记录失败: ${error.message}`);
     }
