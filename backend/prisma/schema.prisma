@@ -202,8 +202,13 @@ model ChatMessage {
   content   String   @db.Text
   savedData Json?    @map("saved_data")
   createdAt DateTime @default(now()) @map("created_at")
+  isFromCoach    Boolean  @default(false) @map("is_from_coach")
+  coachMessageType String? @map("coach_message_type")
+  parentId       Int?     @map("parent_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent ChatMessage? @relation("CoachThread", fields: [parentId], references: [id])
+  replies ChatMessage[] @relation("CoachThread")
 
   @@index([userId, createdAt])
   @@map("chat_messages")
