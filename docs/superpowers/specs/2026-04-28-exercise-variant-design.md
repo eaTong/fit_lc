@@ -11,7 +11,7 @@
 当前 `Exercise` 模型已有 `parentId`（自关联）字段用于表达"变体关系"，但存在以下问题：
 - `parentId` 是单向一对多关系，无法表达"一个动作有多个变体、且每个变体与它的关系各有差异"
 - 无专门展示"动作变体差异"的 UI
-- 历史记录直接存动作 ID，查询时无法利用变体关系
+- 历史记录直接存动作名称，查询时无法利用变体关系
 
 ### 1.2 目标
 - 建立标准化的动作变体关系管理（多对多，每对关系记录差异说明）
@@ -117,8 +117,8 @@ model ExerciseVariant {
 |------|------|------|
 | GET | `/admin/exercises/:id/variants` | 获取某动作的所有变体关系 |
 | POST | `/admin/exercises/:id/variants` | 添加变体关系 |
-| PUT | `/admin/exercises/variants/:variantId` | 编辑变体关系 |
-| DELETE | `/admin/exercises/variants/:variantId` | 删除变体关系 |
+| PUT | `/admin/exercises/variants/:id` | 编辑变体关系（:id = ExerciseVariant.id） |
+| DELETE | `/admin/exercises/variants/:id` | 删除变体关系 |
 
 **POST /admin/exercises/:id/variants 请求体：**
 ```json
@@ -161,8 +161,8 @@ model ExerciseVariant {
   "variants": [
     {
       "id": 1,
-      "exerciseId": 2,
-      "exerciseName": "杠铃卧推",
+      "variantId": 5,
+      "variantName": "哑铃卧推",
       "variantType": "equipment",
       "differenceNotes": "哑铃卧推的优势是角度更自由"
     }
