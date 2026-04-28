@@ -14,7 +14,7 @@
 ## 2. 脚本流程
 
 ```
-1. 读取所有 status='published' 的动作
+1. 读取所有动作（包括 status='draft' 和 'published'）
 2. 按名称相似度分组（相同关键词如「卧推」「深蹲」）
 3. 对每组内的动作对调用 AI，分析变体关系
 4. 输出 JSON 报告供人工确认
@@ -44,14 +44,18 @@
 ```json
 {
   "exerciseA": {
+    "id": 1,
     "name": "杠铃卧推",
+    "status": "published",
     "category": "chest",
     "equipment": "barbell",
     "difficulty": "intermediate",
     "description": "经典的胸肌训练动作..."
   },
   "exerciseB": {
+    "id": 2,
     "name": "哑铃卧推",
+    "status": "draft",
     "category": "chest",
     "equipment": "dumbbell",
     "difficulty": "intermediate",
@@ -125,8 +129,8 @@
   "totalPairs": 45,
   "variantPairs": [
     {
-      "exerciseA": { "id": 1, "name": "杠铃卧推" },
-      "exerciseB": { "id": 5, "name": "哑铃卧推" },
+      "exerciseA": { "id": 1, "name": "杠铃卧推", "status": "published" },
+      "exerciseB": { "id": 5, "name": "哑铃卧推", "status": "draft" },
       "isVariant": true,
       "variantType": "equipment",
       "differenceNotes": "重量需下调约20%，注意手臂角度控制"
