@@ -84,6 +84,10 @@ export default function AdminExercises() {
   const [expandedExerciseId, setExpandedExerciseId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<ExerciseFormData>(defaultFormData);
+  const [variantModalExerciseId, setVariantModalExerciseId] = useState<number | null>(null);
+  const [exerciseVariants, setExerciseVariants] = useState<{asSource: any[]; asTarget: any[]}>({asSource: [], asTarget: []});
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [newVariant, setNewVariant] = useState({ variantId: '', variantType: 'equipment', differenceNotes: '' });
 
   useEffect(() => {
     Promise.all([loadExercises(), loadMuscles()]);
@@ -107,6 +111,48 @@ export default function AdminExercises() {
       console.error('Failed to load exercises', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVariants = async (exerciseId: number) => {
+    setVariantLoading(true);
+    try {
+      const data = await adminApi.getExerciseVariants(exerciseId);
+      setExerciseVariants(data);
+    } catch (err) {
+      console.error('Failed to load variants', err);
+    } finally {
+      setVariantLoading(false);
+    }
+  };
+
+  const openVariantModal = (exerciseId: number) => {
+    setVariantModalExerciseId(exerciseId);
+    loadVariants(exerciseId);
+  };
+
+  const handleAddVariant = async () => {
+    if (!variantModalExerciseId || !newVariant.variantId) return;
+    try {
+      await adminApi.createExerciseVariant(variantModalExerciseId, {
+        variantId: parseInt(newVariant.variantId),
+        variantType: newVariant.variantType,
+        differenceNotes: newVariant.differenceNotes,
+      });
+      setNewVariant({ variantId: '', variantType: 'equipment', differenceNotes: '' });
+      await loadVariants(variantModalExerciseId);
+    } catch (err) {
+      console.error('Failed to add variant', err);
+    }
+  };
+
+  const handleDeleteVariant = async (variantRelationId: number) => {
+    if (!confirm('确定要删除此变体关系吗？')) return;
+    try {
+      await adminApi.deleteExerciseVariant(variantRelationId);
+      if (variantModalExerciseId) await loadVariants(variantModalExerciseId);
+    } catch (err) {
+      console.error('Failed to delete variant', err);
     }
   };
 
@@ -296,6 +342,11 @@ export default function AdminExercises() {
                         类型：{exercise.exerciseType === 'compound' ? '复合动作' : '孤立动作'}
                       </div>
                     )}
+                    <div className="flex justify-end mt-2">
+                      <Button size="sm" variant="outline" onClick={() => openVariantModal(exercise.id!)}>
+                        变体管理
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -474,6 +525,100 @@ export default function AdminExercises() {
             <Button variant="primary" onClick={handleSubmit}>
               {editingId ? '保存' : '创建'}
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 变体管理弹窗 */}
+      <Modal
+        isOpen={variantModalExerciseId !== null}
+        onClose={() => setVariantModalExerciseId(null)}
+        title="变体管理"
+        size="lg"
+      >
+        <div className="space-y-4">
+          {/* asSource: 该动作的变体 */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">该动作的变体</h4>
+            {variantLoading ? (
+              <div className="text-text-muted text-sm">加载中...</div>
+            ) : exerciseVariants.asSource.length === 0 ? (
+              <div className="text-text-muted text-sm">暂无变体</div>
+            ) : (
+              <div className="space-y-2">
+                {exerciseVariants.asSource.map((v) => (
+                  <div key={v.id} className="bg-primary-tertiary p-2 rounded text-sm flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{v.variant.name}</div>
+                      <div className="text-text-muted text-xs">
+                        {v.variantType === 'equipment' ? '器械' : v.variantType === 'difficulty' ? '难度' : '姿势'}：{v.differenceNotes || '无'}
+                      </div>
+                    </div>
+                    <Button size="sm" variant="danger" onClick={() => handleDeleteVariant(v.id)}>删除</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* asTarget: 以该动作为变体的动作 */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">以该动作为变体</h4>
+            {exerciseVariants.asTarget.length === 0 ? (
+              <div className="text-text-muted text-sm">暂无</div>
+            ) : (
+              <div className="space-y-2">
+                {exerciseVariants.asTarget.map((v) => (
+                  <div key={v.id} className="bg-primary-tertiary p-2 rounded text-sm flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{v.exercise.name}</div>
+                      <div className="text-text-muted text-xs">
+                        {v.variantType === 'equipment' ? '器械' : v.variantType === 'difficulty' ? '难度' : '姿势'}：{v.differenceNotes || '无'}
+                      </div>
+                    </div>
+                    <Button size="sm" variant="danger" onClick={() => handleDeleteVariant(v.id)}>删除</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 添加新变体 */}
+          <div className="border-t border-border pt-4">
+            <h4 className="text-sm font-medium mb-2">添加变体关系</h4>
+            <div className="space-y-2">
+              <select
+                value={newVariant.variantId}
+                onChange={(e) => setNewVariant({ ...newVariant, variantId: e.target.value })}
+                className="w-full bg-primary-tertiary border border-border px-3 py-2"
+              >
+                <option value="">选择变体动作</option>
+                {exercises
+                  .filter((ex) => ex.id !== variantModalExerciseId)
+                  .map((ex) => (
+                    <option key={ex.id} value={ex.id}>{ex.name}</option>
+                  ))}
+              </select>
+              <select
+                value={newVariant.variantType}
+                onChange={(e) => setNewVariant({ ...newVariant, variantType: e.target.value })}
+                className="w-full bg-primary-tertiary border border-border px-3 py-2"
+              >
+                <option value="equipment">器械变体</option>
+                <option value="difficulty">难度变体</option>
+                <option value="posture">姿势变体</option>
+              </select>
+              <textarea
+                value={newVariant.differenceNotes}
+                onChange={(e) => setNewVariant({ ...newVariant, differenceNotes: e.target.value })}
+                placeholder="差异说明（如：重量需下调20%）"
+                rows={2}
+                className="w-full bg-primary-tertiary border border-border px-3 py-2 text-text-primary"
+              />
+              <Button size="sm" variant="primary" onClick={handleAddVariant} disabled={!newVariant.variantId}>
+                添加
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>
