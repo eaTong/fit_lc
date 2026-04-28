@@ -1,7 +1,11 @@
+import type { Measurement } from '../types';
+
 interface MeasurementCardProps {
-  bodyPart: string;
-  label: string;
-  value: number | null;
+  measurement?: Measurement;
+  onDelete?: (id: number) => void;
+  bodyPart?: string;
+  label?: string;
+  value?: number | null;
   date?: string;
   trend?: 'up' | 'down' | 'flat';
   onClick?: () => void;
@@ -19,20 +23,33 @@ const trendIcons = {
   flat: '—',
 };
 
-export default function MeasurementCard({ bodyPart, label, value, date, trend, onClick }: MeasurementCardProps) {
+export default function MeasurementCard({ label, value, date, trend, onClick, onDelete, measurement }: MeasurementCardProps) {
+  // If measurement is provided, derive label and value from its first item (History page)
+  const displayLabel = label ?? (measurement?.items[0] ? measurement.items[0].bodyPart : '');
+  const displayValue = value ?? measurement?.items[0]?.value ?? null;
+  const displayDate = date ?? measurement?.date;
+
+  const handleClick = () => {
+    if (onDelete && measurement) {
+      onDelete(measurement.id);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
-      className={`flex justify-between items-center py-3 px-4 border-b border-border cursor-pointer hover:bg-primary-tertiary transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={handleClick}
+      className="flex justify-between items-center py-3 px-4 border-b border-border cursor-pointer hover:bg-primary-tertiary transition-colors"
     >
       <div>
-        <span className="text-text-primary">{label}</span>
-        {date && <span className="text-text-muted text-xs ml-2">{date}</span>}
+        <span className="text-text-primary">{displayLabel}</span>
+        {displayDate && <span className="text-text-muted text-xs ml-2">{displayDate}</span>}
       </div>
       <div className="flex items-center gap-2">
-        {value !== null ? (
+        {displayValue !== null ? (
           <>
-            <span className="text-text-primary font-heading">{value}</span>
+            <span className="text-text-primary font-heading">{displayValue}</span>
             <span className="text-text-muted text-sm">cm</span>
             {trend && (
               <span className={`text-lg ${trendColors[trend]}`}>{trendIcons[trend]}</span>

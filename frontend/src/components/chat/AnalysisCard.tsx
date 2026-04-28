@@ -8,7 +8,7 @@ interface AnalysisCardProps {
   suggestions: string[];
 }
 
-export default function AnalysisCard({ completionRate, completed, skipped, pending, suggestions }: AnalysisCardProps) {
+export default function AnalysisCard({ completionRate, completed, skipped, suggestions }: AnalysisCardProps) {
   return (
     <Card variant="accent" className="mt-2">
       <p className="text-text-secondary text-sm mb-2">计划执行分析</p>

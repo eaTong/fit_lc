@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/admin';
-import { Muscle, ExerciseMuscle, SuggestedMuscle } from '../../types';
+import { Muscle, SuggestedMuscle } from '../../types';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
@@ -173,9 +173,8 @@ export default function AdminExercises() {
 
     // 构建肌肉摘要发送给 AI
     const muscleSummary = allMuscles.map(m => ({
-      id: m.id,
       name: m.name,
-      group: m.group,
+      role: 'synergist' as const,
     }));
 
     setAiLoading(true);

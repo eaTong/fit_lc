@@ -1,5 +1,22 @@
 import client from './client';
-import { Exercise, Muscle, SuggestedMuscle } from '../types';
+import { Muscle, SuggestedMuscle } from '../types';
+
+export interface ExerciseFormData {
+  id?: number;
+  name: string;
+  category: string;
+  equipment: string;
+  difficulty: string;
+  description: string;
+  steps: string;
+  safetyNotes: string;
+  commonMistakes: string;
+  adjustmentNotes: string;
+  exerciseType: string;
+  variantType: string;
+  status: string;
+  muscles?: { muscleId: number; role: string }[];
+}
 
 export const adminApi = {
   async getExercises() {
@@ -7,12 +24,12 @@ export const adminApi = {
     return data;
   },
 
-  async createExercise(exercise: Exercise) {
+  async createExercise(exercise: ExerciseFormData) {
     const { data } = await client.post('/admin/exercises', exercise);
     return data;
   },
 
-  async updateExercise(id: number, exercise: Partial<Exercise>) {
+  async updateExercise(id: number, exercise: ExerciseFormData) {
     const { data } = await client.put(`/admin/exercises/${id}`, exercise);
     return data;
   },
