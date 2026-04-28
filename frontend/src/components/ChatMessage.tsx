@@ -17,6 +17,7 @@ function canUndo(type?: string): boolean {
 
 export default function ChatMessage({ message, onUndo, isRevoked = false }: ChatMessageProps) {
   const isUser = message.role === 'user';
+  const isCoach = message.isFromCoach && message.role === 'assistant';
   const [showUndo, setShowUndo] = useState(false);
   const isSaved = message.savedData || message.content.includes('已保存') || message.content.includes('已记录') || message.content.includes('✅');
 
@@ -48,11 +49,21 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
         className={`max-w-[70%] px-4 py-3 relative group ${
           isUser
             ? `bg-primary-tertiary text-text-primary border-2 border-border ${isRevoked ? 'opacity-50' : ''}`
-            : 'bg-transparent text-text-primary'
+            : isCoach
+              ? 'bg-gradient-to-r from-accent-orange/10 to-accent-red/10 border-2 border-accent-orange/50 rounded-lg'
+              : 'bg-transparent text-text-primary'
         }`}
         onMouseEnter={() => isUser && isSaved && !isRevoked && setShowUndo(true)}
         onMouseLeave={() => setShowUndo(false)}
       >
+        {isCoach && (
+          <div className="text-xs text-accent-orange mb-1 flex items-center gap-1">
+            <span>小Fit</span>
+            {message.coachMessageType === 'achievement' && <span>🏆</span>}
+            {message.coachMessageType === 'reminder' && <span>⏰</span>}
+            {message.coachMessageType === 'encouragement' && <span>💪</span>}
+          </div>
+        )}
         <p className={`whitespace-pre-wrap ${isRevoked ? 'text-slate-400 line-through' : ''}`}>
           {message.content}
         </p>

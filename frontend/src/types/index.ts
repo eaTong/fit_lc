@@ -147,6 +147,8 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   savedData?: SavedData;
+  isFromCoach?: boolean;
+  coachMessageType?: 'reminder' | 'achievement' | 'encouragement' | 'checkin';
 }
 
 // 肌肉
