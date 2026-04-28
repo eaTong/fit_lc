@@ -75,3 +75,23 @@ export const recordsApi = {
     return data;
   },
 };
+
+export const coachApi = {
+  getConfig: async (): Promise<{
+    enabled: boolean;
+    reminderTime: string | null;
+    maxDailyMessages: number;
+  }> => {
+    const { data } = await client.get('/users/coach-config');
+    return data.data;
+  },
+
+  updateConfig: async (config: {
+    enabled?: boolean;
+    reminderTime?: string;
+    maxDailyMessages?: number;
+  }) => {
+    const { data } = await client.put('/users/coach-config', config);
+    return data.data;
+  }
+};
