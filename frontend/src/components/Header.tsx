@@ -8,6 +8,7 @@ export default function Header() {
   const isAdmin = user?.roles?.includes('admin');
 
   const navItems = [
+    { path: '/dashboard', label: '看板' },
     { path: '/chat', label: '对话' },
     { path: '/history', label: '历史' },
     { path: '/trends', label: '趋势' },

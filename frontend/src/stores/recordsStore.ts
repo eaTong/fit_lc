@@ -5,6 +5,8 @@ import type { Workout, Measurement } from '../types';
 
 interface RecordsState {
   workouts: Workout[];
+  recentWorkouts: Workout[];
+  latestMeasurement: Measurement | null;
   measurements: Measurement[];
   isLoading: boolean;
   error: string | null;
@@ -16,6 +18,8 @@ interface RecordsState {
 
 export const useRecordsStore = create<RecordsState>((set) => ({
   workouts: [],
+  recentWorkouts: [],
+  latestMeasurement: null,
   measurements: [],
   isLoading: false,
   error: null,
@@ -24,7 +28,8 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { workouts } = await recordsApi.getWorkouts(start, end);
-      set({ workouts: transformWorkouts(workouts), isLoading: false });
+      const transformed = transformWorkouts(workouts);
+      set({ workouts: transformed, recentWorkouts: transformed.slice(0, 5), isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }
@@ -34,7 +39,8 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { measurements } = await recordsApi.getMeasurements(start, end);
-      set({ measurements: transformMeasurements(measurements), isLoading: false });
+      const transformed = transformMeasurements(measurements);
+      set({ measurements: transformed, latestMeasurement: transformed[0] || null, isLoading: false });
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }

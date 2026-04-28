@@ -19,6 +19,7 @@ import Exercises from './pages/Exercises';
 import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
+import Dashboard from './pages/Dashboard';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -100,6 +101,7 @@ function App() {
               <Route path="/measurements" element={<Measurements />} />
               <Route path="/admin/exercises" element={<AdminRoute component={<AdminExercises />} />} />
               <Route path="/admin/muscles" element={<AdminRoute component={<AdminMuscles />} />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/" element={<Navigate to="/chat" />} />
             </Route>
           </Routes>
