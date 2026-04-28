@@ -28,8 +28,20 @@ fit_lc/
 │   ├── prisma/
 │   │   └── schema.prisma      # 数据库模型定义
 │   └── scripts/               # 初始化脚本和 seed 数据
-└── frontend/                 # React 应用（规划中）
+└── frontend/src/             # React 应用
 ```
+
+## 文档结构
+
+- `docs/PRD.md` — **正式版 PRD**（已实现的功能）
+- `docs/PRD-planning.md` — **规划版 PRD**（全部需求路线图，包括未实现的）
+- `docs/requirements-roadmap.md` — 功能优先级和依赖路线图
+- `docs/superpowers/plans/` — 各功能的详细实施计划
+
+**维护规则：**
+- 功能完成并测试通过后，同步到 `docs/PRD.md`
+- 所有规划中的需求记录在 `docs/PRD-planning.md`
+- 功能实施前创建计划文档于 `docs/superpowers/plans/`
 
 ## 事务一致性要求
 
@@ -64,22 +76,22 @@ Prisma schema 定义于 `backend/prisma/schema.prisma`：
 ## 常用命令
 
 ```bash
+# 后端
 cd backend
-
 npm run dev              # 开发模式（tsx watch）
 npm run build            # 编译 TypeScript
 npm start                # 运行生产版本
-
 npm test                 # 运行所有测试
 npm run test:unit        # 运行单元测试
-npm run test:chat         # 测试 Chat Agent
-npm run test:chat:single  # 单轮对话测试
-npm run test:chat:e2e     # 端到端对话测试
-
 npm run init-db          # 初始化 MySQL 数据库（运行 seed 脚本）
-```
 
-**Seed 脚本位置：** `backend/scripts/seed-*.sql`
+# 前端
+cd frontend
+npm run dev              # 开发模式（Vite）
+npm run build            # 构建生产版本（先运行 TypeScript 检查）
+npm test                 # 运行测试（vitest）
+npm test -- --run        # 单次运行所有测试（CI 模式）
+```
 
 ## 前端设计要求
 
@@ -90,7 +102,8 @@ React 18 + Vite + TypeScript + TailwindCSS + Zustand + Axios + React Router v6 +
 使用 Zustand 管理状态，主要 Store：
 - `authStore` - 认证状态（token、用户信息、角色）
 - `chatStore` - 对话状态（消息列表）
-- `recordsStore` - 记录状态（训练/围度历史）
+- `recordsStore` - 记录状态（训练/围度历史、最近训练、最后围度）
+- `planStore` - 计划状态
 
 ### UI 风格（暗色主题）
 
@@ -114,6 +127,7 @@ React 18 + Vite + TypeScript + TailwindCSS + Zustand + Axios + React Router v6 +
 ### 页面路由
 | 路径 | 页面 | 权限 |
 |------|------|------|
+| `/dashboard` | 数据看板 | 登录用户 |
 | `/login` | 登录 | 公开 |
 | `/register` | 注册 | 公开 |
 | `/chat` | AI 对话 | 登录用户 |
@@ -125,6 +139,6 @@ React 18 + Vite + TypeScript + TailwindCSS + Zustand + Axios + React Router v6 +
 | `/plans` | 健身计划 | 登录用户 |
 | `/plans/:id/execute` | 计划执行 | 登录用户 |
 | `/admin/exercises` | 动作库管理 | admin |
-| `/admin/muscles` | 肌肉库管理 | admin |
+| `/admin/muscles` | 肌肉库维护 | admin |
 
 前端源码位于 `frontend/src/`，使用 `ErrorBoundary` 处理未捕获异常。
