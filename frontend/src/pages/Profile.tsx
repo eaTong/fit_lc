@@ -12,10 +12,11 @@ const tabs = [
   { id: 'profile', label: '个人信息' },
   { id: 'body', label: '身体数据' },
   { id: 'security', label: '账号安全' },
+  { id: 'coach', label: 'AI 私教' },
 ];
 
 export default function Profile() {
-  const { user, logout } = useAuthStore();
+  const { logout, coachConfig, fetchCoachConfig, updateCoachConfig } = useAuthStore();
   const [activeTab, setActiveTab] = useState('profile');
   const [profile, setProfile] = useState<any>(null);
   const [nickname, setNickname] = useState('');
@@ -29,6 +30,7 @@ export default function Profile() {
   useEffect(() => {
     loadProfile();
     if (activeTab === 'body') loadMetrics();
+    if (activeTab === 'coach') loadCoachConfig();
   }, [activeTab]);
 
   const loadProfile = async () => {
@@ -59,6 +61,10 @@ export default function Profile() {
     await userApi.changePassword(oldPassword, newPassword);
     setOldPassword('');
     setNewPassword('');
+  };
+
+  const loadCoachConfig = async () => {
+    await fetchCoachConfig();
   };
 
   return (
@@ -113,6 +119,55 @@ export default function Profile() {
             <Card variant="default">
               <Button variant="danger" onClick={logout}>退出登录</Button>
             </Card>
+          </div>
+        )}
+
+        {activeTab === 'coach' && (
+          <div className="space-y-4 max-w-md">
+            <Card variant="default">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-text-primary font-heading">AI 主动提醒</h3>
+                  <p className="text-text-secondary text-sm">开启后，小Fit将在适当时候主动提醒你</p>
+                </div>
+                <div
+                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors ${
+                    coachConfig?.enabled ? 'bg-accent-orange' : 'bg-border'
+                  }`}
+                  onClick={async () => {
+                    if (!coachConfig) return;
+                    await updateCoachConfig({ enabled: !coachConfig.enabled });
+                  }}
+                >
+                  <div
+                    className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      coachConfig?.enabled ? 'translate-x-6' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {coachConfig?.enabled && (
+              <Card variant="default">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-text-primary text-sm block mb-1">每日提醒时间</label>
+                    <input
+                      type="time"
+                      value={coachConfig?.reminderTime || '09:00'}
+                      onChange={async (e) => {
+                        await updateCoachConfig({ reminderTime: e.target.value });
+                      }}
+                      className="w-full px-4 py-2 bg-primary-secondary border-2 border-border rounded text-text-primary"
+                    />
+                  </div>
+                  <p className="text-text-secondary text-xs">
+                    每天最多 {coachConfig?.maxDailyMessages} 条主动消息
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
         )}
       </div>

@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { authApi } from '../api/auth';
+import { coachApi } from '../api/records';
 import type { User } from '../types';
+
+interface CoachConfig {
+  enabled: boolean;
+  reminderTime: string | null;
+  maxDailyMessages: number;
+}
 
 interface AuthState {
   token: string | null;
@@ -8,10 +15,13 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  coachConfig: CoachConfig | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  fetchCoachConfig: () => Promise<void>;
+  updateCoachConfig: (config: Partial<CoachConfig>) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -20,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!localStorage.getItem('token'),
   isLoading: false,
   error: null,
+  coachConfig: null,
 
   login: async (email, password) => {
     set({ isLoading: true, error: null });
@@ -54,7 +65,17 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('token');
-    set({ token: null, user: null, isAuthenticated: false });
+    set({ token: null, user: null, isAuthenticated: false, coachConfig: null });
+  },
+
+  fetchCoachConfig: async () => {
+    const config = await coachApi.getConfig();
+    set({ coachConfig: config });
+  },
+
+  updateCoachConfig: async (config: Partial<CoachConfig>) => {
+    const updated = await coachApi.updateConfig(config as { enabled?: boolean; reminderTime?: string; maxDailyMessages?: number });
+    set({ coachConfig: updated });
   },
 
   checkAuth: async () => {
