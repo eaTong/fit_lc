@@ -46,9 +46,36 @@ export interface Measurement {
 }
 
 // 消息
+// 工具类型
+export type ToolType = 'workout' | 'measurement' | 'plan' | 'adjustment' | 'query' | 'analysis';
+
+// 查询型工具 meta
+export interface QueryMeta {
+  type: 'query';
+  queryType: 'workout' | 'measurement';
+  summary: {
+    totalWorkouts?: number;
+    totalVolume?: number;
+    totalDuration?: number;
+    changes?: Record<string, number>;
+  };
+}
+
+// 分析型工具 meta
+export interface AnalysisMeta {
+  type: 'analysis';
+  completionRate: number;
+  completed: number;
+  skipped: number;
+  pending: number;
+  suggestions: string[];
+}
+
+// 修改 SavedData
 export interface SavedData {
-  type: 'workout' | 'measurement';
-  id: number;
+  type: ToolType;
+  id?: number;  // 仅保存型工具有 id
+  meta?: QueryMeta | AnalysisMeta;
 }
 
 // 计划
