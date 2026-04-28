@@ -17,7 +17,6 @@ export const exerciseRepository = {
       where,
       include: {
         muscles: { include: { muscle: true } },
-        parent: { select: { id: true, name: true } },
       },
       orderBy: { name: 'asc' }
     });
@@ -28,7 +27,6 @@ export const exerciseRepository = {
       where: { id },
       include: {
         muscles: { include: { muscle: true } },
-        parent: { select: { id: true, name: true } },
         variants: {
         select: {
           id: true,
@@ -128,12 +126,12 @@ export const exerciseRepository = {
   },
 
   async updateMuscles(exerciseId: number, muscles: { muscleId: number; role: string }[]) {
-    await prisma.exerciseMuscle.deleteMany({ where: { exerciseId } });
-    for (const m of muscles) {
-      await prisma.exerciseMuscle.create({
-        data: { exerciseId, muscleId: m.muscleId, role: m.role },
-      });
-    }
+    await prisma.$transaction(async (tx) => {
+      await tx.exerciseMuscle.deleteMany({ where: { exerciseId } });
+      for (const m of muscles) {
+        await tx.exerciseMuscle.create({ data: { exerciseId, muscleId: m.muscleId, role: m.role } });
+      }
+    });
   },
 
   async getMusclesByExerciseId(exerciseId: number) {
