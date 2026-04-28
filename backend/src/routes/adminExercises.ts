@@ -3,6 +3,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { exerciseRepository } from '../repositories/exerciseRepository';
+import { exerciseVariantRepository } from '../repositories/exerciseVariantRepository';
 import { exerciseAIService } from '../services/exerciseAIService';
 
 const router = Router();
@@ -128,6 +129,74 @@ router.post('/generate', async (req: Request, res: Response) => {
     res.json(details);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Validation schemas
+const variantRelationSchema = z.object({
+  variantId: z.number().min(1, '请选择变体动作'),
+  variantType: z.enum(['equipment', 'difficulty', 'posture']),
+  differenceNotes: z.string().optional(),
+});
+
+const updateVariantSchema = z.object({
+  variantType: z.enum(['equipment', 'difficulty', 'posture']).optional(),
+  differenceNotes: z.string().optional(),
+});
+
+// GET /api/admin/exercises/:id/variants - 获取某动作的所有变体关系
+router.get('/:id/variants', async (req: Request, res: Response) => {
+  try {
+    const exerciseId = parseInt(String(req.params.id));
+    const result = await exerciseVariantRepository.findByExerciseId(exerciseId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/exercises/:id/variants - 添加变体关系
+router.post('/:id/variants', async (req: Request, res: Response) => {
+  try {
+    const validationResult = variantRelationSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: 'Invalid data', details: validationResult.error.errors });
+    }
+    const exerciseId = parseInt(String(req.params.id));
+    const variant = await exerciseVariantRepository.create({
+      exerciseId,
+      ...validationResult.data,
+    });
+    res.json(variant);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// PUT /api/admin/exercises/variants/:id - 编辑变体关系 (:id = ExerciseVariant.id)
+router.put('/variants/:id', async (req: Request, res: Response) => {
+  try {
+    const validationResult = updateVariantSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: 'Invalid data', details: validationResult.error.errors });
+    }
+    const variant = await exerciseVariantRepository.update(
+      parseInt(String(req.params.id)),
+      validationResult.data
+    );
+    res.json(variant);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/exercises/variants/:id - 删除变体关系
+router.delete('/variants/:id', async (req: Request, res: Response) => {
+  try {
+    await exerciseVariantRepository.delete(parseInt(String(req.params.id)));
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 });
 
