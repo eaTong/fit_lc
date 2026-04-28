@@ -107,7 +107,8 @@ function shouldPair(exerciseA: ExerciseInfo, exerciseB: ExerciseInfo): boolean {
     const angleA = extractAngle(exerciseA.name);
     const angleB = extractAngle(exerciseB.name);
     // 器材相同但角度不同，可以配对
-    if (angleA && angleB && angleA !== angleB) {
+    // Fix: allow pairing if angles are different (including when only one has an angle)
+    if (angleA !== angleB) {
       return true;
     }
     // 其他情况器材相同不做配对
@@ -210,27 +211,11 @@ function parseAIResponse(text: string): {
 }
 
 // 生成反向差异说明
+// Simplified: use same notes for both directions since this is a one-time script
+// Human reviewers can edit the reverse notes in the generated SQL before importing
 function generateReverseNotes(notes: string, variantType: string): string {
-  if (!notes) return '';
-
-  // 简单的反向转换
-  const reversions: Record<string, string> = {
-    '换用哑铃进行': '换用杠铃进行',
-    '换用杠铃进行': '换用哑铃进行',
-    '改用绳索': '改用固定器械',
-    '改用固定器械': '改用绳索',
-    '上斜角度': '调整回平板',
-    '下斜角度': '调整回平板',
-    '高位': '调整到低位',
-    '低位': '调整到高位',
-  };
-
-  for (const [from, to] of Object.entries(reversions)) {
-    if (notes.includes(from)) {
-      return notes.replace(from, to);
-    }
-  }
-
+  // For a one-time analysis script, just use the same notes both ways
+  // Human reviewer can edit reverse notes in the generated SQL
   return notes;
 }
 
