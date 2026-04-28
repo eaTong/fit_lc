@@ -44,7 +44,7 @@ export const adjustPlanTool = new DynamicStructuredTool({
       message += `调整内容：${adjustment}\n`;
       message += `你可以查看更新后的计划详情。`;
 
-      return message;
+      return `__SAVED_TYPE__:adjustment:${plan_id}:{"description":"${adjustment}"}__MESSAGE__${message}`;
     } catch (error) {
       throw new Error(`调整健身计划失败: ${error.message}`);
     }

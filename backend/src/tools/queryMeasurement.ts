@@ -21,7 +21,7 @@ export const queryMeasurementTool = new DynamicStructuredTool({
   func: async ({ userId, start_date, end_date, body_part }) => {
     try {
       const result = await queryService.queryMeasurements(userId, start_date, end_date, body_part);
-      return result;
+      return `__SAVED_TYPE__:query:measurement:${JSON.stringify({summary:{}})}__MESSAGE__${JSON.stringify(result)}`;
     } catch (error) {
       throw new Error(`查询围度记录失败: ${error.message}`);
     }

@@ -37,7 +37,7 @@ export const analyzeExecutionTool = new DynamicStructuredTool({
         message += `继续保持当前节奏！`;
       }
 
-      return message;
+      return `__SAVED_TYPE__:analysis:${JSON.stringify({completionRate: analysis.stats.completionRate, completed: analysis.stats.completed, skipped: analysis.stats.skipped, pending: analysis.stats.pending, suggestions: analysis.suggestions || []})}__MESSAGE__${message}`;
     } catch (error) {
       throw new Error(`分析计划执行失败: ${error.message}`);
     }

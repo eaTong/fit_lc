@@ -308,7 +308,7 @@ export const generatePlanTool = new DynamicStructuredTool({
 
       message += `\n你可以查看计划详情，或让我调整某些训练动作。`;
 
-      return `__PLAN_ID__:${planId}__${message}`;
+      return `__SAVED_TYPE__:plan:${planId}:{"name":"${user_profile.name || '健身计划'}"}__MESSAGE__${message}`;
     } catch (error) {
       throw new Error(`生成健身计划失败: ${error.message}`);
     }
