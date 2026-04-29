@@ -7,10 +7,10 @@
     "build:weapp": "taro build --type weapp"
   },
   "dependencies": {
-    "@tarojs/cli": "4.x",
-    "@tarojs/taro": "4.x",
-    "@tarojs/plugin-framework-react": "4.x",
-    "@tarojs/react": "4.x",
+    "@tarojs/cli": "4.0.5",
+    "@tarojs/taro": "4.0.5",
+    "@tarojs/plugin-framework-react": "4.0.5",
+    "@tarojs/react": "4.0.5",
     "react": "^18.0.0",
     "zustand": "^4.5.0",
     "axios": "^1.6.0",
