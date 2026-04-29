@@ -116,7 +116,6 @@ function App() {
             <Route element={<SettingsLayout />}>
               <Route path="/settings" element={<Settings />} />
               <Route path="/security" element={<Security />} />
-              <Route path="/badges" element={<Badges />} />
               <Route path="/calendar" element={<Calendar />} />
             </Route>
 
