@@ -1,14 +1,12 @@
 import { defineConfig } from '@tarojs/cli'
 
 export default defineConfig({
-  appId: 'your-appid',
-  date: '2026-04-29',
+  appId: process.env.TARO_APP_ID || 'your-appid',
   targets: ['weapp'],
   designWidth: 375,
   sourceRoot: 'src',
   outputRoot: 'dist',
   plugins: [],
   defineConstants: {},
-  framework: 'react',
-  compilationDate: new Date().toISOString()
+  framework: 'react'
 })
