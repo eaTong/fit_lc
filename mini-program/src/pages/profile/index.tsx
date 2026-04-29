@@ -3,6 +3,7 @@ import { View, Text, Image, Button, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { useAuthStore } from '../../store/auth';
+import { usePlanStore } from '../../store/plan';
 import { getStats } from '../../api/achievements';
 import { getPlans } from '../../api/plans';
 import type { Stats } from '../../api/achievements';
@@ -11,9 +12,8 @@ import './index.scss';
 
 export default function ProfilePage() {
   const { user, clearAuth } = useAuthStore();
+  const { plans, setPlans, setCurrentPlan } = usePlanStore();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     loadData();
@@ -32,6 +32,7 @@ export default function ProfilePage() {
       if (activePlan) setCurrentPlan(activePlan);
     } catch (err) {
       console.error('Failed to load profile data:', err);
+      Taro.showToast({ title: '加载失败', icon: 'none' });
     }
   };
 
@@ -54,6 +55,7 @@ export default function ProfilePage() {
   };
 
   const activePlan = plans.find((p) => p.status === 'active');
+  const progress = activePlan ? Math.round((activePlan.exercises.length / 10) * 100) : 0;
 
   return (
     <ScrollView className="profile-page" scrollY>
@@ -84,7 +86,7 @@ export default function ProfilePage() {
             <View className="plan-info">
               <Text className="plan-name">{activePlan.name}</Text>
               <View className="progress-bar">
-                <View className="progress-fill" style={{ width: '30%' }} />
+                <View className="progress-fill" style={{ width: `${progress}%` }} />
               </View>
             </View>
             <Button className="start-btn">开始执行</Button>
