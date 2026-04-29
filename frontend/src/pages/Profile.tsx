@@ -23,26 +23,34 @@ export default function Profile() {
       <h1 className="font-heading text-3xl font-bold mb-6">我的</h1>
 
       {/* 快速入口 */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <Link
           to="/settings"
-          className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
         >
           <span className="text-2xl">⚙️</span>
-          <div>
-            <div className="font-heading text-text-primary">设置</div>
-            <div className="text-sm text-text-secondary">个人信息与偏好</div>
+          <div className="text-center">
+            <div className="text-text-primary text-sm">设置</div>
+          </div>
+        </Link>
+
+        <Link
+          to="/security"
+          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+        >
+          <span className="text-2xl">🔐</span>
+          <div className="text-center">
+            <div className="text-text-primary text-sm">安全</div>
           </div>
         </Link>
 
         <Link
           to="/badges"
-          className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
         >
           <span className="text-2xl">🏆</span>
-          <div>
-            <div className="font-heading text-text-primary">我的徽章</div>
-            <div className="text-sm text-text-secondary">查看已获得的成就</div>
+          <div className="text-center">
+            <div className="text-text-primary text-sm">徽章</div>
           </div>
         </Link>
       </div>
