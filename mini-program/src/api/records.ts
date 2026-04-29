@@ -41,30 +41,30 @@ export async function getMeasurements() {
   });
 }
 
-export async function deleteWorkout(id: number) {
-  return request({
-    url: `/records/workout/${id}`,
+export async function deleteWorkout(id: number): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>({
+    url: `/records/workout/${String(id)}`,
     method: 'DELETE'
   });
 }
 
-export async function deleteMeasurement(id: number) {
-  return request({
-    url: `/records/measurement/${id}`,
+export async function deleteMeasurement(id: number): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>({
+    url: `/records/measurement/${String(id)}`,
     method: 'DELETE'
   });
 }
 
-export async function restoreWorkout(id: number) {
-  return request({
-    url: `/records/workout/${id}/restore`,
+export async function restoreWorkout(id: number): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>({
+    url: `/records/workout/${String(id)}/restore`,
     method: 'POST'
   });
 }
 
-export async function restoreMeasurement(id: number) {
-  return request({
-    url: `/records/measurement/${id}/restore`,
+export async function restoreMeasurement(id: number): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>({
+    url: `/records/measurement/${String(id)}/restore`,
     method: 'POST'
   });
 }

@@ -20,6 +20,6 @@ export async function getMuscles() {
 
 export async function getMuscleDetail(id: number) {
   return request<Muscle>({
-    url: `/muscles/${id}`
+    url: `/muscles/${String(id)}`
   });
 }
