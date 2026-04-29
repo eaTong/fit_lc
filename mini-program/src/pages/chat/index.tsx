@@ -12,32 +12,41 @@ import LoadingDots from '../../components/LoadingDots';
 import Celebration from '../../components/Celebration';
 import './index.scss';
 
+function generateMessageId(): number {
+  return Date.now() + Math.floor(Math.random() * 1000000);
+}
+
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState('');
-  const scrollRef = useRef<any>(null);
-  const { messages, setMessages, addMessage, setLoading, isLoading } = useChatStore();
+  const scrollRef = useRef<{ scrollTop?: number }>(null);
+  const { messages, setMessages, addMessage, updateLastMessage, setLoading, isLoading } = useChatStore();
   const { isLoggedIn, setAuth } = useAuthStore();
   const { addWorkout, addMeasurement } = useRecordsStore();
   const [showCelebration, setShowCelebration] = useState(false);
+  const [loginFailed, setLoginFailed] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
-      handleWechatLogin();
+      if (!loginFailed) {
+        handleWechatLogin();
+      }
     } else {
       loadMessages();
       checkFirstWorkout();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, loginFailed]);
 
   const handleWechatLogin = async () => {
     try {
       const loginRes = await wx.login();
       const result = await wechatLogin(loginRes.code);
       setAuth(result.token, result.user);
+      setLoginFailed(false);
       loadMessages();
     } catch (err) {
       console.error('Login failed:', err);
-      wx.showToast({ title: '登录失败', icon: 'none' });
+      setLoginFailed(true);
+      wx.showToast({ title: '登录失败，点击重试', icon: 'none' });
     }
   };
 
@@ -67,8 +76,9 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    const tempId = generateMessageId();
     const userMessage = {
-      id: Date.now(),
+      id: tempId,
       role: 'user' as const,
       content: inputValue,
       createdAt: new Date().toISOString()
@@ -80,8 +90,9 @@ export default function ChatPage() {
 
     try {
       // Add placeholder for AI response
+      const placeholderId = generateMessageId();
       addMessage({
-        id: Date.now() + 1,
+        id: placeholderId,
         role: 'assistant',
         content: '正在思考...',
         createdAt: new Date().toISOString()
@@ -91,7 +102,7 @@ export default function ChatPage() {
       const finalMessage = result.message;
 
       // Update the "thinking" message with actual response
-      useChatStore.getState().updateLastMessage(finalMessage);
+      updateLastMessage(finalMessage);
 
       // If saved data came back, add to records
       if (finalMessage.savedData) {
@@ -102,8 +113,8 @@ export default function ChatPage() {
         }
       }
     } catch (err) {
-      useChatStore.getState().updateLastMessage({
-        id: Date.now(),
+      updateLastMessage({
+        id: generateMessageId(),
         role: 'assistant',
         content: '抱歉，服务出错了，请稍后重试。',
         createdAt: new Date().toISOString()
@@ -111,6 +122,11 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetryLogin = () => {
+    setLoginFailed(false);
+    handleWechatLogin();
   };
 
   const handleUndo = async (messageId: number) => {
@@ -125,6 +141,20 @@ export default function ChatPage() {
       }
     });
   };
+
+  if (loginFailed) {
+    return (
+      <View className="chat-page login-failed">
+        <View className="login-error">
+          <Text className="error-icon">⚠️</Text>
+          <Text className="error-text">登录失败</Text>
+          <Button className="retry-btn" onClick={handleRetryLogin}>
+            点击重试
+          </Button>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="chat-page">
@@ -155,7 +185,7 @@ export default function ChatPage() {
           placeholder="描述你的训练或围度..."
           placeholderClass="input-placeholder"
           value={inputValue}
-          onInput={(e) => setInputValue(e.detail.value)}
+          onInput={(e: { detail: { value: string } }) => setInputValue(e.detail.value)}
           onConfirm={handleSend}
         />
         <Button className="send-btn" onClick={handleSend} disabled={isLoading}>
