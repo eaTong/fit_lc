@@ -13,7 +13,7 @@ describe('BottomTabBar', () => {
   };
 
   it('renders all 5 tabs', () => {
-    renderWithRouter('/dashboard');
+    renderWithRouter('/chat');
 
     expect(screen.getByText('首页')).toBeTruthy();
     expect(screen.getByText('数据')).toBeTruthy();
@@ -23,7 +23,7 @@ describe('BottomTabBar', () => {
   });
 
   it('renders all 5 icons', () => {
-    renderWithRouter('/dashboard');
+    renderWithRouter('/chat');
 
     expect(screen.getByText('🏠')).toBeTruthy();
     expect(screen.getByText('📊')).toBeTruthy();
@@ -33,21 +33,21 @@ describe('BottomTabBar', () => {
   });
 
   it('has correct links for each tab', () => {
-    renderWithRouter('/dashboard');
+    renderWithRouter('/chat');
 
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(5);
 
     const hrefs = links.map(link => link.getAttribute('href'));
-    expect(hrefs).toContain('/dashboard');
+    expect(hrefs).toContain('/chat');
     expect(hrefs).toContain('/history');
     expect(hrefs).toContain('/plans');
     expect(hrefs).toContain('/muscles');
     expect(hrefs).toContain('/profile');
   });
 
-  it('highlights 首页 tab on /dashboard', () => {
-    renderWithRouter('/dashboard');
+  it('highlights 首页 tab on /chat', () => {
+    renderWithRouter('/chat');
 
     const homeTab = screen.getByText('首页').closest('a');
     expect(homeTab?.className).toContain('text-accent-orange');
@@ -110,17 +110,17 @@ describe('BottomTabBar', () => {
   });
 
   it('inactive tabs have text-text-secondary class', () => {
-    renderWithRouter('/dashboard');
-
-    const dataTab = screen.getByText('数据').closest('a');
-    expect(dataTab?.className).toContain('text-text-secondary');
+    renderWithRouter('/chat');
 
     const plansTab = screen.getByText('计划').closest('a');
     expect(plansTab?.className).toContain('text-text-secondary');
+
+    const profileTab = screen.getByText('我的').closest('a');
+    expect(profileTab?.className).toContain('text-text-secondary');
   });
 
   it('is fixed at bottom', () => {
-    renderWithRouter('/dashboard');
+    renderWithRouter('/chat');
 
     const nav = screen.getByRole('navigation');
     expect(nav.className).toContain('fixed');
