@@ -1,0 +1,192 @@
+import { useEffect, useState } from 'react';
+import { useRecordsStore } from '../../stores/recordsStore';
+import { recordsApi, type WeeklyStats, type ChangeItem } from '../../api/records';
+import { achievementApi, type MuscleGroupVolume } from '../../api/achievement';
+import TrendChart from '../TrendChart';
+import MuscleGroupChart from '../charts/MuscleGroupChart';
+import DateRangePicker from '../ui/DateRangePicker';
+import AIInsightSummary from '../AIInsightSummary';
+import type { Workout, Measurement } from '../../types';
+
+const tabs = [
+  { id: 'measurements', label: '围度趋势' },
+  { id: 'workouts', label: '训练统计' },
+  { id: 'muscles', label: '肌肉群' },
+];
+
+// Default to last 90 days
+const getDefaultDates = () => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 90);
+  return {
+    start: start.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+  };
+};
+
+function processMeasurementData(measurements: Measurement[]) {
+  const latest = measurements.slice(0, 30);
+  return latest.reverse().map((m) => ({
+    date: m.date,
+    chest: m.items.find((i) => i.bodyPart === 'chest')?.value,
+    waist: m.items.find((i) => i.bodyPart === 'waist')?.value,
+    hips: m.items.find((i) => i.bodyPart === 'hips')?.value,
+    biceps: m.items.find((i) => i.bodyPart === 'biceps')?.value,
+  }));
+}
+
+function processWorkoutData(workouts: Workout[]) {
+  const byWeek: Record<string, number> = {};
+  workouts.forEach((w) => {
+    const date = new Date(w.date);
+    const weekStart = new Date(date);
+    weekStart.setDate(date.getDate() - date.getDay());
+    const key = weekStart.toISOString().slice(0, 10);
+    byWeek[key] = (byWeek[key] || 0) + 1;
+  });
+
+  return Object.entries(byWeek)
+    .slice(-8)
+    .map(([date, count]) => ({ date, count }));
+}
+
+const defaultStats: WeeklyStats = {
+  weeklyWorkouts: 0,
+  monthlyWorkouts: 0,
+  totalVolume: 0,
+  workoutDays: 0,
+};
+
+export default function TrendsTab() {
+  const { workouts, measurements, fetchWorkouts, fetchMeasurements } = useRecordsStore();
+  const [activeTab, setActiveTab] = useState('measurements');
+  const [dateRange, setDateRange] = useState(getDefaultDates());
+  const [stats, setStats] = useState<WeeklyStats>(defaultStats);
+  const [changes, setChanges] = useState<ChangeItem[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [muscleGroups, setMuscleGroups] = useState<MuscleGroupVolume[]>([]);
+
+  useEffect(() => {
+    fetchWorkouts(dateRange.start, dateRange.end);
+    fetchMeasurements(dateRange.start, dateRange.end);
+  }, [fetchWorkouts, fetchMeasurements, dateRange]);
+
+  useEffect(() => {
+    if (activeTab === 'muscles') {
+      achievementApi.getMuscleVolume(dateRange.start, dateRange.end)
+        .then((data) => setMuscleGroups(data.muscleGroups))
+        .catch((err) => {
+          console.error('Failed to fetch muscle volume:', err);
+          setMuscleGroups([]);
+        });
+    }
+  }, [activeTab, dateRange]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await recordsApi.getStats();
+        setStats(data.weekly);
+        setChanges(data.changes);
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+        setStats(defaultStats);
+        setChanges([]);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const measurementChartData = processMeasurementData(measurements);
+  const workoutChartData = processWorkoutData(workouts);
+
+  const measurementLines = [
+    { dataKey: 'chest', color: '#FF4500', name: '胸围' },
+    { dataKey: 'waist', color: '#DC143C', name: '腰围' },
+    { dataKey: 'hips', color: '#3B82F6', name: '臀围' },
+    { dataKey: 'biceps', color: '#22C55E', name: '臂围' },
+  ];
+
+  return (
+    <div>
+      {/* AI 智能总结 */}
+      <div className="mb-6">
+        <AIInsightSummary stats={stats} changes={changes} isLoading={statsLoading} />
+      </div>
+
+      <DateRangePicker
+        startDate={dateRange.start}
+        endDate={dateRange.end}
+        onStartDateChange={(d) => setDateRange((r) => ({ ...r, start: d }))}
+        onEndDateChange={(d) => setDateRange((r) => ({ ...r, end: d }))}
+      />
+
+      {/* Tab切换 - 内部子tab */}
+      <div className="flex border-b-2 border-border mt-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 font-heading uppercase tracking-wide transition-colors
+              ${activeTab === tab.id
+                ? 'text-accent-orange border-b-2 border-accent-orange -mb-px'
+                : 'text-text-secondary hover:text-text-primary'
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6">
+        {activeTab === 'measurements' && (
+          <div>
+            <h2 className="font-heading text-xl mb-4 text-text-secondary">身体围度变化</h2>
+            {measurementChartData.length > 0 ? (
+              <TrendChart type="line" data={measurementChartData} lines={measurementLines} />
+            ) : (
+              <p className="text-text-secondary text-center">暂无围度数据</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'workouts' && (
+          <div>
+            <h2 className="font-heading text-xl mb-4 text-text-secondary">每周训练次数</h2>
+            {workoutChartData.length > 0 ? (
+              <TrendChart type="bar" data={workoutChartData} />
+            ) : (
+              <p className="text-text-secondary text-center">暂无训练数据</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'muscles' && (
+          <div>
+            <h2 className="font-heading text-xl mb-4 text-text-secondary">肌肉群训练量分布</h2>
+            {muscleGroups.length > 0 ? (
+              <>
+                <MuscleGroupChart data={muscleGroups} />
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {muscleGroups.map((mg) => (
+                    <div key={mg.group} className="bg-primary-secondary p-3 rounded">
+                      <div className="text-text-secondary text-xs">{mg.name}</div>
+                      <div className="text-accent-orange font-bold">{mg.percentage}%</div>
+                      <div className="text-text-muted text-xs">{mg.volume.toLocaleString()} kg</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-text-secondary text-center">暂无训练数据</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
