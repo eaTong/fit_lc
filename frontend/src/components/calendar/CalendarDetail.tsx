@@ -13,7 +13,8 @@ export default function CalendarDetail({
   measurements,
 }: CalendarDetailProps) {
   // Parse date to display "m月d日" format
-  const dateObj = new Date(date);
+  // Use T12:00:00 to avoid timezone issues when parsing YYYY-MM-DD format
+  const dateObj = new Date(date + 'T12:00:00');
   const month = dateObj.getMonth() + 1;
   const day = dateObj.getDate();
   const dateDisplay = `${month}月${day}日`;
@@ -23,7 +24,7 @@ export default function CalendarDetail({
   return (
     <div className="mt-4 border-t-2 border-border pt-4">
       <h3 className="text-center text-text-secondary mb-4">
-        ────── {dateDisplay} ───────────
+        -- -- -- {dateDisplay} -- -- -- -- -- --
       </h3>
 
       {!hasRecords && (
@@ -40,20 +41,20 @@ export default function CalendarDetail({
 
               if (e.duration !== undefined) {
                 return (
-                  <div key={e.id} className="text-text-secondary text-sm mb-1">
+                  <div key={`${workout.id}-${e.id}`} className="text-text-secondary text-sm mb-1">
                     🏃 {e.exerciseName} {e.duration}分钟
                   </div>
                 );
               }
               if (e.distance !== undefined) {
                 return (
-                  <div key={e.id} className="text-text-secondary text-sm mb-1">
+                  <div key={`${workout.id}-${e.id}`} className="text-text-secondary text-sm mb-1">
                     🏃 {e.exerciseName} {e.distance}公里
                   </div>
                 );
               }
               return (
-                <div key={e.id} className="text-text-secondary text-sm mb-1">
+                <div key={`${workout.id}-${e.id}`} className="text-text-secondary text-sm mb-1">
                   🏋️ {e.exerciseName} {totalSets}组×{totalReps}次
                 </div>
               );
