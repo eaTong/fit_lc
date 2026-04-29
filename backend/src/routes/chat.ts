@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { runAgent } from '../agents/fitnessAgent';
 import { userContextService } from '../services/userContextService';
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 
 const router = Router();
 
@@ -11,7 +11,8 @@ const chatRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
   message: { error: '请求过于频繁，请稍后再试' },
-  keyGenerator: (req) => req.user?.id ? String(req.user.id) : (req.ip || 'anonymous'),
+  keyGenerator: (req) => req.user?.id ? String(req.user.id) : (req.ip?.replace(/:/g, '_') || 'anonymous'),
+  validate: { ipKeyGenerator: false },
 });
 
 router.get('/messages', async (req: Request, res: Response) => {

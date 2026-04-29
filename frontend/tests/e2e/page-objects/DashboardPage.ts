@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class DashboardPage extends BasePage {
   constructor(page: Page) {
-    super(page, '/dashboard');
+    super(page, '/history?tab=dashboard');
   }
 
   async getStatCard(title: string): Promise<Locator> {

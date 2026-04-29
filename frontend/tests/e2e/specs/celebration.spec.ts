@@ -252,7 +252,7 @@ test.describe('Cumulative Stats on Dashboard', () => {
   });
 
   test('STATS-001: 累计训练次数显示 @stats @dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show cumulative stats card
     const statsCard = page.locator('[data-testid="cumulative-stats-card"]');
@@ -264,7 +264,7 @@ test.describe('Cumulative Stats on Dashboard', () => {
   });
 
   test('STATS-002: 累计训练量显示 @stats @dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show total volume
     const totalVolume = page.locator('[data-testid="total-volume"]');
@@ -272,7 +272,7 @@ test.describe('Cumulative Stats on Dashboard', () => {
   });
 
   test('STATS-003: 连续打卡天数显示 @stats @dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show streak days
     const streakDays = page.locator('[data-testid="streak-days"]');
@@ -280,7 +280,7 @@ test.describe('Cumulative Stats on Dashboard', () => {
   });
 
   test('STATS-004: 本周数据与累计数据分开显示 @stats @dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show cumulative stats card
     const cumulativeCard = page.locator('[data-testid="cumulative-stats-card"]');
