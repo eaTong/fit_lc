@@ -15,12 +15,13 @@ test.describe('History Records', () => {
   test('REC-001: 查看训练历史 @records', async ({ page }) => {
     await historyPage.open();
 
-    // Should have tabs for workout and measurement
-    await expect(page.getByText('训练')).toBeVisible();
-    await expect(page.getByText('围度')).toBeVisible();
+    // Should have tabs for workout, trends and measurement
+    await expect(page.getByText('训练历史')).toBeVisible();
+    await expect(page.getByText('趋势分析')).toBeVisible();
+    await expect(page.getByText('围度记录')).toBeVisible();
 
     // Workout tab should be active by default
-    await expect(page.getByRole('tab', { name: '训练' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: '训练历史' })).toHaveAttribute('aria-selected', 'true');
   });
 
   test('REC-002: 查看围度历史 @records', async ({ page }) => {

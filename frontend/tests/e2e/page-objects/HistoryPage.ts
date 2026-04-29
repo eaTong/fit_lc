@@ -2,8 +2,9 @@ import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class HistoryPage extends BasePage {
-  private workoutTab = this.page.getByRole('tab', { name: '训练' });
-  private measurementTab = this.page.getByRole('tab', { name: '围度' });
+  private workoutTab = this.page.getByRole('tab', { name: '训练历史' });
+  private trendsTab = this.page.getByRole('tab', { name: '趋势分析' });
+  private measurementTab = this.page.getByRole('tab', { name: '围度记录' });
 
   constructor(page: Page) {
     super(page, '/history');
@@ -11,6 +12,10 @@ export class HistoryPage extends BasePage {
 
   async switchToWorkoutTab(): Promise<void> {
     await this.workoutTab.click();
+  }
+
+  async switchToTrendsTab(): Promise<void> {
+    await this.trendsTab.click();
   }
 
   async switchToMeasurementTab(): Promise<void> {
@@ -28,7 +33,7 @@ export class HistoryPage extends BasePage {
 
 export class TrendsPage extends BasePage {
   constructor(page: Page) {
-    super(page, '/trends');
+    super(page, '/history?tab=trends');
   }
 
   async selectTimeRange(range: string): Promise<void> {
@@ -45,8 +50,14 @@ export class TrendsPage extends BasePage {
 }
 
 export class ProfilePage extends BasePage {
+  private securityTab = this.page.getByRole('tab', { name: '账号安全' });
+
   constructor(page: Page) {
     super(page, '/profile');
+  }
+
+  async switchToSecurityTab(): Promise<void> {
+    await this.securityTab.click();
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
