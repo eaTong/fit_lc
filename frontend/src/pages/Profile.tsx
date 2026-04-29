@@ -39,13 +39,11 @@ export default function Profile() {
 
   const saveProfile = async () => {
     await userApi.updateProfile({ nickname, height: height as number });
-  };
-
-  const addMetric = async () => {
-    if (!newWeight) return;
-    await userApi.addMetric(new Date().toISOString().split('T')[0], newWeight as number, newBodyFat as number || undefined);
-    setNewWeight('');
-    setNewBodyFat('');
+    if (newWeight) {
+      await userApi.addMetric(new Date().toISOString().split('T')[0], newWeight as number, newBodyFat as number || undefined);
+      setNewWeight('');
+      setNewBodyFat('');
+    }
   };
 
   const changePassword = async () => {
@@ -72,16 +70,9 @@ export default function Profile() {
               <div className="mt-4 space-y-4">
                 <Input label="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
                 <Input label="身高 (cm)" type="number" value={height} onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')} />
-                <Button variant="primary" onClick={saveProfile}>保存</Button>
-              </div>
-            </Card>
-
-            <Card variant="default">
-              <p className="text-text-secondary text-sm mb-2">记录身体数据</p>
-              <div className="space-y-2">
                 <Input label="体重 (kg)" type="number" value={newWeight} onChange={(e) => setNewWeight(e.target.value ? Number(e.target.value) : '')} />
                 <Input label="体脂率 (%)" type="number" value={newBodyFat} onChange={(e) => setNewBodyFat(e.target.value ? Number(e.target.value) : '')} />
-                <Button variant="primary" onClick={addMetric}>记录</Button>
+                <Button variant="primary" onClick={saveProfile}>保存</Button>
               </div>
             </Card>
 
