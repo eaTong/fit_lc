@@ -1,159 +1,96 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
-import { userApi } from '../api/user';
+import { useRecordsStore } from '../stores/recordsStore';
+import { useAchievementStore } from '../stores/achievementStore';
 import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import TabSwitcher from '../components/ui/TabSwitcher';
-import AvatarUpload from '../components/AvatarUpload';
-
-const tabs = [
-  { id: 'settings', label: '设置' },
-  { id: 'security', label: '账号安全' },
-  { id: 'coach', label: 'AI 私教' },
-];
+import StatCard from '../components/dashboard/StatCard';
 
 export default function Profile() {
-  const { logout, coachConfig, fetchCoachConfig, updateCoachConfig } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('settings');
-  const [profile, setProfile] = useState<any>(null);
-  const [nickname, setNickname] = useState('');
-  const [height, setHeight] = useState<number | ''>('');
-  const [newWeight, setNewWeight] = useState<number | ''>('');
-  const [newBodyFat, setNewBodyFat] = useState<number | ''>('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const { recentWorkouts, fetchWorkouts } = useRecordsStore();
+  const { stats: achievementStats } = useAchievementStore();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProfile();
-    if (activeTab === 'coach') loadCoachConfig();
-  }, [activeTab]);
+    fetchWorkouts();
+    setLoading(false);
+  }, [fetchWorkouts]);
 
-  const loadProfile = async () => {
-    const data = await userApi.getProfile();
-    setProfile(data);
-    setNickname(data?.nickname || '');
-    setHeight(data?.height || '');
-  };
-
-  const saveProfile = async () => {
-    await userApi.updateProfile({ nickname, height: height as number });
-    if (newWeight) {
-      await userApi.addMetric(new Date().toISOString().split('T')[0], newWeight as number, newBodyFat as number || undefined);
-      setNewWeight('');
-      setNewBodyFat('');
-    }
-  };
-
-  const changePassword = async () => {
-    await userApi.changePassword(oldPassword, newPassword);
-    setOldPassword('');
-    setNewPassword('');
-  };
-
-  const loadCoachConfig = async () => {
-    await fetchCoachConfig();
-  };
+  const totalWorkouts = achievementStats['total_workouts']?.value || 0;
+  const streakDays = achievementStats['streak_days']?.value || 0;
 
   return (
     <div className="px-6 py-4">
-      <h1 className="font-heading text-3xl font-bold mb-6">个人设置</h1>
+      <h1 className="font-heading text-3xl font-bold mb-6">我的</h1>
 
-      <TabSwitcher tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-
-      <div className="mt-6">
-        {activeTab === 'settings' && (
-          <div className="space-y-4 max-w-md">
-            <Card variant="default">
-              <AvatarUpload currentAvatar={profile?.avatar} onUpload={userApi.uploadAvatar} />
-              <div className="mt-4 space-y-4">
-                <Input label="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
-                <Input label="身高 (cm)" type="number" value={height} onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')} />
-                <Input label="体重 (kg)" type="number" value={newWeight} onChange={(e) => setNewWeight(e.target.value ? Number(e.target.value) : '')} />
-                <Input label="体脂率 (%)" type="number" value={newBodyFat} onChange={(e) => setNewBodyFat(e.target.value ? Number(e.target.value) : '')} />
-                <Button variant="primary" onClick={saveProfile}>保存</Button>
-              </div>
-            </Card>
-
-            <Link
-              to="/badges"
-              className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-            >
-              <span className="text-2xl">🏆</span>
-              <div>
-                <div className="font-heading text-text-primary">我的徽章</div>
-                <div className="text-sm text-text-secondary">查看已获得的成就</div>
-              </div>
-            </Link>
+      {/* 快速入口 */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+        >
+          <span className="text-2xl">⚙️</span>
+          <div>
+            <div className="font-heading text-text-primary">设置</div>
+            <div className="text-sm text-text-secondary">个人信息与偏好</div>
           </div>
-        )}
+        </Link>
 
-        {activeTab === 'security' && (
-          <div className="space-y-4 max-w-md">
-            <Card variant="default">
-              <p className="text-text-secondary text-sm mb-4">修改密码</p>
-              <div className="space-y-3">
-                <Input label="当前密码" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
-                <Input label="新密码" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                <Button variant="primary" onClick={changePassword}>修改密码</Button>
-              </div>
-            </Card>
-            <Card variant="default">
-              <Button variant="danger" onClick={logout}>退出登录</Button>
-            </Card>
+        <Link
+          to="/badges"
+          className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+        >
+          <span className="text-2xl">🏆</span>
+          <div>
+            <div className="font-heading text-text-primary">我的徽章</div>
+            <div className="text-sm text-text-secondary">查看已获得的成就</div>
           </div>
-        )}
-
-        {activeTab === 'coach' && (
-          <div className="space-y-4 max-w-md">
-            <Card variant="default">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-text-primary font-heading">AI 主动提醒</h3>
-                  <p className="text-text-secondary text-sm">开启后，小Fit将在适当时候主动提醒你</p>
-                </div>
-                <div
-                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors ${
-                    coachConfig?.enabled ? 'bg-accent-orange' : 'bg-border'
-                  }`}
-                  onClick={async () => {
-                    if (!coachConfig) return;
-                    await updateCoachConfig({ enabled: !coachConfig.enabled });
-                  }}
-                >
-                  <div
-                    className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      coachConfig?.enabled ? 'translate-x-6' : 'translate-x-0.5'
-                    } mt-0.5`}
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {coachConfig?.enabled && (
-              <Card variant="default">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-text-primary text-sm block mb-1">每日提醒时间</label>
-                    <input
-                      type="time"
-                      value={coachConfig?.reminderTime || '09:00'}
-                      onChange={async (e) => {
-                        await updateCoachConfig({ reminderTime: e.target.value });
-                      }}
-                      className="w-full px-4 py-2 bg-primary-secondary border-2 border-border rounded text-text-primary"
-                    />
-                  </div>
-                  <p className="text-text-secondary text-xs">
-                    每天最多 {coachConfig?.maxDailyMessages} 条主动消息
-                  </p>
-                </div>
-              </Card>
-            )}
-          </div>
-        )}
+        </Link>
       </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <StatCard title="累计训练" value={loading ? '—' : totalWorkouts} unit="次" icon="🔥" />
+        <StatCard title="连续打卡" value={loading ? '—' : streakDays} unit="天" icon="📅" />
+      </div>
+
+      {/* 最近训练 */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-heading text-lg font-semibold text-text-primary">最近训练</h2>
+          <Link
+            to="/history?tab=history"
+            className="text-accent-orange text-sm hover:text-accent-red transition-colors"
+          >
+            查看全部
+          </Link>
+        </div>
+        {recentWorkouts.length === 0 ? (
+          <p className="text-text-secondary text-center py-8">暂无训练记录</p>
+        ) : (
+          <>
+            {recentWorkouts.slice(0, 5).map((workout) => {
+              const firstExercise = workout.exercises?.[0];
+              const totalSets = firstExercise?.sets?.length || 0;
+              const totalReps = firstExercise?.sets?.reduce((sum, s) => sum + s.reps, 0) || 0;
+              return (
+                <div key={workout.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                  <div>
+                    <p className="text-text-primary">
+                      {firstExercise?.exerciseName || '训练'}
+                    </p>
+                    <p className="text-text-secondary text-sm">
+                      {new Date(workout.date).toLocaleDateString('zh-CN')}
+                    </p>
+                  </div>
+                  <div className="text-right text-text-secondary text-sm">
+                    {totalSets}组 × {totalReps}次
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </Card>
     </div>
   );
 }
