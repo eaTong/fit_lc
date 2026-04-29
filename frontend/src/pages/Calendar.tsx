@@ -6,9 +6,10 @@ import CalendarDetail from '../components/calendar/CalendarDetail';
 
 export default function Calendar() {
   const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
   const { workouts, measurements, fetchWorkouts, fetchMeasurements } = useRecordsStore();
   const navigate = useNavigate();
