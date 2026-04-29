@@ -1,0 +1,55 @@
+// mini-program/src/subpkg/knowledge/muscles/index.scss
+.muscle-detail {
+  height: 100vh;
+  background-color: $bg-primary;
+  padding: 24px;
+
+  &.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    Text {
+      color: $text-secondary;
+      font-size: 28px;
+    }
+  }
+
+  .header {
+    margin-bottom: 32px;
+
+    .name {
+      display: block;
+      font-size: 40px;
+      color: $text-primary;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .group {
+      font-size: 26px;
+      color: $accent-primary;
+    }
+  }
+
+  .section {
+    margin-bottom: 32px;
+
+    .section-title {
+      display: block;
+      font-size: 28px;
+      color: $accent-primary;
+      font-weight: bold;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid $border-color;
+    }
+
+    .content {
+      font-size: 28px;
+      color: $text-primary;
+      line-height: 1.8;
+    }
+  }
+}
