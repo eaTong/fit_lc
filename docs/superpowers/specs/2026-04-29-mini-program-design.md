@@ -49,6 +49,7 @@ FitLC 微信小程序是 AI 健身记录 SaaS 系统的移动端入口，为 nor
 | 记录 | pages/records/index |
 | 趋势 | pages/trends/index |
 | 动作库（Tab入口） | pages/exercises/index |
+| 计划（Tab入口） | pages/plans/index |
 | 我的 | pages/profile/index |
 | 设置 | pages/settings/index |
 | 徽章 | pages/badges/index |
@@ -59,7 +60,6 @@ FitLC 微信小程序是 AI 健身记录 SaaS 系统的移动端入口，为 nor
 | 页面 | 路径 |
 |------|------|
 | 动作详情 | pages/exercises/detail |
-| 肌肉库列表 | pages/muscles/index |
 | 肌肉详情 | pages/muscles/detail |
 | 计划执行 | pages/plans/execute |
 
@@ -356,7 +356,6 @@ Response: { token: string, user: User }
       "root": "subpkg/knowledge",
       "pages": [
         "pages/exercises/detail",
-        "pages/muscles/index",
         "pages/muscles/detail",
         "pages/plans/execute"
       ]
@@ -369,9 +368,8 @@ Response: { token: string, user: User }
 
 | 页面 | 从何处进入 |
 |------|-----------|
-| 动作详情 | 动作库列表点击 |
-| 肌肉库列表 | 动作库 Tab 切换 |
-| 肌肉详情 | 肌肉库列表点击 |
+| 动作详情 | 动作库 Tab → 动作列表点击 |
+| 肌肉详情 | 动作库 Tab → 肌肉库切换 → 肌肉点击 |
 | 计划执行 | 我的 Tab → 计划列表点击 |
 
 ---
