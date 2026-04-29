@@ -3,6 +3,9 @@ import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
 import { generateWorkoutFeedback } from '../services/coachFeedbackService';
+import { personalRecordService } from '../services/personalRecordService';
+import { achievementService } from '../services/achievementService';
+import { statsService } from '../services/statsService';
 
 export const saveWorkoutTool = new DynamicStructuredTool({
   name: "save_workout",
@@ -35,9 +38,50 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 生成 AI 即时反馈
       const feedback = await generateWorkoutFeedback(userId, result.id);
 
+      // 检查 PR 突破
+      const prResults = [];
+      for (const exercise of exercises) {
+        const prResult = await personalRecordService.checkAndUpdatePR(
+          userId,
+          exercise.name,
+          result.id,
+          {
+            weight: exercise.weight,
+            reps: exercise.reps,
+            duration: exercise.duration,
+            distance: exercise.distance
+          }
+        );
+        if (prResult.isNewPR) {
+          prResults.push(prResult);
+        }
+      }
+
+      // 更新累计统计
+      await statsService.updateAggregatedStats(userId);
+
+      // 检查徽章和里程碑
+      const achievements = await achievementService.checkBadges(userId, { type: 'workout' });
+      const milestones = achievements.length > 0 ? await achievementService.checkMilestones(userId) : [];
+
+      // 构建成就反馈消息
+      let achievementMsg = '';
+      if (prResults.length > 0) {
+        const prList = prResults.map(pr => `🏆 ${pr.exerciseName} ${pr.recordType}: ${pr.oldValue || 0}kg → ${pr.newValue}kg`).join('\n');
+        achievementMsg += `\n\n🔥 **个人纪录突破！**\n${prList}`;
+      }
+      if (achievements.length > 0) {
+        const badgeNames = achievements.map(b => `🎖️ ${b.name}`).join('、');
+        achievementMsg += `\n\n🎉 **获得徽章！** ${badgeNames}`;
+      }
+      if (milestones.length > 0) {
+        const milestoneNames = milestones.map(m => `⭐ ${m.name}`).join('、');
+        achievementMsg += `\n\n🎯 **里程碑达成！** ${milestoneNames}`;
+      }
+
       // 将反馈信息附加到返回消息
       const feedbackMsg = feedback.personalized_comment;
-      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}\n\n${feedbackMsg}`;
+      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}\n\n${feedbackMsg}${achievementMsg}`;
     } catch (error) {
       throw new Error(`保存训练记录失败: ${error.message}`);
     }

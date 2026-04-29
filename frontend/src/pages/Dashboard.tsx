@@ -2,10 +2,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecordsStore } from '../stores/recordsStore';
+import { useAchievementStore } from '../stores/achievementStore';
 import { recordsApi, type WeeklyStats } from '../api/records';
+import type { CumulativeStats } from '../api/achievement';
 import StatCard from '../components/dashboard/StatCard';
 import RecentWorkoutItem from '../components/dashboard/RecentWorkoutItem';
 import KeyMeasurementsPanel from '../components/dashboard/KeyMeasurementsPanel';
+import PRCard from '../components/dashboard/PRCard';
+import CumulativeStatsCard from '../components/dashboard/CumulativeStatsCard';
 import Card from '../components/ui/Card';
 
 const defaultStats: WeeklyStats = {
@@ -15,15 +19,27 @@ const defaultStats: WeeklyStats = {
   workoutDays: 0,
 };
 
+const defaultCumulative: CumulativeStats = {
+  totalWorkouts: 0,
+  totalVolume: 0,
+  streakDays: 0,
+  weeklyWorkouts: 0,
+  weeklyVolume: 0,
+};
+
 export default function Dashboard() {
   const { recentWorkouts, latestMeasurement, fetchWorkouts, fetchMeasurements, isLoading } = useRecordsStore();
+  const { personalRecords, stats: achievementStats, fetchPersonalRecords, fetchStats } = useAchievementStore();
   const [stats, setStats] = useState<WeeklyStats>(defaultStats);
+  const [cumulativeStats, setCumulativeStats] = useState<CumulativeStats>(defaultCumulative);
   const [loading, setLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
 
   useEffect(() => {
     fetchWorkouts();
     fetchMeasurements();
+    fetchPersonalRecords();
+    fetchStats();
 
     recordsApi
       .getStats()
@@ -33,7 +49,23 @@ export default function Dashboard() {
         setStatsError(true);
       })
       .finally(() => setLoading(false));
-  }, [fetchWorkouts, fetchMeasurements]);
+  }, [fetchWorkouts, fetchMeasurements, fetchPersonalRecords, fetchStats]);
+
+  useEffect(() => {
+    if (Object.keys(achievementStats).length > 0) {
+      const totalWorkouts = achievementStats['total_workouts'];
+      const totalVolume = achievementStats['total_volume'];
+      const streakDays = achievementStats['streak_days'];
+
+      setCumulativeStats({
+        totalWorkouts: totalWorkouts?.value || 0,
+        totalVolume: totalVolume?.value || 0,
+        streakDays: streakDays?.value || 0,
+        weeklyWorkouts: stats.weeklyWorkouts,
+        weeklyVolume: stats.totalVolume,
+      });
+    }
+  }, [achievementStats, stats]);
 
   return (
     <div className="px-6 py-4">
@@ -66,6 +98,11 @@ export default function Dashboard() {
       {/* Stats Error Message */}
       {statsError && <p className="text-accent-red text-sm mb-4">数据加载失败，请刷新页面</p>}
 
+      {/* Cumulative Stats Card */}
+      <div className="mb-6">
+        <CumulativeStatsCard stats={cumulativeStats} isLoading={loading} />
+      </div>
+
       {/* Two-column lower section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Workouts */}
@@ -86,8 +123,11 @@ export default function Dashboard() {
           )}
         </Card>
 
-        {/* Key Measurements */}
-        <KeyMeasurementsPanel measurement={latestMeasurement} />
+        {/* Right column: PR Card + Key Measurements */}
+        <div className="space-y-6">
+          <PRCard personalRecords={personalRecords} />
+          <KeyMeasurementsPanel measurement={latestMeasurement} />
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ interface ChatState {
   revokedMessageIds: Set<string>;
   lastUserMessageContent: string | null;
   sendMessage: (content: string, historyMessages?: ChatMessage[]) => Promise<void>;
+  loadLatestMessages: (limit?: number) => Promise<void>;
   clearMessages: () => void;
   removeLastSavedData: () => SavedData | undefined;
   markMessageAsRevoked: (messageId: string) => string | null;
@@ -54,6 +55,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ],
         isLoading: false,
       }));
+    }
+  },
+
+  loadLatestMessages: async (limit = 20) => {
+    set({ isLoading: true });
+    try {
+      const { messages: latestMessages } = await chatApi.getRecentMessages(limit);
+      set({ messages: latestMessages, isLoading: false });
+    } catch {
+      set({ isLoading: false });
     }
   },
 

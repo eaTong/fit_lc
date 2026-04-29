@@ -25,9 +25,9 @@ export class ChatPage extends BasePage {
     await this.page.getByText('撤销').click();
   }
 
-  async expectSaveSuccess(): Promise<void> {
+  async expectSaveSuccess(timeout: number = 30000): Promise<void> {
     // AI may respond with "已保存" or "已记录"
-    await this.page.getByText(/已保存|已记录/).first().waitFor({ state: 'visible' });
+    await this.page.getByText(/已保存|已记录/).first().waitFor({ state: 'visible', timeout });
   }
 
   async expectMessageContains(text: string): Promise<void> {

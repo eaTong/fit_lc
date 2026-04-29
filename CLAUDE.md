@@ -39,9 +39,19 @@ fit_lc/
 - `docs/superpowers/plans/` — 各功能的详细实施计划
 
 **维护规则：**
-- 功能完成并测试通过后，同步到 `docs/PRD.md`
+- 功能完成并测试通过后，**必须同步**更新 `docs/PRD.md`
 - 所有规划中的需求记录在 `docs/PRD-planning.md`
 - 功能实施前创建计划文档于 `docs/superpowers/plans/`
+- 数据模型变更 → 更新 `docs/PRD.md` 第7章数据库设计
+- API 变更 → 更新 `docs/PRD.md` 第8章 API 接口设计
+- 新功能入口 → 更新 `docs/PRD.md` 第9章前端页面清单
+
+**提交前检查清单：**
+1. 代码是否完成且通过测试？
+2. `docs/PRD.md` 是否同步更新？（表结构、API、章节）
+3. `docs/PRD-planning.md` 对应需求状态是否改为"已实现"？
+4. 前端 Store/Type 是否同步新增？
+5. **e2e 测试是否补充？**（`frontend/tests/e2e/specs/` 下新增 spec 文件和 page-object）
 
 ## 事务一致性要求
 

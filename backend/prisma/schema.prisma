@@ -14,15 +14,21 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  workouts          Workout[]
-  bodyMeasurements  BodyMeasurement[]
-  workoutPlans      WorkoutPlan[]
-  userContext       UserContext?
-  chatMessages      ChatMessage[]
-  roles             UserRole[]
-  userProfile       UserProfile?
-  bodyMetrics       BodyMetrics[]
-  coachConfig       CoachConfig?
+  workouts            Workout[]
+  bodyMeasurements    BodyMeasurement[]
+  workoutPlans        WorkoutPlan[]
+  userContext         UserContext?
+  chatMessages        ChatMessage[]
+  roles               UserRole[]
+  userProfile         UserProfile?
+  bodyMetrics         BodyMetrics[]
+  coachConfig         CoachConfig?
+  personalRecords     PersonalRecord[]
+  userBadges          UserBadge[]
+  aggregatedStats     AggregatedStats[]
+  triggerEvents       TriggerEvent[]
+  trendPredictions    TrendPrediction[]
+  userMilestones      UserMilestone[]
 
   @@map("users")
 }
@@ -59,6 +65,7 @@ model Workout {
 
   user      User              @relation(fields: [userId], references: [id])
   exercises WorkoutExercise[]
+  personalRecords PersonalRecord[]
 
   @@index([userId])
   @@index([date])
@@ -351,4 +358,150 @@ model CoachConfig {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("coach_configs")
+}
+
+// ========== D-001: 个人最佳记录 ==========
+model PersonalRecord {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  exerciseName String    @map("exercise_name") @db.VarChar(100)
+  recordType   String    @map("record_type")   // weight | reps | duration | distance
+  bestValue    Decimal   @map("best_value")    @db.Decimal(12, 3)
+  achievedAt   DateTime  @map("achieved_at")   @db.Date
+  workoutId    Int?      @map("workout_id")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout Workout? @relation(fields: [workoutId], references: [id])
+
+  @@unique([userId, exerciseName, recordType])
+  @@index([userId])
+  @@index([exerciseName])
+  @@map("personal_records")
+}
+
+// ========== D-002: 徽章定义表 ==========
+model Badge {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique @db.VarChar(50)
+  name          String   @db.VarChar(100)
+  description   String   @db.Text
+  iconUrl       String?  @map("icon_url") @db.VarChar(500)
+  category      String   // workout | measurement | streak | milestone
+  conditionType String   @map("condition_type")
+  conditionValue Json    @map("condition_value")
+  tier          String   @default("bronze")  // bronze | silver | gold | platinum
+  points        Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  userBadges UserBadge[]
+
+  @@index([category])
+  @@map("badges")
+}
+
+// ========== D-003: 用户徽章记录 ==========
+model UserBadge {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  badgeId     Int      @map("badge_id")
+  achievedAt  DateTime @default(now()) @map("achieved_at")
+  notifyShown Boolean  @default(false) @map("notify_shown")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+// ========== D-004: 累计统计数据 ==========
+model AggregatedStats {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  statType   String    @map("stat_type")   // weekly_workouts | total_volume | streak_days | etc.
+  period     String    @default("all")     // all | weekly | monthly
+  value      Decimal   @db.Decimal(15, 3)
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, statType, period])
+  @@index([userId])
+  @@map("aggregated_stats")
+}
+
+// ========== D-005: 触发事件日志 ==========
+model TriggerEvent {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  triggerType  String   @map("trigger_type")  // workout_complete | measurement_complete | streak_broken | etc.
+  triggerKey   String   @map("trigger_key")   // 唯一键，如 "reminder_workout_2026-04-28"
+  payload      Json?
+  triggeredAt  DateTime @default(now()) @map("triggered_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, triggerType, triggerKey])
+  @@index([userId])
+  @@index([triggerType])
+  @@index([triggeredAt])
+  @@map("trigger_events")
+}
+
+// ========== D-006: 趋势预测模型 ==========
+model TrendPrediction {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  metricType   String    @map("metric_type")   // weight | body_fat | chest | waist | etc.
+  modelType    String    @map("model_type")   // linear | exponential
+  slope        Decimal   @db.Decimal(10, 6)
+  intercept    Decimal   @db.Decimal(10, 4)
+  rSquared     Decimal?  @map("r_squared")    @db.Decimal(5, 4)
+  dataPoints   Int       @map("data_points")
+  lastUpdated  DateTime  @default(now()) @map("last_updated")
+  nextPredictedDate DateTime? @map("next_predicted_date") @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, metricType])
+  @@index([userId])
+  @@map("trend_predictions")
+}
+
+// ========== D-007: 里程碑定义表 ==========
+model Milestone {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique @db.VarChar(50)
+  name          String   @db.VarChar(100)
+  description   String   @db.Text
+  iconUrl       String?  @map("icon_url") @db.VarChar(500)
+  category      String   // strength | volume | consistency | measurement
+  metricType    String   @map("metric_type")
+  threshold     Decimal  @db.Decimal(15, 3)
+  tier          Int      @default(1)
+  points        Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  userMilestones UserMilestone[]
+
+  @@index([category])
+  @@map("milestones")
+}
+
+// ========== D-008: 用户里程碑记录 ==========
+model UserMilestone {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  milestoneId Int       @map("milestone_id")
+  progress    Decimal   @db.Decimal(15, 3)  @default(0)
+  achievedAt  DateTime? @map("achieved_at")
+  notifyShown Boolean   @default(false) @map("notify_shown")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone Milestone @relation(fields: [milestoneId], references: [id])
+
+  @@unique([userId, milestoneId])
+  @@index([userId])
+  @@map("user_milestones")
 }
