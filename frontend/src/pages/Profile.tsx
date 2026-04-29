@@ -64,7 +64,6 @@ export default function Profile() {
       {/* 统计卡片 */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard title="累计训练" value={loading ? '—' : totalWorkouts} unit="次" icon="🔥" />
-        <StatCard title="连续打卡" value={loading ? '—' : streakDays} unit="天" icon="📅" />
       </div>
 
       {/* 连续打卡入口 */}
