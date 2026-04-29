@@ -6,350 +6,402 @@
 
 ---
 
-## 1. 产品概述
+## 1. 概述
 
 ### 1.1 产品定位
-FitLC 微信小程序是 Web 端的移动端版本，通过自然语言对话自动记录健身数据和身体围度，支持历史数据查询与趋势分析。
+FitLC 微信小程序是 AI 健身记录 SaaS 系统的移动端入口，为 normal 用户提供健身记录、围度追踪、计划执行等核心功能。
 
-### 1.2 与 Web 端关系
-- **独立项目**，代码不共享
-- **API 共用**，复用 Web 端后端接口
-- **风格一致**，采用 Web 端相同配色和交互逻辑
+### 1.2 设计目标
+- 功能均衡：保留 Web 端核心功能，小程序化适配
+- 包体积可控：主包 + 分包结构
+- 品牌一致：沿用 Web 端暗色主题 + 烈焰橙强调色
 
-### 1.3 技术栈
-| 层级 | 技术选型 |
-|------|---------|
-| 框架 | 微信小程序原生框架 |
-| 状态管理 | MobX（微信推荐） |
-| 网络请求 | wx.request 封装 |
-| 样式 | wxss + Web 端配色 |
-| 登录 | 静默登录 + 账号绑定 |
-
----
-
-## 2. 登录流程
-
-### 2.1 流程设计
-```
-用户首次访问
-    ↓
-wx.login 获取 code
-    ↓
-调用后端 API 换取 openid
-    ↓
-判断是否已绑定账号
-    ├── 已绑定 → 自动登录 → 进入首页
-    └── 未绑定 → 引导绑定账号
-                    ├── 绑定已有账号（输入账号密码）
-                    └── 注册新账号
-```
-
-### 2.2 Token 管理
-- 存储 JWT + refresh_token
-- 过期前自动静默刷新
-- 刷新失败引导重新登录
+### 1.3 技术选型
+| 项目 | 选型 |
+|-----|------|
+| 框架 | Taro 4.x + React |
+| 状态 | Zustand（小程序适配版，与 Web 端一致） |
+| UI | 暗色主题 (#0A0A0A) + 烈焰橙 (#FF4500) |
+| 登录 | 微信静默登录（UnionID） |
+| 数据 | 全从现有后端 API 获取 |
 
 ---
 
-## 3. 页面结构
+## 2. 页面结构
 
-### 3.1 底部 Tab 导航（5个Tab，与 Web 一致）
+### 2.1 Tab 导航（5个）
 
-| Tab | 图标 | 主页面 | 功能 |
-|-----|------|--------|------|
-| 首页 | 🏠 | chat | AI 对话，记录训练/围度 |
-| 数据 | 📊 | history | 训练历史、围度记录（子Tab切换） |
-| 计划 | 📋 | plans | 健身计划列表 |
-| 知识 | 📚 | muscles | 肌肉库、动作库（子Tab切换） |
-| 我的 | 👤 | profile | 个人信息、设置、徽章 |
+| # | Tab | 路径 | 说明 |
+|---|-----|------|------|
+| 1 | 对话 | /pages/chat/index | AI 对话核心 |
+| 2 | 记录 | /pages/records/index | 训练/围度历史 |
+| 3 | 趋势 | /pages/trends/index | 数据趋势分析 |
+| 4 | 动作库 | /pages/exercises/index | 动作库 + 肌肉库 |
+| 5 | 我的 | /pages/profile/index | 个人中心、计划入口 |
 
-### 3.2 Tab 详细页面映射
+### 2.2 分包结构
 
-**首页 Tab：**
-- `/pages/chat/chat` - AI 对话页
+**主包（main）**
 
-**数据 Tab（子 Tab 切换）：**
-- `/pages/history/history` - 训练/围度历史
-- `/pages/trends/trends` - 趋势分析
-- `/pages/calendar/calendar` - 日历
+| 页面 | 路径 |
+|------|------|
+| 对话 | pages/chat/index |
+| 记录 | pages/records/index |
+| 趋势 | pages/trends/index |
+| 动作库（Tab入口） | pages/exercises/index |
+| 我的 | pages/profile/index |
+| 设置 | pages/settings/index |
+| 徽章 | pages/badges/index |
+| 日历 | pages/calendar/index |
 
-**计划 Tab：**
-- `/pages/plans/plans` - 计划列表
-- `/pages/plan-detail/plan-detail` - 计划详情
-- `/pages/plan-execute/plan-execute` - 计划执行
+**分包（knowledge）**
 
-**知识 Tab（子 Tab 切换）：**
-- `/pages/muscles/muscles` - 肌肉库
-- `/pages/exercises/exercises` - 动作库
+| 页面 | 路径 |
+|------|------|
+| 动作详情 | pages/exercises/detail |
+| 肌肉库列表 | pages/muscles/index |
+| 肌肉详情 | pages/muscles/detail |
+| 计划执行 | pages/plans/execute |
 
-**我的 Tab：**
-- `/pages/profile/profile` - 个人中心
-- `/pages/settings/settings` - 设置
-- `/pages/security/security` - 账号安全
-- `/pages/badges/badges` - 徽章
+### 2.3 页面关系图
 
-### 3.3 页面层级
-- 页面栈限制最多 10 层
-- Tab 间切换使用 `wx.switchTab` 保持页面状态
-- 非 Tab 页面使用 `wx.navigateTo`
-
----
-
-## 4. 分包策略
-
-### 4.1 分包原则
-主包限制 2MB，按 Tab 分包减少主包体积。
-
-### 4.2 分包结构
 ```
-主包：
-  - tabBar 页面（chat, history, plans, muscles, profile）
-  - 登录相关（login, bind-account）
+Tab: 对话 (chat)
+└── 消息列表 → AI 对话
 
-分包1（数据）：
-  - history, trends, calendar
+Tab: 记录 (records)
+└── 分段切换：训练 / 围度
+    └── 记录列表
 
-分包2（计划）：
-  - plans, plan-detail, plan-execute
+Tab: 趋势 (trends)
+└── 围度趋势折线图
+└── 训练统计柱状图
 
-分包3（知识）：
-  - muscles, exercises
+Tab: 动作库 (exercises)
+├── 动作库列表 → 动作详情
+└── 肌肉库列表 → 肌肉详情
 
-分包4（我的）：
-  - settings, security, badges
+Tab: 我的 (profile)
+├── 用户信息卡片
+├── 连续打卡天数
+├── 计划列表 → 计划执行
+├── 快捷入口：日历、徽章、设置
+└── 退出登录
 ```
 
 ---
 
-## 5. 配色方案（与 Web 一致）
+## 3. 页面详细设计
+
+### 3.1 对话页 (chat/index)
+
+**功能描述**
+用户通过自然语言与 AI 对话，系统自动识别意图并记录训练/围度数据。
+
+**页面结构**
+```
+├── 消息列表（scroll-view）
+│   ├── 用户消息（右侧，橙色背景）
+│   └── AI 回复（左侧，深灰背景）
+│       ├── Markdown 渲染内容
+│       └── 保存成功后：撤销按钮
+├── 加载状态
+│   └── "正在思考..." 加载动画
+└── 输入区域（底部fixed）
+    ├── 多行输入框
+    └── 发送按钮
+```
+
+**首次训练庆祝动画**
+- 触发条件：totalWorkouts === 1
+- 展示：🎉 emoji 跳动 + "恭喜完成首次训练！"
+- 持续 3 秒后消失
+
+### 3.2 记录页 (records/index)
+
+**功能描述**
+展示用户训练和围度历史记录。
+
+**页面结构**
+```
+├── 顶部 Tab 分段控件
+│   ├── 训练
+│   └── 围度
+├── 记录列表（按日期分组）
+│   └── 日期分组
+│       └── 记录卡片
+│           ├── 训练：动作列表 + 组数×次数/重量
+│           └── 围度：部位 + 数值
+├── 空状态
+│   └── 引导卡片：示例语句 + 跳转 Chat 按钮
+└── FAB 按钮
+    └── 跳转 Chat 快速记录
+```
+
+### 3.3 趋势页 (trends/index)
+
+**功能描述**
+展示围度变化趋势和训练统计。
+
+**页面结构**
+```
+├── 顶部 Tab
+│   ├── 围度趋势
+│   └── 训练统计
+├── 围度趋势 Tab
+│   ├── 部位选择器（胸/腰/臀/臂/腿/小腿）
+│   ├── 折线图（Recharts）
+│   └── 时间范围选择器：30天/90天/6个月/1年
+└── 训练统计 Tab
+    ├── 柱状图（每周训练次数）
+    └── 肌肉群训练量饼图
+```
+
+### 3.4 动作库页 (exercises/index)
+
+**功能描述**
+动作库和肌肉库合并在同一 Tab，通过顶部切换访问。
+
+**页面结构**
+```
+├── 顶部 Tab
+│   ├── 动作库
+│   └── 肌肉库
+├── 动作库 Tab
+│   ├── 筛选栏
+│   │   ├── 肌肉群：全部/胸/背/腿/肩/臂/核心
+│   │   ├── 器械：全部/杠铃/哑铃/龙门架/器械/自重
+│   │   └── 难度：全部/入门/中级/高级
+│   └── 动作卡片列表
+│       ├── 动作名称
+│       ├── 肌肉群标签
+│       └── 难度标签
+└── 肌肉库 Tab
+    └── 两层层级列表
+        ├── 肌肉群（Level 1，可展开）
+        └── 主肌肉（Level 2）
+```
+
+**动作详情页 (exercises/detail)**
+```
+├── 动作名称 + 难度/器械标签
+├── 动作类型（复合/孤立）
+├── 动作步骤
+├── 安全注意事项
+├── 常见错误
+├── 细节调整
+├── 变体转换指南
+└── 关联肌肉展示
+```
+
+**肌肉详情页 (muscles/detail)**
+```
+├── 肌肉名称
+├── 肌肉功能
+├── 起点 / 止点
+├── 训练技巧
+└── 关联动作列表
+```
+
+### 3.5 我的页 (profile/index)
+
+**功能描述**
+个人中心，承载健身计划入口。
+
+**页面结构**
+```
+├── 用户信息卡片
+│   ├── 头像（微信头像）
+│   ├── 昵称
+│   └── 累计训练次数
+├── 连续打卡天数卡片
+│   └── 点击进入日历页
+├── 计划区域
+│   ├── 当前计划卡片（进行中）
+│   │   ├── 计划名称
+│   │   ├── 进度条
+│   │   └── 开始执行按钮
+│   └── 我的计划列表
+│       └── 计划卡片（可点击进入执行页）
+├── 快捷入口
+│   ├── 日历
+│   ├── 徽章
+│   └── 设置
+└── 退出登录按钮
+```
+
+**计划执行页 (plans/execute)**
+```
+├── 计划名称 + 当前进度
+├── 今日训练日
+├── 动作列表
+│   └── 动作卡片
+│       ├── 动作名称
+│       ├── 组数×次数
+│       └── 重量/时长
+├── 打卡按钮
+└── AI 反馈（执行后）
+```
+
+---
+
+## 4. 导航设计
+
+### 4.1 页面栈
+采用统一页面栈，所有页面在同一个栈内，通过 `wx.navigateTo` 跳转。
+
+### 4.2 跳转规则
+
+| 从 | 到 | 方式 |
+|----|----|------|
+| Tab 页面 | Tab 页面 | switchTab |
+| Tab 页面 | 子页面 | navigateTo |
+| 子页面 | 子页面 | navigateTo |
+| 子页面 | Tab 页面 | reLaunch |
+
+### 4.3 分包加载
+- 分包页面通过 navigateTo 首次访问时自动下载
+- 动作详情、肌肉详情、计划执行均放入 knowledge 分包
+
+---
+
+## 5. 登录设计
+
+### 5.1 静默登录流程
+
+```
+小程序启动
+  → wx.login() 获取 code
+  → 调用后端 /api/auth/wechat { code }
+  → 后端返回 JWT token
+  → 存储 token，进入对话页
+```
+
+### 5.2 后端接口（需新增）
+
+```
+POST /api/auth/wechat
+Body: { code: string }
+Response: { token: string, user: User }
+```
+
+### 5.3 登录状态
+- Token 存储于 wx.getStorageSync('token')
+- 请求拦截器自动附加 Authorization header
+- 401 响应 → 清除 token → 重新登录
+
+---
+
+## 6. API 对接
+
+### 6.1 现有可用接口
+
+| 模块 | 接口 | 说明 |
+|-----|------|------|
+| 认证 | POST /api/auth/wechat | 微信登录（新增） |
+| 对话 | GET /api/chat/messages | 获取聊天记录 |
+| 对话 | POST /api/chat/message | 发送消息 |
+| 记录 | GET /api/records/workouts | 训练历史 |
+| 记录 | GET /api/records/measurements | 围度历史 |
+| 趋势 | GET /api/achievements/stats | 累计统计 |
+| 趋势 | GET /api/achievements/muscle-volume | 肌肉群训练量 |
+| 动作 | GET /api/exercises | 动作列表 |
+| 动作 | GET /api/exercises/:id | 动作详情 |
+| 肌肉 | GET /api/admin/muscles | 肌肉列表 |
+| 计划 | GET /api/plans | 计划列表 |
+| 计划 | GET /api/plans/:id | 计划详情 |
+| 计划 | POST /api/plans/:id/executions | 执行打卡 |
+| 成就 | GET /api/achievements/badges | 用户徽章 |
+| 成就 | GET /api/achievements/personal-records | 个人最佳 |
+
+---
+
+## 7. UI 规范
+
+### 7.1 配色方案
 
 | 用途 | 色值 |
 |------|------|
 | 背景主色 | #0A0A0A |
 | 背景次色 | #1A1A1A |
 | 背景三级 | #252525 |
-| 强调色主 | #FF4500 |
-| 强调色次 | #DC143C |
+| 强调色主 | #FF4500（烈焰橙） |
+| 强调色次 | #DC143C（电红） |
 | 文字主色 | #FFFFFF |
 | 文字次色 | #888888 |
 | 边框色 | #333333 |
 
----
+### 7.2 视觉风格
+- 无圆角或极小圆角 (2-4px)
+- 粗边框按钮 (2px solid)
+- 快速过渡动画 (150-200ms)
+- 卡片光晕效果
 
-## 6. 核心页面设计
-
-### 6.1 聊天页面（首页）
-```
-┌─────────────────────────┐
-│ FitLC            ◉ 更多 │
-├─────────────────────────┤
-│                         │
-│  用户：今天跑了5公里     │
-│                         │
-│  AI：已记录！🏃        │
-│  训练内容：跑步 5公里   │
-│  [撤销]                 │
-│                         │
-├─────────────────────────┤
-│ ┌─────────────────────┐ │
-│ │ 输入训练内容...      │ │
-│ └─────────────────────┘ │
-│ [📷] [🎤] [➕] [发送] │
-└─────────────────────────┘
-```
-
-### 6.2 历史记录页面（数据 Tab）
-```
-┌─────────────────────────┐
-│ ← 数据                  │
-├─────────────────────────┤
-│ [训练] [围度] [日历] [趋势] │ ← 子 Tab
-├─────────────────────────┤
-│ 📅 2026-04-29          │
-│ 🏋️ 深蹲 4组×45kg      │
-│ 📏 围度：胸94/腰78     │
-│                         │
-│ 📅 2026-04-28          │
-│ 🏃 跑步 5公里          │
-└─────────────────────────┘
-```
-
-### 6.3 日历页面
-```
-┌─────────────────────────┐
-│ ← 日历            今天   │
-├─────────────────────────┤
-│       < 2026年4月  >    │
-├─────────────────────────┤
-│ 一  二  三  四  五  六  日│
-│         1  2  3  4  5  │
-│  6  7● 8  9 10 11 12  │
-│ ...                     │
-├─────────────────────────┤
-│ ─────── 4月7日 ─────── │
-│ 🏋️ 深蹲 4组×45kg      │
-│ 🏃 跑步 5公里          │
-└─────────────────────────┘
-```
-
-### 6.4 个人中心页面（我的 Tab）
-```
-┌─────────────────────────┐
-│           我的          │
-├─────────────────────────┤
-│ 👤 用户昵称            │
-│    累计训练 128 次     │
-│    连续打卡 12 天      │
-├─────────────────────────┤
-│ 📅 连续打卡            │ ← 跳转日历
-│ ⚙️ 设置                │ ← 跳转设置
-│ 🏆 徽章                │ ← 跳转徽章
-│ 🔐 账号安全            │ ← 跳转安全
-└─────────────────────────┘
-```
+### 7.3 动效
+- Tab 切换：150ms ease-out
+- 页面跳转：200ms slide
+- 加载动画：脉冲效果
+- 庆祝动画：🎉 emoji 跳动 3s
 
 ---
 
-## 7. 组件设计
+## 8. 分包策略
 
-### 7.1 通用组件（与 Web 端一致风格）
-- Card - 卡片容器
-- Button - 按钮
-- Input - 输入框
-- TabBar - 底部导航（5个Tab）
-- Header - 顶部导航栏
+### 8.1 分包配置
 
-### 7.2 业务组件
-- ChatMessage - 聊天消息
-- ChatInput - 对话输入框（支持拍照/语音/更多）
-- WorkoutCard - 训练记录卡片
-- MeasurementCard - 围度记录卡片
-- CalendarGrid - 日历网格
-- StatCard - 统计卡片
-- AchievementBadge - 成就徽章
-
----
-
-## 8. API 接口
-
-### 8.1 需要适配的接口
-与 Web 端共用以下 API 接口：
-
-| 模块 | 接口 | 说明 |
-|------|------|------|
-| 认证 | POST /api/auth/login | 账号密码登录 |
-| 认证 | POST /api/auth/register | 注册 |
-| 认证 | POST /api/auth/refresh | 刷新 token |
-| 用户 | GET /api/user/profile | 获取用户信息 |
-| 用户 | PUT /api/user/profile | 更新用户信息 |
-| 聊天 | GET /api/chat/messages | 获取消息历史 |
-| 聊天 | POST /api/chat/message | 发送消息 |
-| 训练 | GET /api/records/workouts | 获取训练记录 |
-| 训练 | DELETE /api/records/workouts/:id | 删除训练记录 |
-| 围度 | GET /api/records/measurements | 获取围度记录 |
-| 围度 | DELETE /api/records/measurements/:id | 删除围度记录 |
-| 计划 | GET /api/plans | 获取计划列表 |
-| 计划 | GET /api/plans/:id | 获取计划详情 |
-| 计划 | POST /api/plans/:id/execute | 执行计划 |
-| 肌肉 | GET /api/muscles | 获取肌肉库 |
-| 动作 | GET /api/exercises | 获取动作库 |
-| 成就 | GET /api/achievements | 获取成就 |
-
-### 8.2 小程序特有接口
-| 接口 | 说明 |
-|------|------|
-| POST /api/auth/wechat/code | 微信 code 换 openid |
-| POST /api/auth/wechat/bind | 绑定微信与账号 |
-
----
-
-## 9. 功能清单
-
-### 9.1 核心功能（普通用户）
-- [ ] 微信登录 + 账号绑定
-- [ ] AI 对话记录训练
-- [ ] AI 对话记录围度
-- [ ] 查看训练历史
-- [ ] 查看围度历史
-- [ ] 日历查看打卡记录
-- [ ] 趋势分析图表
-- [ ] 健身计划查看
-- [ ] 计划执行记录
-- [ ] 肌肉库浏览
-- [ ] 动作库浏览
-- [ ] 个人设置
-- [ ] 账号安全（改密码）
-- [ ] 成就徽章展示
-- [ ] 撤销功能
-
-### 9.2 交互功能
-- [ ] 消息 Markdown 渲染
-- [ ] 图片识别记录
-- [ ] 语音输入
-- [ ] 下拉刷新
-- [ ] 上拉加载更多
-
----
-
-## 10. 项目结构
-
+```json
+{
+  "subPackages": [
+    {
+      "root": "subpkg/knowledge",
+      "pages": [
+        "pages/exercises/detail",
+        "pages/muscles/index",
+        "pages/muscles/detail",
+        "pages/plans/execute"
+      ]
+    }
+  ]
+}
 ```
-fitlc-mini/
-├── app.js                 # 应用入口
-├── app.json               # 应用配置
-├── app.wxss               # 全局样式
-├── project.config.json    # 项目配置
-├── sitemap.json           # 站点地图
-│
-├── pages/
-│   ├── chat/              # 首页 Tab - AI 对话
-│   ├── history/            # 数据 Tab - 历史记录
-│   ├── trends/             # 数据 Tab - 趋势分析
-│   ├── calendar/           # 数据 Tab - 日历
-│   ├── plans/              # 计划 Tab - 计划列表
-│   ├── plan-detail/        # 计划 Tab - 计划详情
-│   ├── plan-execute/       # 计划 Tab - 计划执行
-│   ├── muscles/            # 知识 Tab - 肌肉库
-│   ├── exercises/          # 知识 Tab - 动作库
-│   ├── profile/            # 我的 Tab - 个人中心
-│   ├── settings/           # 我的 Tab - 设置
-│   ├── security/           # 我的 Tab - 账号安全
-│   ├── badges/             # 我的 Tab - 徽章
-│   ├── login/              # 登录页
-│   └── bind-account/       # 账号绑定页
-│
-├── components/             # 通用组件
-│   ├── Card/
-│   ├── Button/
-│   ├── Input/
-│   ├── TabBar/
-│   ├── Header/
-│   ├── ChatMessage/
-│   ├── ChatInput/
-│   ├── WorkoutCard/
-│   ├── CalendarGrid/
-│   └── ...
-│
-├── stores/                # 状态管理
-│   ├── authStore.js        # 认证状态
-│   ├── chatStore.js        # 聊天状态
-│   ├── recordsStore.js     # 记录状态
-│   └── achievementStore.js # 成就状态
-│
-├── api/                   # API 调用
-│   ├── request.js          # 请求封装
-│   ├── auth.js             # 认证接口
-│   ├── user.js             # 用户接口
-│   ├── chat.js             # 聊天接口
-│   ├── records.js          # 记录接口
-│   ├── plans.js            # 计划接口
-│   └── muscles.js          # 肌肉接口
-│
-├── utils/                 # 工具函数
-│   ├── format.js           # 格式化
-│   ├── validate.js         # 校验
-│   └── markdown.js         # Markdown 解析
-│
-└── styles/                # 样式文件
-    └── variables.wxss      # CSS 变量
+
+### 8.2 分包页面访问入口
+
+| 页面 | 从何处进入 |
+|------|-----------|
+| 动作详情 | 动作库列表点击 |
+| 肌肉库列表 | 动作库 Tab 切换 |
+| 肌肉详情 | 肌肉库列表点击 |
+| 计划执行 | 我的 Tab → 计划列表点击 |
+
+---
+
+## 9. 状态管理
+
+### 9.1 Store 设计（与 Web 端一致）
+
+```typescript
+useAuthStore     // token、用户信息、登录状态
+useChatStore     // 消息列表、加载状态
+useRecordsStore  // 训练历史、围度历史
+usePlanStore     // 计划列表、当前计划
 ```
+
+### 9.2 本地存储
+- Token：wx.getStorageSync('token')
+- 用户信息：wx.getStorageSync('user')
+- 聊天消息：内存（每次会话重新拉取）
+
+---
+
+## 10. 待后端配合事项
+
+1. **新增微信登录接口** `POST /api/auth/wechat`
+   - 接收微信 code，换取 UnionID
+   - 已注册用户返回 JWT
+   - 未注册用户自动创建账户（role: normal）
+   - User 表需增加 wechatOpenid / unionid 字段
+
+2. **肌肉库接口权限**
+   - 当前 `/api/admin/muscles` 需要 admin 权限
+   - normal 用户访问肌肉库需要新增 `/api/muscles` 接口（只读）
