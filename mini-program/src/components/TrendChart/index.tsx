@@ -4,10 +4,22 @@ import './index.scss';
 
 const COLORS = ['#FF4500', '#DC143C', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
 
+interface LineChartData {
+  date?: string;
+  week?: string;
+  [key: string]: any;
+}
+
+interface PieChartData {
+  name: string;
+  value: number;
+  [key: string]: any;
+}
+
 interface TrendChartProps {
   type: 'line' | 'bar' | 'pie';
-  data: any[];
-  dataKey?: string;
+  data: LineChartData[] | PieChartData[];
+  dataKey: string;
   xAxisKey?: string;
 }
 
@@ -16,7 +28,7 @@ export default function TrendChart({ type, data, dataKey, xAxisKey }: TrendChart
     return (
       <View className="trend-chart">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={data as LineChartData[]}>
             <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
             <XAxis dataKey={xAxisKey || 'date'} stroke="#888888" />
             <YAxis stroke="#888888" />
@@ -24,7 +36,7 @@ export default function TrendChart({ type, data, dataKey, xAxisKey }: TrendChart
               contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
               labelStyle={{ color: '#FFFFFF' }}
             />
-            <Line type="monotone" dataKey={dataKey || 'value'} stroke="#FF4500" strokeWidth={2} dot={{ fill: '#FF4500' }} />
+            <Line type="monotone" dataKey={dataKey} stroke="#FF4500" strokeWidth={2} dot={{ fill: '#FF4500' }} />
           </LineChart>
         </ResponsiveContainer>
       </View>
@@ -35,7 +47,7 @@ export default function TrendChart({ type, data, dataKey, xAxisKey }: TrendChart
     return (
       <View className="trend-chart">
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+          <BarChart data={data as LineChartData[]}>
             <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
             <XAxis dataKey={xAxisKey || 'week'} stroke="#888888" />
             <YAxis stroke="#888888" />
@@ -43,7 +55,7 @@ export default function TrendChart({ type, data, dataKey, xAxisKey }: TrendChart
               contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
               labelStyle={{ color: '#FFFFFF' }}
             />
-            <Bar dataKey={dataKey || 'count'} fill="#FF4500" />
+            <Bar dataKey={dataKey} fill="#FF4500" />
           </BarChart>
         </ResponsiveContainer>
       </View>
@@ -56,13 +68,12 @@ export default function TrendChart({ type, data, dataKey, xAxisKey }: TrendChart
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={data}
+              data={data as PieChartData[]}
               cx="50%"
               cy="50%"
               labelLine={false}
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               outerRadius={100}
-              fill="#888888"
               dataKey="value"
             >
               {data.map((entry, index) => (
