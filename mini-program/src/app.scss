@@ -12,29 +12,31 @@ view, text {
   box-sizing: border-box;
 }
 
+@mixin button-base {
+  border-radius: $border_radius;
+  padding: 20px 40px;
+  font-size: 28px;
+}
+
 .btn-primary {
+  @include button-base;
   background-color: $accent-primary;
   color: $text-primary;
   border: 2px solid $accent-primary;
-  border-radius: $border-radius;
-  padding: 20px 40px;
-  font-size: 28px;
   &:active {
     opacity: 0.8;
   }
 }
 
 .btn-outline {
+  @include button-base;
   background-color: transparent;
   color: $accent-primary;
   border: 2px solid $accent-primary;
-  border-radius: $border-radius;
-  padding: 20px 40px;
-  font-size: 28px;
 }
 
 .card {
   background-color: $bg-secondary;
-  border-radius: $border-radius;
+  border-radius: $border_radius;
   padding: 24px;
 }
