@@ -1,0 +1,69 @@
+// mini-program/src/pages/trends/index.scss
+.trends-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #0A0A0A;
+
+  .tab-header {
+    display: flex;
+    background-color: #1A1A1A;
+    padding: 16px;
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 16px 0;
+      color: #888888;
+      font-size: 28px;
+      border-bottom: 2px solid transparent;
+
+      &.active {
+        color: #FF4500;
+        border-bottom-color: #FF4500;
+      }
+    }
+  }
+
+  .content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+
+    .trend-section {
+      .section-title {
+        display: block;
+        font-size: 28px;
+        color: #FFFFFF;
+        margin-bottom: 16px;
+        margin-top: 32px;
+
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+
+      .selectors {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 24px;
+
+        .picker {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background-color: #1A1A1A;
+          padding: 16px 24px;
+          border-radius: 4px;
+          color: #FFFFFF;
+          font-size: 26px;
+
+          .arrow {
+            color: #888888;
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+}
