@@ -1,0 +1,40 @@
+// mini-program/src/app.scss
+@import './styles/theme.scss';
+
+page {
+  background-color: $bg-primary;
+  color: $text-primary;
+  font-size: 28px;
+  line-height: 1.5;
+}
+
+view, text {
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background-color: $accent-primary;
+  color: $text-primary;
+  border: 2px solid $accent-primary;
+  border-radius: $border-radius;
+  padding: 20px 40px;
+  font-size: 28px;
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: $accent-primary;
+  border: 2px solid $accent-primary;
+  border-radius: $border-radius;
+  padding: 20px 40px;
+  font-size: 28px;
+}
+
+.card {
+  background-color: $bg-secondary;
+  border-radius: $border-radius;
+  padding: 24px;
+}
