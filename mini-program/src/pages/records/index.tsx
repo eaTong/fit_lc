@@ -1,6 +1,7 @@
 // mini-program/src/pages/records/index.tsx
 import { View, Text, ScrollView, Button } from '@tarojs/components';
 import { useState, useEffect } from 'react';
+import Taro from '@tarojs/taro';
 import { useRecordsStore } from '../../store/records';
 import { getWorkouts, getMeasurements } from '../../api/records';
 import RecordCard from '../../components/RecordCard';
@@ -10,7 +11,7 @@ type TabType = 'workout' | 'measurement';
 
 export default function RecordsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('workout');
-  const { workouts, measurements, setWorkouts, setMeasurements, setLoading, isLoading } = useRecordsStore();
+  const { workouts, measurements, setWorkouts, setMeasurements, setLoading } = useRecordsStore();
 
   useEffect(() => {
     loadData();
@@ -33,7 +34,7 @@ export default function RecordsPage() {
   };
 
   const handleFabClick = () => {
-    wx.switchTab({ url: '/pages/chat/index' });
+    Taro.switchTab({ url: '/pages/chat/index' });
   };
 
   const renderEmptyState = () => (
