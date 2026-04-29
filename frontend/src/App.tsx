@@ -21,6 +21,7 @@ import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
 import Badges from './pages/Badges';
+import Settings from './pages/Settings';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -104,6 +105,7 @@ function App() {
                 <Route path="/measurements" element={<Measurements />} />
                 <Route path="/dashboard" element={<Navigate to="/history?tab=dashboard" />} />
                 <Route path="/badges" element={<Badges />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/" element={<Navigate to="/chat" />} />
               </Route>
             </Route>

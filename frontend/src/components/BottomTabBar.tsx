@@ -5,7 +5,7 @@ const tabs = [
   { path: '/history', label: '数据', icon: '📊' },
   { path: '/plans', label: '计划', icon: '📋' },
   { path: '/muscles', label: '知识', icon: '📚' },
-  { path: '/profile', label: '我的', icon: '👤' },
+  { path: '/settings', label: '设置', icon: '⚙️' },
 ];
 
 export default function BottomTabBar() {
