@@ -11,6 +11,7 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { workouts, measurements, fetchWorkouts, fetchMeasurements } = useRecordsStore();
+  const navigate = useNavigate();
 
   // Fetch data when year or month changes
   useEffect(() => {
