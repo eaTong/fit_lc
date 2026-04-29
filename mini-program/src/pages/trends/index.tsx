@@ -1,8 +1,8 @@
 // mini-program/src/pages/trends/index.tsx
 import { View, Text, ScrollView, Picker } from '@tarojs/components';
-import { useState, useEffect } from 'react';
-import { getStats, getMuscleVolume } from '../../api/achievements';
-import { getMeasurements } from '../../api/records';
+import { useState, useEffect, useCallback } from 'react';
+import { getStats, getMuscleVolume, type Stats } from '../../api/achievements';
+import { getMeasurements, type Measurement } from '../../api/records';
 import TrendChart from '../../components/TrendChart';
 import './index.scss';
 
@@ -27,19 +27,25 @@ const TIME_RANGES: { label: string; value: TimeRange }[] = [
   { label: '全部', value: 'all' }
 ];
 
+interface TrendDataPoint {
+  date: string;
+  value: number;
+}
+
+interface MuscleVolumeData {
+  name: string;
+  value: number;
+}
+
 export default function TrendsPage() {
   const [activeTab, setActiveTab] = useState<TrendTab>('measurement');
   const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPart>('chest');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('90');
-  const [stats, setStats] = useState<any>(null);
-  const [muscleVolume, setMuscleVolume] = useState<any[]>([]);
-  const [measurementHistory, setMeasurementHistory] = useState<any[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [muscleVolume, setMuscleVolume] = useState<MuscleVolumeData[]>([]);
+  const [measurementHistory, setMeasurementHistory] = useState<Measurement[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [statsData, volumeData, measurementsData] = await Promise.all([
         getStats(),
@@ -52,9 +58,13 @@ export default function TrendsPage() {
     } catch (err) {
       console.error('Failed to load trends data:', err);
     }
-  };
+  }, []);
 
-  const getMeasurementTrendData = () => {
+  useEffect(() => {
+    loadData();
+  }, [activeTab, loadData]);
+
+  const getMeasurementTrendData = (): TrendDataPoint[] => {
     const now = Date.now();
     const rangeDays = selectedTimeRange === 'all' ? 99999 : parseInt(selectedTimeRange);
     const cutoff = now - rangeDays * 24 * 60 * 60 * 1000;
@@ -62,7 +72,7 @@ export default function TrendsPage() {
     return measurementHistory
       .filter((m) => new Date(m.date).getTime() > cutoff)
       .map((m) => {
-        const item = m.items.find((i: any) => i.bodyPart === selectedBodyPart);
+        const item = m.items.find((i) => i.bodyPart === selectedBodyPart);
         return {
           date: m.date,
           value: item?.value || 0
@@ -71,15 +81,7 @@ export default function TrendsPage() {
       .filter((d) => d.value > 0);
   };
 
-  const getWorkoutTrendData = () => {
-    const weeks = 12;
-    return Array.from({ length: weeks }, (_, i) => ({
-      week: `第${i + 1}周`,
-      count: Math.floor(Math.random() * 7)
-    }));
-  };
-
-  const getMuscleVolumeData = () => {
+  const getMuscleVolumeData = (): MuscleVolumeData[] => {
     return muscleVolume.map((mv) => ({
       name: mv.name,
       value: mv.volume
@@ -136,9 +138,6 @@ export default function TrendsPage() {
 
         {activeTab === 'workout' && (
           <View className="trend-section">
-            <Text className="section-title">每周训练次数</Text>
-            <TrendChart type="bar" data={getWorkoutTrendData()} dataKey="count" xAxisKey="week" />
-
             <Text className="section-title">肌肉群训练量</Text>
             <TrendChart type="pie" data={getMuscleVolumeData()} dataKey="value" />
           </View>
