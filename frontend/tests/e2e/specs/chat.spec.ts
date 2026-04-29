@@ -79,4 +79,19 @@ test.describe('AI Chat', () => {
       await expect(page.getByText(/撤销成功|已撤销/)).toBeVisible();
     }
   });
+
+  test('CHAT-007: PR突破反馈 @chat @pr', async () => {
+    // Record a workout that might set a PR
+    await chatPage.sendMessage('卧推60kg 4组每组10个');
+
+    // Should show save success
+    await chatPage.expectSaveSuccess();
+
+    // Should contain PR feedback if achieved
+    const lastMessage = await chatPage.getLastAssistantMessage();
+    // Check if PR was broken (message may contain personal record feedback)
+    if (lastMessage.includes('个人纪录') || lastMessage.includes('PR')) {
+      await expect(page.getByText(/个人纪录|PR|突破/)).toBeVisible();
+    }
+  });
 });

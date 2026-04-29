@@ -209,4 +209,85 @@ export const statsRepository = {
 
     return { weekly, changes };
   },
+
+  async getVolumeByMuscleGroup(userId: number, startDate?: Date, endDate?: Date): Promise<{
+    name: string;
+    group: string;
+    volume: number;
+    percentage: number;
+  }[]> {
+    const dateFilter: any = {};
+    if (startDate) dateFilter.gte = startDate;
+    if (endDate) dateFilter.lte = endDate;
+
+    const workouts = await prisma.workout.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        ...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {}),
+      },
+      include: {
+        exercises: true,
+      },
+    });
+
+    if (workouts.length === 0) {
+      return [];
+    }
+
+    const exerciseNames = [...new Set(
+      workouts.flatMap(w => w.exercises.map(e => e.exerciseName))
+    )];
+
+    const exercises = await prisma.exercise.findMany({
+      where: {
+        name: { in: exerciseNames },
+        status: 'published',
+      },
+    });
+
+    const exerciseCategoryMap = new Map<string, string>();
+    for (const ex of exercises) {
+      exerciseCategoryMap.set(ex.name, ex.category);
+    }
+
+    const groupVolumeMap = new Map<string, number>();
+    let totalVolume = 0;
+
+    for (const workout of workouts) {
+      for (const exercise of workout.exercises) {
+        if (exercise.weight && exercise.sets && exercise.reps) {
+          const volume = Number(exercise.weight) * exercise.sets * exercise.reps;
+          totalVolume += volume;
+
+          const category = exerciseCategoryMap.get(exercise.exerciseName) || 'other';
+          const current = groupVolumeMap.get(category) || 0;
+          groupVolumeMap.set(category, current + volume);
+        }
+      }
+    }
+
+    const groupNames: Record<string, string> = {
+      chest: '胸部',
+      back: '背部',
+      legs: '腿部',
+      shoulders: '肩部',
+      arms: '手臂',
+      core: '核心',
+      other: '其他',
+    };
+
+    const result = [];
+    for (const [group, volume] of groupVolumeMap) {
+      result.push({
+        name: groupNames[group] || group,
+        group,
+        volume,
+        percentage: totalVolume > 0 ? Math.round((volume / totalVolume) * 100) : 0,
+      });
+    }
+
+    result.sort((a, b) => b.volume - a.volume);
+    return result;
+  },
 };

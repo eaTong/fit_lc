@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { runAgent } from '../agents/fitnessAgent';
 import { userContextService } from '../services/userContextService';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 
@@ -11,6 +12,25 @@ const chatRateLimiter = rateLimit({
   max: 20,
   message: { error: '请求过于频繁，请稍后再试' },
   keyGenerator: (req) => req.user?.id ? String(req.user.id) : (req.ip || 'anonymous'),
+});
+
+router.get('/messages', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+
+    const messages = await prisma.chatMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+
+    // Return in chronological order (oldest first)
+    res.json({ messages: messages.reverse() });
+  } catch (err) {
+    console.error('Get messages error:', err);
+    res.status(500).json({ error: 'Failed to get messages' });
+  }
 });
 
 router.post('/message', chatRateLimiter, async (req: Request, res: Response) => {
@@ -32,6 +52,29 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       userContext,
       historyMessages || []
     );
+
+    // Save user message and assistant reply to database
+    try {
+      await prisma.chatMessage.createMany({
+        data: [
+          {
+            userId,
+            role: 'user',
+            content: message,
+          },
+          {
+            userId,
+            role: 'assistant',
+            content: reply,
+            savedData: savedData as any,
+            isFromCoach: false,
+          },
+        ],
+      });
+    } catch (dbErr) {
+      console.error('Failed to save chat messages:', dbErr);
+      // Don't fail the request if DB save fails
+    }
 
     // Async refresh context (don't wait)
     setImmediate(() => {

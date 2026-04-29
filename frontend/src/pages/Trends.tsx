@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRecordsStore } from '../stores/recordsStore';
 import { recordsApi, type WeeklyStats, type ChangeItem } from '../api/records';
+import { achievementApi, type MuscleGroupVolume } from '../api/achievement';
 import TrendChart from '../components/TrendChart';
+import MuscleGroupChart from '../components/charts/MuscleGroupChart';
 import TabSwitcher from '../components/ui/TabSwitcher';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import AIInsightSummary from '../components/AIInsightSummary';
@@ -10,6 +12,7 @@ import type { Workout, Measurement } from '../types';
 const tabs = [
   { id: 'measurements', label: '围度趋势' },
   { id: 'workouts', label: '训练统计' },
+  { id: 'muscles', label: '肌肉群' },
 ];
 
 // Default to last 90 days
@@ -63,11 +66,23 @@ export default function Trends() {
   const [stats, setStats] = useState<WeeklyStats>(defaultStats);
   const [changes, setChanges] = useState<ChangeItem[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [muscleGroups, setMuscleGroups] = useState<MuscleGroupVolume[]>([]);
 
   useEffect(() => {
     fetchWorkouts(dateRange.start, dateRange.end);
     fetchMeasurements(dateRange.start, dateRange.end);
   }, [fetchWorkouts, fetchMeasurements, dateRange]);
+
+  useEffect(() => {
+    if (activeTab === 'muscles') {
+      achievementApi.getMuscleVolume(dateRange.start, dateRange.end)
+        .then((data) => setMuscleGroups(data.muscleGroups))
+        .catch((err) => {
+          console.error('Failed to fetch muscle volume:', err);
+          setMuscleGroups([]);
+        });
+    }
+  }, [activeTab, dateRange]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -132,6 +147,28 @@ export default function Trends() {
             <h2 className="font-heading text-xl mb-4 text-text-secondary">每周训练次数</h2>
             {workoutChartData.length > 0 ? (
               <TrendChart type="bar" data={workoutChartData} />
+            ) : (
+              <p className="text-text-secondary text-center">暂无训练数据</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'muscles' && (
+          <div>
+            <h2 className="font-heading text-xl mb-4 text-text-secondary">肌肉群训练量分布</h2>
+            {muscleGroups.length > 0 ? (
+              <>
+                <MuscleGroupChart data={muscleGroups} />
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {muscleGroups.map((mg) => (
+                    <div key={mg.group} className="bg-primary-secondary p-3 rounded">
+                      <div className="text-text-secondary text-xs">{mg.name}</div>
+                      <div className="text-accent-orange font-bold">{mg.percentage}%</div>
+                      <div className="text-text-muted text-xs">{mg.volume.toLocaleString()} kg</div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <p className="text-text-secondary text-center">暂无训练数据</p>
             )}

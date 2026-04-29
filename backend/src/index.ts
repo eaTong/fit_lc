@@ -15,6 +15,8 @@ import adminExercisesRouter from './routes/adminExercises';
 import adminMusclesRouter from './routes/adminMuscles';
 import voiceRoutes from './routes/voice';
 import usersRouter from './routes/users';
+import achievementsRouter from './routes/achievements';
+import triggersRouter from './routes/triggers';
 import { authMiddleware } from './middleware/auth';
 import multer from 'multer';
 
@@ -128,6 +130,8 @@ app.use('/api/admin/exercises', adminExercisesRouter);
 app.use('/api/admin/muscles', adminMusclesRouter);
 app.use('/api/voice', authMiddleware, upload.single('audio'), voiceRoutes);
 app.use('/api/users', authMiddleware, usersRouter);
+app.use('/api/achievements', authMiddleware, achievementsRouter);
+app.use('/api/triggers', authMiddleware, triggersRouter);
 
 app.listen(PORT, () => {
   console.log(`FitLC backend running on port ${PORT}`);

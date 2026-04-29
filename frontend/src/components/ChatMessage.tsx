@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ChatMessage as ChatMessageType } from '../types';
 import PlanCard from './chat/PlanCard';
 import QueryResultCard from './chat/QueryResultCard';
@@ -65,7 +67,36 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
           </div>
         )}
         <p className={`whitespace-pre-wrap ${isRevoked ? 'text-slate-400 line-through' : ''}`}>
-          {message.content}
+          {isUser ? (
+            message.content
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code: ({ children, className }) => {
+                  const isInline = !className;
+                  return isInline ? (
+                    <code className="bg-primary-tertiary px-1 py-0.5 rounded text-accent-orange">{children}</code>
+                  ) : (
+                    <code className={`bg-primary-tertiary px-2 py-1 rounded block ${className}`}>{children}</code>
+                  );
+                },
+                pre: ({ children }) => <pre className="bg-primary-tertiary p-2 rounded my-2 overflow-x-auto">{children}</pre>,
+                a: ({ href, children }) => <a href={href} className="text-accent-orange underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                ul: ({ children }) => <ul className="list-disc list-inside my-1">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-inside my-1">{children}</ol>,
+                li: ({ children }) => <li className="my-0.5">{children}</li>,
+                strong: ({ children }) => <strong className="text-accent-orange font-semibold">{children}</strong>,
+                h1: ({ children }) => <h1 className="text-xl font-bold my-2">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-lg font-bold my-2">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-base font-semibold my-1">{children}</h3>,
+                p: ({ children }) => <p className="my-1">{children}</p>,
+                blockquote: ({ children }) => <blockquote className="border-l-4 border-accent-orange pl-4 my-2 italic">{children}</blockquote>,
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          )}
         </p>
 
         {showCard && renderCard()}

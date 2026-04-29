@@ -2,6 +2,8 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
+import { achievementService } from '../services/achievementService';
+import { statsService } from '../services/statsService';
 
 export const saveMeasurementTool = new DynamicStructuredTool({
   name: "save_measurement",
@@ -28,7 +30,26 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveMeasurement(userId, finalDate, measurements);
-      return `__SAVED_TYPE__:measurement:${result.id}:{}__MESSAGE__${result.message}`;
+
+      // 更新累计统计
+      await statsService.updateAggregatedStats(userId);
+
+      // 检查徽章和里程碑
+      const achievements = await achievementService.checkBadges(userId, { type: 'measurement' });
+      const milestones = achievements.length > 0 ? await achievementService.checkMilestones(userId) : [];
+
+      // 构建成就反馈消息
+      let achievementMsg = '';
+      if (achievements.length > 0) {
+        const badgeNames = achievements.map(b => `🎖️ ${b.name}`).join('、');
+        achievementMsg += `\n\n🎉 **获得徽章！** ${badgeNames}`;
+      }
+      if (milestones.length > 0) {
+        const milestoneNames = milestones.map(m => `⭐ ${m.name}`).join('、');
+        achievementMsg += `\n\n🎯 **里程碑达成！** ${milestoneNames}`;
+      }
+
+      return `__SAVED_TYPE__:measurement:${result.id}:{}__MESSAGE__${result.message}${achievementMsg}`;
     } catch (error) {
       throw new Error(`保存围度记录失败: ${error.message}`);
     }

@@ -41,4 +41,19 @@ export const chatApi = {
     const { parsed, savedData } = parseSavedData(data.reply);
     return { reply: parsed, savedData };
   },
+
+  async getRecentMessages(limit = 20): Promise<{ messages: ChatMessage[] }> {
+    const { data } = await client.get<{ messages: any[] }>('/chat/messages', { params: { limit } });
+    // Convert API messages to ChatMessage format
+    const messages: ChatMessage[] = data.messages.map((m: any) => ({
+      id: m.id?.toString() || crypto.randomUUID(),
+      role: m.role,
+      content: m.content,
+      timestamp: new Date(m.timestamp),
+      savedData: m.savedData,
+      isFromCoach: m.isFromCoach,
+      coachMessageType: m.coachMessageType,
+    }));
+    return { messages };
+  },
 };
