@@ -1,7 +1,8 @@
 import { Component, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
-import Header from './components/Header';
+import BottomTabLayout from './layouts/BottomTabLayout';
+import SidebarLayout from './layouts/SidebarLayout';
 import ToastContainer from './components/Toast';
 import AppTipBanner from './components/AppTipBanner';
 import Login from './pages/Login';
@@ -58,26 +59,25 @@ function useAuth() {
   return { isAuthenticated };
 }
 
-function ProtectedLayout() {
+// 用户端布局（Bottom Tab）
+function UserLayout() {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" />;
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <AppTipBanner />
-      <main className="flex-1">
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }
 
-function AdminRoute({ component }: { component: ReactNode }) {
+// 管理端布局（Sidebar）
+function AdminLayout() {
   const user = useAuthStore((s) => s.user);
   if (!user?.roles?.includes('admin')) {
     return <Navigate to="/chat" />;
   }
-  return component;
+  return <Outlet />;
 }
 
 function App() {
@@ -88,23 +88,33 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route element={<ProtectedLayout />}>
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/trends" element={<Trends />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/plans" element={<Plans />} />
-              <Route path="/plans/new" element={<PlanGenerate />} />
-              <Route path="/plans/:id" element={<PlanDetail />} />
-              <Route path="/plans/:id/execute" element={<PlanExecute />} />
-              <Route path="/muscles" element={<Muscles />} />
-              <Route path="/exercises" element={<Exercises />} />
-              <Route path="/measurements" element={<Measurements />} />
-              <Route path="/admin/exercises" element={<AdminRoute component={<AdminExercises />} />} />
-              <Route path="/admin/muscles" element={<AdminRoute component={<AdminMuscles />} />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/badges" element={<Badges />} />
-              <Route path="/" element={<Navigate to="/chat" />} />
+
+            {/* 用户端路由 - Bottom Tab 布局 */}
+            <Route element={<UserLayout />}>
+              <Route element={<BottomTabLayout />}>
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/trends" element={<Trends />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/plans" element={<Plans />} />
+                <Route path="/plans/new" element={<PlanGenerate />} />
+                <Route path="/plans/:id" element={<PlanDetail />} />
+                <Route path="/plans/:id/execute" element={<PlanExecute />} />
+                <Route path="/muscles" element={<Muscles />} />
+                <Route path="/exercises" element={<Exercises />} />
+                <Route path="/measurements" element={<Measurements />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/badges" element={<Badges />} />
+                <Route path="/" element={<Navigate to="/chat" />} />
+              </Route>
+            </Route>
+
+            {/* 管理端路由 - Sidebar 布局 */}
+            <Route element={<AdminLayout />}>
+              <Route element={<SidebarLayout />}>
+                <Route path="/admin/exercises" element={<AdminExercises />} />
+                <Route path="/admin/muscles" element={<AdminMuscles />} />
+              </Route>
             </Route>
           </Routes>
           <ToastContainer />
