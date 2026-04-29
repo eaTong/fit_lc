@@ -1,0 +1,25 @@
+{
+  "name": "fitlc-mini-program",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp"
+  },
+  "dependencies": {
+    "@tarojs/cli": "4.x",
+    "@tarojs/taro": "4.x",
+    "@tarojs/plugin-framework-react": "4.x",
+    "@tarojs/react": "4.x",
+    "react": "^18.0.0",
+    "zustand": "^4.5.0",
+    "axios": "^1.6.0",
+    "marked": "^12.0.0",
+    "react-markdown": "^9.0.0",
+    "recharts": "^2.12.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
