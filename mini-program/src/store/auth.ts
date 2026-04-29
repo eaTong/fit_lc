@@ -15,20 +15,38 @@ interface AuthState {
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: wx.getStorageSync('token') || null,
-  user: wx.getStorageSync('user') || null,
-  isLoggedIn: !!wx.getStorageSync('token'),
+// 类型守卫函数
+function isValidUser(obj: any): obj is User {
+  return obj && typeof obj.id === 'number' && typeof obj.nickname === 'string';
+}
 
-  setAuth: (token, user) => {
-    wx.setStorageSync('token', token);
-    wx.setStorageSync('user', user);
-    set({ token, user, isLoggedIn: true });
-  },
+function isValidToken(token: any): token is string {
+  return typeof token === 'string' && token.length > 0;
+}
 
-  clearAuth: () => {
-    wx.removeStorageSync('token');
-    wx.removeStorageSync('user');
-    set({ token: null, user: null, isLoggedIn: false });
-  }
-}));
+export const useAuthStore = create<AuthState>((set) => {
+  // 从 storage 恢复状态时进行类型检查
+  const storedToken = wx.getStorageSync('token');
+  const storedUser = wx.getStorageSync('user');
+
+  const token = isValidToken(storedToken) ? storedToken : null;
+  const user = isValidUser(storedUser) ? storedUser : null;
+
+  return {
+    token,
+    user,
+    isLoggedIn: !!token,
+
+    setAuth: (token, user) => {
+      wx.setStorageSync('token', token);
+      wx.setStorageSync('user', user);
+      set({ token, user, isLoggedIn: true });
+    },
+
+    clearAuth: () => {
+      wx.removeStorageSync('token');
+      wx.removeStorageSync('user');
+      set({ token: null, user: null, isLoggedIn: false });
+    }
+  };
+});
