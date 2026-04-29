@@ -20,7 +20,6 @@ import Exercises from './pages/Exercises';
 import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
-import Dashboard from './pages/Dashboard';
 import Badges from './pages/Badges';
 
 interface ErrorBoundaryProps {
@@ -103,7 +102,7 @@ function App() {
                 <Route path="/muscles" element={<Muscles />} />
                 <Route path="/exercises" element={<Exercises />} />
                 <Route path="/measurements" element={<Measurements />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Navigate to="/history?tab=dashboard" />} />
                 <Route path="/badges" element={<Badges />} />
                 <Route path="/" element={<Navigate to="/chat" />} />
               </Route>

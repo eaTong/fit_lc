@@ -14,7 +14,7 @@ test.describe('Achievements System', () => {
   });
 
   test('ACH-001: 获取个人最佳记录 @achievements @pr', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show PR card on dashboard
     const prSection = page.locator('[data-testid="pr-card"]');
@@ -42,7 +42,7 @@ test.describe('Achievements System', () => {
   });
 
   test('ACH-004: 获取累计统计数据 @achievements @stats', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // Should show cumulative stats
     const hasStats = await page.getByText('累计训练').isVisible() ||
@@ -121,7 +121,7 @@ test.describe('PR Detection in Chat', () => {
   });
 
   test('PR-002: Dashboard显示PR列表 @pr @dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/history?tab=dashboard');
 
     // PR section should be visible
     await expect(page.getByText('个人最佳').or(page.locator('[data-testid="pr-card"]'))).toBeVisible();
