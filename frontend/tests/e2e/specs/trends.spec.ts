@@ -10,7 +10,7 @@ test.describe('Trends Analysis', () => {
   });
 
   test('TREND-001: 查看围度趋势图 @trends', async ({ page }) => {
-    await page.goto('/trends');
+    await page.goto('/history?tab=trends');
 
     // Should show chart container
     await expect(page.locator('canvas').or(page.locator('[data-testid="chart"]'))).toBeVisible();
@@ -21,7 +21,7 @@ test.describe('Trends Analysis', () => {
   });
 
   test('TREND-002: 时间范围筛选 @trends', async ({ page }) => {
-    await page.goto('/trends');
+    await page.goto('/history?tab=trends');
 
     // Select 30 days
     await page.getByRole('button', { name: '30天' }).click();
@@ -31,7 +31,7 @@ test.describe('Trends Analysis', () => {
   });
 
   test('TREND-003: 查看训练统计 @trends', async ({ page }) => {
-    await page.goto('/trends');
+    await page.goto('/history?tab=trends');
 
     // Switch to training stats tab
     await page.getByRole('tab', { name: '训练统计' }).click();

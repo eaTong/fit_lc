@@ -62,6 +62,9 @@ test.describe('User Profile', () => {
   test('PROF-006: 退出登录 @profile', async ({ page }) => {
     await profilePage.open();
 
+    // Switch to security tab first (logout button is there)
+    await profilePage.switchToSecurityTab();
+
     // Click logout button
     await profilePage.clickButton('退出登录');
 
