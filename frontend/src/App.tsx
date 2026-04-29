@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { useAuthStore } from './stores/authStore';
 import BottomTabLayout from './layouts/BottomTabLayout';
 import SidebarLayout from './layouts/SidebarLayout';
+import SettingsLayout from './layouts/SettingsLayout';
 import ToastContainer from './components/Toast';
 import AppTipBanner from './components/AppTipBanner';
 import Login from './pages/Login';
@@ -21,6 +22,7 @@ import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
 import Badges from './pages/Badges';
+import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import Security from './pages/Security';
 
@@ -106,10 +108,16 @@ function App() {
                 <Route path="/measurements" element={<Measurements />} />
                 <Route path="/dashboard" element={<Navigate to="/history?tab=dashboard" />} />
                 <Route path="/badges" element={<Badges />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/security" element={<Security />} />
                 <Route path="/" element={<Navigate to="/chat" />} />
               </Route>
+            </Route>
+
+            {/* 设置页面布局 - 无底部导航栏 */}
+            <Route element={<SettingsLayout />}>
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/security" element={<Security />} />
+              <Route path="/badges" element={<Badges />} />
+              <Route path="/calendar" element={<Calendar />} />
             </Route>
 
             {/* 管理端路由 - Sidebar 布局 */}

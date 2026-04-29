@@ -18,6 +18,12 @@ export default function Profile() {
   const totalWorkouts = achievementStats['total_workouts']?.value || 0;
   const streakDays = achievementStats['streak_days']?.value || 0;
 
+  // 日历入口
+  const calendarLink = {
+    streakDays,
+    to: '/calendar'
+  };
+
   return (
     <div className="px-6 py-4">
       <h1 className="font-heading text-3xl font-bold mb-6">我的</h1>
@@ -60,6 +66,20 @@ export default function Profile() {
         <StatCard title="累计训练" value={loading ? '—' : totalWorkouts} unit="次" icon="🔥" />
         <StatCard title="连续打卡" value={loading ? '—' : streakDays} unit="天" icon="📅" />
       </div>
+
+      {/* 连续打卡入口 */}
+      <Link
+        to={calendarLink.to}
+        className="block p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors mb-4"
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-2xl">📅</span>
+          <span className="text-text-primary font-semibold">连续打卡</span>
+        </div>
+        <div className="text-text-secondary text-sm">
+          当前连续 {loading ? '—' : streakDays} 天
+        </div>
+      </Link>
 
       {/* 最近训练 */}
       <Card>
