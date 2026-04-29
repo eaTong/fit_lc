@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth';
 import authProtectedRoutes from './routes/authProtected';
+import authWechatRoutes from './routes/auth.wechat';
 import chatRoutes from './routes/chat';
 import recordsRoutes from './routes/records';
 import plansRoutes from './routes/plans';
@@ -116,6 +117,7 @@ app.use(express.json());
 
 // 公开路由
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', authWechatRoutes);
 
 // 需认证路由
 app.use('/api/auth', authMiddleware, authProtectedRoutes);
