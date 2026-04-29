@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { userApi } from '../api/user';
 import Card from '../components/ui/Card';
@@ -75,14 +76,27 @@ export default function Profile() {
 
       <div className="mt-6">
         {activeTab === 'profile' && (
-          <Card variant="default" className="max-w-md">
-            <AvatarUpload currentAvatar={profile?.avatar} onUpload={userApi.uploadAvatar} />
-            <div className="mt-4 space-y-4">
-              <Input label="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
-              <Input label="身高 (cm)" type="number" value={height} onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')} />
-              <Button variant="primary" onClick={saveProfile}>保存</Button>
-            </div>
-          </Card>
+          <div className="space-y-4 max-w-md">
+            <Card variant="default">
+              <AvatarUpload currentAvatar={profile?.avatar} onUpload={userApi.uploadAvatar} />
+              <div className="mt-4 space-y-4">
+                <Input label="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} />
+                <Input label="身高 (cm)" type="number" value={height} onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')} />
+                <Button variant="primary" onClick={saveProfile}>保存</Button>
+              </div>
+            </Card>
+
+            <Link
+              to="/badges"
+              className="flex items-center gap-3 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+            >
+              <span className="text-2xl">🏆</span>
+              <div>
+                <div className="font-heading text-text-primary">我的徽章</div>
+                <div className="text-sm text-text-secondary">查看已获得的成就</div>
+              </div>
+            </Link>
+          </div>
         )}
 
         {activeTab === 'body' && (
