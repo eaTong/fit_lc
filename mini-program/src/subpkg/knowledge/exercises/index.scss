@@ -1,0 +1,74 @@
+// mini-program/src/subpkg/knowledge/exercises/index.scss
+.exercise-detail {
+  height: 100vh;
+  background-color: $bg-primary;
+  padding: 24px;
+
+  &.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    Text {
+      color: $text-secondary;
+      font-size: 28px;
+    }
+  }
+
+  .header {
+    margin-bottom: 32px;
+
+    .name {
+      display: block;
+      font-size: 40px;
+      color: $text-primary;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      .tag {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 24px;
+
+        &.category {
+          background-color: rgba(255, 69, 0, 0.2);
+          color: $accent-primary;
+        }
+
+        &.equipment, &.difficulty, &.type {
+          background-color: $bg-tertiary;
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+
+  .section {
+    margin-bottom: 32px;
+
+    .section-title {
+      display: block;
+      font-size: 28px;
+      color: $accent-primary;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .content {
+      font-size: 26px;
+      color: $text-primary;
+      line-height: 1.6;
+
+      &.warning {
+        color: #FF6B6B;
+      }
+    }
+  }
+}
