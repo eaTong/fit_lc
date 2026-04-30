@@ -76,23 +76,6 @@ export default function Calendar() {
 
   return (
     <div className="px-4 py-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-text-secondary hover:text-text-primary"
-        >
-          返回
-        </button>
-        <h1 className="font-heading text-xl font-bold text-accent-orange">日历</h1>
-        <button
-          onClick={goToToday}
-          className="text-accent-orange text-sm hover:text-accent-red"
-        >
-          今天
-        </button>
-      </div>
-
       {/* Month navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
