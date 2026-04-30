@@ -20,10 +20,10 @@ export function PhotoGrid() {
             key={photo.id}
             className="aspect-square relative cursor-pointer"
             onClick={() => openViewer(photo)}
-            onContextMenu={(e) => {
+            onContextMenu={async (e) => {
               e.preventDefault();
               if (confirm('删除该照片?')) {
-                deletePhoto(photo.id);
+                await deletePhoto(photo.id);
               }
             }}
           >
