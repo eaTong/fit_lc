@@ -33,7 +33,9 @@ fit_lc/
 │   │   └── tools/        # Agent Tools
 │   ├── prisma/
 │   │   └── schema.prisma # 数据模型
-│   └── scripts/          # 初始化脚本
+│   └── scripts/
+│       ├── init-db.sql  # 数据库表结构
+│       └── seed.sql     # 初始数据（角色/用户/肌肉/动作）
 ├── frontend/             # React Web 应用
 │   └── src/
 │       ├── components/   # 公共组件
@@ -59,7 +61,13 @@ fit_lc/
 ```bash
 cd backend
 npm install
-npm run init-db
+
+# 创建数据库并导入表结构
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS fitlc;"
+mysql -u root -p fitlc < scripts/init-db.sql
+
+# 导入初始数据（角色、测试用户、肌肉群、动作库）
+mysql -u root -p fitlc < scripts/seed.sql
 ```
 
 ### 2. 配置环境变量
