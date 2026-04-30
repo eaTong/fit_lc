@@ -8,7 +8,7 @@ export default function Gallery() {
   const { loadPhotos, selectedYear, selectedMonth } = useAlbumStore();
 
   useEffect(() => {
-    loadPhotos();
+    useAlbumStore.getState().loadPhotos();
   }, []);
 
   return (

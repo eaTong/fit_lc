@@ -24,6 +24,7 @@ export const useAlbumStore = create<AlbumState>((set, get) => ({
   viewerPhoto: null,
 
   setMonth: (year, month) => {
+    if (get().loading) return;
     set({ selectedYear: year, selectedMonth: month });
     get().loadPhotos();
   },

@@ -2,10 +2,14 @@ import { useAlbumStore } from '@/stores/albumStore';
 import { PhotoViewer } from './PhotoViewer';
 
 export function PhotoGrid() {
-  const { photos, loading, openViewer, deletePhoto } = useAlbumStore();
+  const { photos, loading, error, openViewer, deletePhoto } = useAlbumStore();
 
   if (loading) {
     return <div className="text-center text-text-secondary py-8">加载中...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 py-8">{error}</div>;
   }
 
   if (photos.length === 0) {
