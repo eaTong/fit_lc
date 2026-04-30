@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { runAgent } from '../agents/fitnessAgent';
 import { userContextService } from '../services/userContextService';
+import { albumService } from '../services/albumService';
 import prisma from '../lib/prisma';
 
 const router = Router();
@@ -56,21 +57,27 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
 
     // Save user message and assistant reply to database
     try {
-      await prisma.chatMessage.createMany({
-        data: [
-          {
-            userId,
-            role: 'user',
-            content: message,
-          },
-          {
-            userId,
-            role: 'assistant',
-            content: reply,
-            savedData: savedData as any,
-            isFromCoach: false,
-          },
-        ],
+      const userMessage = await prisma.chatMessage.create({
+        data: {
+          userId,
+          role: 'user',
+          content: message,
+        },
+      });
+
+      // Sync images to album after user message is saved
+      if (imageUrls && imageUrls.length > 0) {
+        albumService.syncPhotosFromMessage(userId, imageUrls, userMessage.id);
+      }
+
+      await prisma.chatMessage.create({
+        data: {
+          userId,
+          role: 'assistant',
+          content: reply,
+          savedData: savedData as any,
+          isFromCoach: false,
+        },
       });
     } catch (dbErr) {
       console.error('Failed to save chat messages:', dbErr);
