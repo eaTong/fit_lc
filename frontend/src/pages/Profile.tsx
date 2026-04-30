@@ -104,7 +104,7 @@ export default function Profile() {
       </div>
 
       {/* 功能入口网格 */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <Link
           to="/history"
           className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
@@ -144,6 +144,26 @@ export default function Profile() {
             <div className="text-text-primary text-xs">训练计划</div>
           </div>
         </Link>
+
+        <Link
+          to="/calendar"
+          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+        >
+          <span className="text-xl">📅</span>
+          <div className="text-center">
+            <div className="text-text-primary text-xs">打卡日历</div>
+          </div>
+        </Link>
+
+        <Link
+          to="/gallery"
+          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+        >
+          <span className="text-xl">🖼️</span>
+          <div className="text-center">
+            <div className="text-text-primary text-xs">我的相册</div>
+          </div>
+        </Link>
       </div>
 
       {/* Two-column lower section */}
@@ -174,7 +194,7 @@ export default function Profile() {
       </div>
 
       {/* 快捷设置入口 */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4">
         <Link
           to="/settings"
           className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
@@ -202,35 +222,6 @@ export default function Profile() {
           <span className="text-2xl">🏆</span>
           <div className="text-center">
             <div className="text-text-primary text-sm">徽章</div>
-          </div>
-        </Link>
-      </div>
-
-      {/* 打卡和相册入口 */}
-      <div className="grid grid-cols-2 gap-4">
-        <Link
-          to="/calendar"
-          className="block p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">📅</span>
-            <span className="text-text-primary font-semibold">连续打卡</span>
-          </div>
-          <div className="text-text-secondary text-sm">
-            当前连续 {loading ? '—' : cumulativeStats.streakDays} 天
-          </div>
-        </Link>
-
-        <Link
-          to="/gallery"
-          className="block p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🖼️</span>
-              <span className="text-text-primary font-semibold">我的相册</span>
-            </div>
-            <span className="text-text-secondary">›</span>
           </div>
         </Link>
       </div>
