@@ -40,13 +40,15 @@ export const useAlbumStore = create<AlbumState>((set, get) => ({
   },
 
   deletePhoto: async (id) => {
+    set({ loading: true, error: null });
     try {
       await albumApi.deletePhoto(id);
       set((state) => ({
         photos: state.photos.filter((p) => p.id !== id),
+        loading: false,
       }));
     } catch (err: any) {
-      set({ error: err.message });
+      set({ error: err.message, loading: false });
     }
   },
 
