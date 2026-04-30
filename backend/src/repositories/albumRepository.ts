@@ -35,4 +35,11 @@ export const albumRepository = {
   async findById(id: number) {
     return prisma.albumPhoto.findUnique({ where: { id } });
   },
+
+  async findByUserAll(userId: number) {
+    return prisma.albumPhoto.findMany({
+      where: { userId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
 };

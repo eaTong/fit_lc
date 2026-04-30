@@ -20,9 +20,22 @@ export interface Exercise {
   parentId: number | null;
   tags: string[] | null;
   status: string;
+  steps: string | null;
+  safetyNotes: string | null;
+  commonMistakes: string | null;
+  exerciseType: string | null;
+  variantType: string | null;
   muscles?: ExerciseMuscle[];
   parent?: { id: number; name: string };
-  variants?: { id: number; name: string; status: string }[];
+  variants?: ExerciseVariant[];
+}
+
+export interface ExerciseVariant {
+  id: number;
+  variantId: number;
+  variantType: string | null;
+  differenceNotes: string | null;
+  variant: { id: number; name: string };
 }
 
 export interface ExerciseMuscle {

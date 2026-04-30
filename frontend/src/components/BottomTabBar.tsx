@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 const tabs = [
   { path: '/chat', label: '首页', icon: '🏠' },
-  { path: '/muscles', label: '知识', icon: '📚' },
+  { path: '/exercises', label: '动作', icon: '💪' },
   { path: '/profile', label: '我的', icon: '👤' },
 ];
 
@@ -13,9 +13,8 @@ export default function BottomTabBar() {
     if (path === '/chat') {
       return location.pathname === '/chat';
     }
-    if (path === '/muscles') {
-      return location.pathname.startsWith('/muscles') ||
-             location.pathname.startsWith('/exercises');
+    if (path === '/exercises') {
+      return location.pathname.startsWith('/exercises');
     }
     return location.pathname.startsWith(path);
   };

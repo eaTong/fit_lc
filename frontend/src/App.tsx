@@ -17,8 +17,8 @@ import Plans from './pages/Plans';
 import PlanGenerate from './pages/PlanGenerate';
 import PlanDetail from './pages/PlanDetail';
 import PlanExecute from './pages/PlanExecute';
-import Muscles from './pages/Muscles';
 import Exercises from './pages/Exercises';
+import ExerciseDetail from './pages/ExerciseDetail';
 import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
@@ -26,7 +26,8 @@ import Badges from './pages/Badges';
 import Gallery from './pages/Gallery';
 import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
-import Security from './pages/Security';
+import ProfileSettings from './pages/settings/ProfileSettings';
+import BodySettings from './pages/settings/BodySettings';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -98,7 +99,7 @@ function App() {
             <Route element={<UserLayout />}>
               <Route element={<BottomTabLayout />}>
                 <Route path="/chat" element={<Chat />} />
-                <Route path="/muscles" element={<Muscles />} />
+                <Route path="/exercises" element={<Exercises />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/" element={<Navigate to="/chat" />} />
               </Route>
@@ -112,7 +113,7 @@ function App() {
                 <Route path="/plans/:id" element={<PlanDetail />} />
                 <Route path="/plans/:id/execute" element={<PlanExecute />} />
                 <Route path="/gallery" element={<Gallery />} />
-                <Route path="/exercises" element={<Exercises />} />
+                <Route path="/exercises/:id" element={<ExerciseDetail />} />
                 <Route path="/measurements" element={<Measurements />} />
                 <Route path="/badges" element={<Badges />} />
               </Route>
@@ -120,8 +121,11 @@ function App() {
 
             {/* 设置页面布局 - 无底部导航栏 */}
             <Route element={<SettingsLayout />}>
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/security" element={<Security />} />
+              <Route path="/settings" element={<Settings />}>
+                <Route index element={<ProfileSettings />} />
+                <Route path="profile" element={<ProfileSettings />} />
+                <Route path="body" element={<BodySettings />} />
+              </Route>
               <Route path="/calendar" element={<Calendar />} />
             </Route>
 

@@ -8,11 +8,18 @@ export interface AlbumPhoto {
   createdAt: string;
 }
 
+export type PhotosByMonth = Record<string, AlbumPhoto[]>;
+
 export const albumApi = {
   async getPhotosByMonth(year: number, month: number): Promise<AlbumPhoto[]> {
     const { data } = await client.get<{ data: AlbumPhoto[] }>('/album/photos', {
       params: { year, month },
     });
+    return data.data;
+  },
+
+  async getAllPhotos(): Promise<PhotosByMonth> {
+    const { data } = await client.get<{ data: PhotosByMonth }>('/album/photos');
     return data.data;
   },
 

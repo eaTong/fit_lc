@@ -1,40 +1,28 @@
 import { create } from 'zustand';
-import { albumApi, AlbumPhoto } from '../api/album';
+import { albumApi, AlbumPhoto, PhotosByMonth } from '../api/album';
 
 interface AlbumState {
-  photos: AlbumPhoto[];
-  selectedYear: number;
-  selectedMonth: number;
+  photosByMonth: PhotosByMonth;
   loading: boolean;
   error: string | null;
   viewerPhoto: AlbumPhoto | null;
-  setMonth: (year: number, month: number) => void;
   loadPhotos: () => Promise<void>;
   deletePhoto: (id: number) => Promise<void>;
   openViewer: (photo: AlbumPhoto) => void;
   closeViewer: () => void;
 }
 
-export const useAlbumStore = create<AlbumState>((set, get) => ({
-  photos: [],
-  selectedYear: new Date().getFullYear(),
-  selectedMonth: new Date().getMonth() + 1,
+export const useAlbumStore = create<AlbumState>((set) => ({
+  photosByMonth: {},
   loading: false,
   error: null,
   viewerPhoto: null,
 
-  setMonth: (year, month) => {
-    if (get().loading) return;
-    set({ selectedYear: year, selectedMonth: month });
-    get().loadPhotos();
-  },
-
   loadPhotos: async () => {
     set({ loading: true, error: null });
     try {
-      const { selectedYear, selectedMonth } = get();
-      const photos = await albumApi.getPhotosByMonth(selectedYear, selectedMonth);
-      set({ photos, loading: false });
+      const photosByMonth = await albumApi.getAllPhotos();
+      set({ photosByMonth, loading: false });
     } catch (err: any) {
       set({ error: err.message, loading: false });
     }
@@ -44,10 +32,9 @@ export const useAlbumStore = create<AlbumState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await albumApi.deletePhoto(id);
-      set((state) => ({
-        photos: state.photos.filter((p) => p.id !== id),
-        loading: false,
-      }));
+      // Reload all photos after deletion
+      const photosByMonth = await albumApi.getAllPhotos();
+      set({ photosByMonth, loading: false, viewerPhoto: null });
     } catch (err: any) {
       set({ error: err.message, loading: false });
     }

@@ -26,4 +26,8 @@ export const albumService = {
     await albumRepository.softDelete(photoId, userId);
     return { success: true };
   },
+
+  async getAllPhotos(userId: number) {
+    return albumRepository.findByUserAll(userId);
+  },
 };

@@ -192,4 +192,63 @@ describe('AlbumRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('findByUserAll', () => {
+    it('should return all photos for a user ordered by createdAt desc', async () => {
+      const userId = 1;
+      const expectedPhotos = [
+        {
+          id: 2,
+          userId: 1,
+          ossUrl: 'https://example.com/photo2.jpg',
+          thumbnailUrl: null,
+          chatMessageId: null,
+          deletedAt: null,
+          createdAt: new Date(2026, 3, 20),
+        },
+        {
+          id: 1,
+          userId: 1,
+          ossUrl: 'https://example.com/photo1.jpg',
+          thumbnailUrl: null,
+          chatMessageId: null,
+          deletedAt: null,
+          createdAt: new Date(2026, 3, 15),
+        },
+      ];
+
+      mockFindMany.mockResolvedValue(expectedPhotos);
+
+      const result = await albumRepository.findByUserAll(userId);
+
+      expect(mockFindMany).toHaveBeenCalledWith({
+        where: { userId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe(2); // newest first
+      expect(result[1].id).toBe(1);
+    });
+
+    it('should return empty array when user has no photos', async () => {
+      mockFindMany.mockResolvedValue([]);
+
+      const result = await albumRepository.findByUserAll(999);
+
+      expect(result).toEqual([]);
+      expect(mockFindMany).toHaveBeenCalled();
+    });
+
+    it('should exclude deleted photos', async () => {
+      const userId = 1;
+      mockFindMany.mockResolvedValue([]);
+
+      await albumRepository.findByUserAll(userId);
+
+      expect(mockFindMany).toHaveBeenCalledWith({
+        where: { userId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+  });
 });

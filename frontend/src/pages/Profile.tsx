@@ -1,227 +1,191 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useRecordsStore } from '../stores/recordsStore';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
 import { useAchievementStore } from '../stores/achievementStore';
-import { recordsApi, type WeeklyStats } from '../api/records';
-import type { CumulativeStats } from '../api/achievement';
-import StatCard from '../components/dashboard/StatCard';
-import RecentWorkoutItem from '../components/dashboard/RecentWorkoutItem';
-import KeyMeasurementsPanel from '../components/dashboard/KeyMeasurementsPanel';
-import PRCard from '../components/dashboard/PRCard';
-import CumulativeStatsCard from '../components/dashboard/CumulativeStatsCard';
-import Card from '../components/ui/Card';
+import { userApi } from '../api/user';
+import { achievementApi } from '../api/achievement';
 
-const defaultStats: WeeklyStats = {
-  weeklyWorkouts: 0,
-  monthlyWorkouts: 0,
-  totalVolume: 0,
-  workoutDays: 0,
-};
+interface UserProfile {
+  nickname?: string;
+  avatar?: string;
+  height?: number;
+}
 
-const defaultCumulative: CumulativeStats = {
-  totalWorkouts: 0,
-  totalVolume: 0,
-  streakDays: 0,
-  weeklyWorkouts: 0,
-  weeklyVolume: 0,
-};
+interface BodyMetric {
+  weight: number;
+  bodyFat?: number;
+}
+
+interface AchievementStats {
+  total_workouts?: { value: number };
+  total_volume?: { value: number };
+  streak_days?: { value: number };
+}
 
 export default function Profile() {
-  const { recentWorkouts, latestMeasurement, fetchWorkouts, fetchMeasurements, isLoading } = useRecordsStore();
-  const { personalRecords, stats: achievementStats, fetchPersonalRecords, fetchStats } = useAchievementStore();
-  const [stats, setStats] = useState<WeeklyStats>(defaultStats);
-  const [cumulativeStats, setCumulativeStats] = useState<CumulativeStats>(defaultCumulative);
-  const [loading, setLoading] = useState(true);
-  const [statsError, setStatsError] = useState(false);
+  const { user } = useAuthStore();
+  const { badges, fetchBadges } = useAchievementStore();
+  const navigate = useNavigate();
+
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [latestMetric, setLatestMetric] = useState<BodyMetric | null>(null);
+  const [stats, setStats] = useState<AchievementStats>({});
 
   useEffect(() => {
-    fetchWorkouts();
-    fetchMeasurements();
-    fetchPersonalRecords();
-    fetchStats();
+    loadProfile();
+    loadStats();
+    fetchBadges();
+  }, []);
 
-    recordsApi
-      .getStats()
-      .then((data) => setStats(data.weekly))
-      .catch((err) => {
-        console.error('Failed to fetch stats:', err);
-        setStatsError(true);
-      })
-      .finally(() => setLoading(false));
-  }, [fetchWorkouts, fetchMeasurements, fetchPersonalRecords, fetchStats]);
-
-  useEffect(() => {
-    if (Object.keys(achievementStats).length > 0) {
-      const totalWorkouts = achievementStats['total_workouts'];
-      const totalVolume = achievementStats['total_volume'];
-      const streakDays = achievementStats['streak_days'];
-
-      setCumulativeStats({
-        totalWorkouts: totalWorkouts?.value || 0,
-        totalVolume: totalVolume?.value || 0,
-        streakDays: streakDays?.value || 0,
-        weeklyWorkouts: stats.weeklyWorkouts,
-        weeklyVolume: stats.totalVolume,
-      });
+  const loadProfile = async () => {
+    try {
+      const data = await userApi.getProfile();
+      setProfile(data);
+    } catch (err) {
+      console.error('Failed to load profile:', err);
     }
-  }, [achievementStats, stats]);
+
+    try {
+      const metrics = await userApi.getMetrics(1, 1);
+      if (metrics.records.length > 0) {
+        setLatestMetric(metrics.records[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load metrics:', err);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const { stats: achievementStats } = await achievementApi.getStats();
+      setStats(achievementStats);
+    } catch (err) {
+      console.error('Failed to load stats:', err);
+    }
+  };
+
+  const totalWorkouts = stats.total_workouts?.value || 0;
+  const totalVolume = stats.total_volume?.value || 0;
+  const streakDays = stats.streak_days?.value || 0;
+  const badgeCount = badges.length;
+
+  const bmi = profile?.height && latestMetric?.weight
+    ? (latestMetric.weight / Math.pow(profile.height / 100, 2)).toFixed(1)
+    : null;
 
   return (
     <div className="px-6 py-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-3xl font-bold">我的</h1>
-        <Link
-          to="/chat"
-          className="px-4 py-2 bg-accent-orange text-white font-heading font-medium
-            border-2 border-accent-orange hover:bg-accent-red hover:border-accent-red
-            transition-all duration-150"
-        >
-          开始训练
-        </Link>
-      </div>
-
-      {/* Stats Error Message */}
-      {statsError && <p className="text-accent-red text-sm mb-4">数据加载失败，请刷新页面</p>}
-
-      {/* Stat Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard title="本周训练" value={(loading || isLoading) ? '—' : stats.weeklyWorkouts} unit="次" icon="🔥" />
-        <StatCard title="本周训练日" value={(loading || isLoading) ? '—' : stats.workoutDays} unit="天" icon="📅" />
-        <StatCard
-          title="本周训练量"
-          value={(loading || isLoading) ? '—' : Math.round(stats.totalVolume / 1000)}
-          unit="吨"
-          subtitle={!(loading || isLoading) ? `${stats.totalVolume.toLocaleString()} kg` : undefined}
-          icon="🏋️"
-        />
-        <StatCard title="本月训练" value={(loading || isLoading) ? '—' : stats.monthlyWorkouts} unit="次" icon="📆" />
-      </div>
-
-      {/* Cumulative Stats Card */}
-      <div className="mb-6">
-        <CumulativeStatsCard stats={cumulativeStats} isLoading={loading} />
-      </div>
-
-      {/* 功能入口网格 */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <Link
-          to="/history"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <span className="text-xl">📋</span>
-          <div className="text-center">
-            <div className="text-text-primary text-xs">训练历史</div>
+      {/* 头像 + 昵称行 */}
+      <Link
+        to="/settings/profile"
+        className="flex items-center justify-between p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors mb-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-tertiary border-2 border-border flex items-center justify-center">
+            {profile?.avatar ? (
+              <img src={profile.avatar} alt="avatar" className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <span className="text-2xl">👤</span>
+            )}
           </div>
-        </Link>
+          <span className="text-text-primary font-heading text-lg">
+            {profile?.nickname || user?.email || '未设置昵称'}
+          </span>
+        </div>
+        <span className="text-text-secondary">→</span>
+      </Link>
 
-        <Link
-          to="/trends"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+      {/* 统计行 */}
+      <div
+        className="flex items-center gap-2 p-4 bg-tertiary rounded border border-border mb-4 overflow-x-auto"
+        onClick={() => navigate('/calendar')}
+        style={{ cursor: 'pointer' }}
+      >
+        <span className="text-text-secondary text-sm whitespace-nowrap">
+          训练天数 <span className="text-text-primary font-medium">{totalWorkouts}</span>
+        </span>
+        <span className="text-border">·</span>
+        <span className="text-text-secondary text-sm whitespace-nowrap">
+          连续天数 <span className="text-text-primary font-medium">{streakDays}</span>
+        </span>
+        <span className="text-border">·</span>
+        <span className="text-text-secondary text-sm whitespace-nowrap">
+          总训练量 <span className="text-text-primary font-medium">{(totalVolume / 1000).toFixed(0)}</span>吨
+        </span>
+        <span className="text-border">·</span>
+        <span
+          className="text-accent-orange text-sm whitespace-nowrap"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/badges');
+          }}
         >
-          <span className="text-xl">📈</span>
-          <div className="text-center">
-            <div className="text-text-primary text-xs">趋势分析</div>
-          </div>
-        </Link>
+          徽章 <span className="font-medium">{badgeCount}</span>
+        </span>
+      </div>
 
+      {/* 身体数据行 */}
+      <Link
+        to="/settings/body"
+        className="flex items-center justify-between p-4 bg-tertiary rounded border border-border mb-4"
+      >
+        <div className="flex items-center gap-4 text-sm">
+          <span className="text-text-secondary">
+            身高 <span className="text-text-primary font-medium">{profile?.height || '--'}</span>cm
+          </span>
+          <span className="text-border">·</span>
+          <span className="text-text-secondary">
+            体重 <span className="text-text-primary font-medium">{latestMetric?.weight || '--'}</span>kg
+          </span>
+          <span className="text-border">·</span>
+          <span className="text-text-secondary">
+            体脂 <span className="text-text-primary font-medium">{latestMetric?.bodyFat || '--'}</span>%
+          </span>
+          <span className="text-border">·</span>
+          <span className="text-accent-orange">
+            BMI <span className="font-medium">{bmi || '--'}</span>
+          </span>
+        </div>
+        <span className="text-text-secondary">→</span>
+      </Link>
+
+      {/* 开始训练 */}
+      <Link
+        to="/chat"
+        className="flex items-center justify-center gap-2 w-full p-4 bg-accent-orange text-white font-heading font-medium rounded border-2 border-accent-orange hover:bg-accent-red hover:border-accent-red transition-all duration-150 mb-6"
+      >
+        开始训练
+      </Link>
+
+      {/* 快速入口 */}
+      <div className="grid grid-cols-3 gap-3">
         <Link
           to="/measurements"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
         >
-          <span className="text-xl">📏</span>
+          <span className="text-2xl">📏</span>
           <div className="text-center">
-            <div className="text-text-primary text-xs">围度记录</div>
+            <div className="text-text-primary text-sm">围度</div>
           </div>
         </Link>
 
         <Link
           to="/plans"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
+          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
         >
-          <span className="text-xl">🏋️</span>
+          <span className="text-2xl">🏋️</span>
           <div className="text-center">
-            <div className="text-text-primary text-xs">训练计划</div>
-          </div>
-        </Link>
-
-        <Link
-          to="/calendar"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <span className="text-xl">📅</span>
-          <div className="text-center">
-            <div className="text-text-primary text-xs">打卡日历</div>
+            <div className="text-text-primary text-sm">计划</div>
           </div>
         </Link>
 
         <Link
           to="/gallery"
-          className="flex flex-col items-center gap-2 p-3 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <span className="text-xl">🖼️</span>
-          <div className="text-center">
-            <div className="text-text-primary text-xs">我的相册</div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Two-column lower section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Recent Workouts */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-lg font-semibold text-text-primary">最近训练</h2>
-            <Link
-              to="/history"
-              className="text-accent-orange text-sm hover:text-accent-red transition-colors"
-            >
-              查看全部
-            </Link>
-          </div>
-          {recentWorkouts.length === 0 ? (
-            <p className="text-text-secondary text-center py-8">暂无训练记录</p>
-          ) : (
-            recentWorkouts.slice(0, 3).map((w) => <RecentWorkoutItem key={w.id} workout={w} />)
-          )}
-        </Card>
-
-        {/* Right column: PR Card + Key Measurements */}
-        <div className="space-y-6">
-          <PRCard personalRecords={personalRecords} />
-          <KeyMeasurementsPanel measurement={latestMeasurement} />
-        </div>
-      </div>
-
-      {/* 快捷设置入口 */}
-      <div className="grid grid-cols-3 gap-4">
-        <Link
-          to="/settings"
           className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
         >
-          <span className="text-2xl">⚙️</span>
+          <span className="text-2xl">🖼️</span>
           <div className="text-center">
-            <div className="text-text-primary text-sm">设置</div>
-          </div>
-        </Link>
-
-        <Link
-          to="/security"
-          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <span className="text-2xl">🔐</span>
-          <div className="text-center">
-            <div className="text-text-primary text-sm">安全</div>
-          </div>
-        </Link>
-
-        <Link
-          to="/badges"
-          className="flex flex-col items-center gap-2 p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors"
-        >
-          <span className="text-2xl">🏆</span>
-          <div className="text-center">
-            <div className="text-text-primary text-sm">徽章</div>
+            <div className="text-text-primary text-sm">相册</div>
           </div>
         </Link>
       </div>
