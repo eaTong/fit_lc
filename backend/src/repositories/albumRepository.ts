@@ -1,0 +1,38 @@
+import prisma from '../lib/prisma';
+
+export interface CreateAlbumPhotoInput {
+  userId: number;
+  ossUrl: string;
+  thumbnailUrl?: string;
+  chatMessageId?: number;
+}
+
+export const albumRepository = {
+  async create(input: CreateAlbumPhotoInput) {
+    return prisma.albumPhoto.create({ data: input });
+  },
+
+  async findByUserAndMonth(userId: number, year: number, month: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+    return prisma.albumPhoto.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async softDelete(id: number, userId: number) {
+    return prisma.albumPhoto.updateMany({
+      where: { id, userId },
+      data: { deletedAt: new Date() },
+    });
+  },
+
+  async findById(id: number) {
+    return prisma.albumPhoto.findUnique({ where: { id } });
+  },
+};
