@@ -7,7 +7,17 @@ export const AIConfigSchema = z.object({
   provider: AIProviderSchema,
   minimaxApiKey: z.string().optional(),
   zhipuApiKey: z.string().optional(),
-  modelName: z.string().optional(), // Override default model name
+  modelName: z.string().optional(),
+  models: z.object({
+    minimax: z.object({
+      chat: z.string(),
+      vision: z.string(),
+    }),
+    zhipu: z.object({
+      chat: z.string(),
+      vision: z.string(),
+    }),
+  }),
 });
 
 export type AIConfig = z.infer<typeof AIConfigSchema>;
@@ -21,19 +31,17 @@ export const aiConfig: AIConfig = {
   minimaxApiKey: getEnv('MINIMAX_API_KEY'),
   zhipuApiKey: getEnv('ZHIPU_API_KEY'),
   modelName: getEnv('AI_MODEL_NAME') || undefined,
+  models: {
+    minimax: {
+      chat: getEnv('MINIMAX_CHAT_MODEL', 'MiniMax-Text-01'),
+      vision: getEnv('MINIMAX_VISION_MODEL', 'MiniMax-VL-01'),
+    },
+    zhipu: {
+      chat: getEnv('ZHIPU_CHAT_MODEL', 'GLM-4-Plus'),
+      vision: getEnv('ZHIPU_VISION_MODEL', 'GLM-4V-Flash'),
+    },
+  },
 };
-
-// Default models per provider
-export const DEFAULT_MODELS = {
-  minimax: {
-    chat: 'MiniMax-Text-01',
-    vision: 'MiniMax-VL-01',
-  },
-  zhipu: {
-    chat: 'GLM-4-Plus',      // Free tier text model
-    vision: 'GLM-4V-Flash',  // Free multimodal model
-  },
-} as const;
 
 export function getCurrentProvider(): AIProvider {
   return aiConfig.provider;
@@ -43,7 +51,7 @@ export function getModelName(type: 'chat' | 'vision'): string {
   if (aiConfig.modelName) {
     return aiConfig.modelName;
   }
-  return DEFAULT_MODELS[aiConfig.provider][type];
+  return aiConfig.models[aiConfig.provider][type];
 }
 
 export function requireApiKey(provider: AIProvider): string {
