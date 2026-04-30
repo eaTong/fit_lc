@@ -8,9 +8,7 @@ export const albumService = {
       ossUrl: url,
       chatMessageId,
     }));
-    await prisma.$transaction(async (tx) => {
-      await tx.albumPhoto.createMany({ data: photos });
-    });
+    await prisma.albumPhoto.createMany({ data: photos });
   },
 
   async getPhotosByMonth(userId: number, year: number, month: number) {

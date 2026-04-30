@@ -2,8 +2,8 @@
 
 > **注意：** 本文档为正式版 PRD，记录已实现的功能。全部需求（包括未实现的）请参见 [PRD-planning.md](./PRD-planning.md)。
 
-**版本：** 1.4
-**日期：** 2026-04-29
+**版本：** 1.5
+**日期：** 2026-04-30
 **状态：** 已上线
 
 ---
@@ -405,6 +405,43 @@ AI回复内容支持Markdown格式渲染，包括：
 
 ---
 
+### 3.8 相册功能
+
+#### 3.8.1 功能描述
+用户聊天中发送的图片自动同步到相册，支持按月份浏览和管理。
+
+#### 3.8.2 功能特性
+| 特性 | 说明 |
+|------|------|
+| 自动同步 | 用户发送图片时自动写入相册，无需手动操作 |
+| 月份分类 | 图片按月份分类展示，支持横向月份选择器 |
+| 照片预览 | 点击照片可全屏预览，支持 ESC 关闭 |
+| 照片删除 | 右键可删除照片（软删除） |
+
+#### 3.8.3 入口
+- 底部导航栏新增"相册" Tab
+- 个人中心页面"我的相册"链接
+
+#### 3.8.4 数据模型
+**AlbumPhoto 表：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INT | 主键 |
+| userId | INT | 用户ID |
+| ossUrl | VARCHAR(500) | OSS 图片地址 |
+| thumbnailUrl | VARCHAR(500) | 缩略图地址（可选） |
+| chatMessageId | INT | 关联聊天消息ID |
+| createdAt | DATETIME | 创建时间 |
+| deletedAt | DATETIME | 软删除时间 |
+
+#### 3.8.5 API 接口
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/album/photos | 获取指定月份照片 | 是 |
+| DELETE | /api/album/photos/:id | 删除照片 | 是 |
+
+---
+
 ## 4. AI增强功能
 
 ### 4.1 动作详情AI生成
@@ -655,7 +692,8 @@ users 1 ───< user_roles >──── 1 roles
 | trend_predictions | 趋势预测模型 | id, userId, metricType, slope, intercept, rSquared |
 | milestones | 里程碑定义 | id, code, name, metricType, threshold |
 | user_milestones | 用户里程碑记录 | id, userId, milestoneId, progress, achievedAt |
-| chat_messages | 对话历史 | id, userId, role, content, savedData, createdAt |
+| chat_messages | 对话历史 | id, userId, role, content, savedData, imageUrls, createdAt |
+| album_photos | 相册照片 | id, userId, ossUrl, thumbnailUrl, chatMessageId, createdAt, deletedAt |
 
 #### 6.2.1 肌肉群训练量统计
 
@@ -796,9 +834,10 @@ GROUP BY m.group
 | /login | 登录页 | 用户登录 | 公开 |
 | /register | 注册页 | 用户注册 | 公开 |
 | /chat | AI对话页 | 核心功能，训练/围度记录（首页Tab） | 登录用户 |
+| /gallery | 相册 | 用户相册，按月份浏览照片 | 登录用户 |
 | /history | 历史记录 | 训练和围度历史（数据Tab） | 登录用户 |
 | /trends | 趋势分析 | 围度趋势图和训练统计 | 登录用户 |
-| /profile | 个人中心 | 用户信息、设置入口、连续打卡入口（我的Tab） | 登录用户 |
+| /profile | 个人中心 | 用户信息、设置入口、连续打卡入口（我的Tab），含"我的相册"链接 | 登录用户 |
 | /exercises | 动作库 | 动作列表和筛选（知识Tab） | 登录用户 |
 | /muscles | 肌肉库 | 肌肉层级树 | 登录用户 |
 | /plans | 健身计划 | AI生成训练计划（计划Tab） | 登录用户 |
@@ -811,11 +850,12 @@ GROUP BY m.group
 
 ### 8.2 底部导航栏
 
-用户端底部 Tab 导航（5个Tab）：
+用户端底部 Tab 导航（6个Tab）：
 | Tab | 图标 | 路径 |
 |-----|------|------|
 | 首页 | 🏠 | /chat |
 | 数据 | 📊 | /history |
+| 相册 | 🖼️ | /gallery |
 | 计划 | 📋 | /plans |
 | 知识 | 📚 | /muscles |
 | 我的 | 👤 | /profile |
