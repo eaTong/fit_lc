@@ -6,11 +6,16 @@ const router = Router();
 
 router.get('/photos', authMiddleware, async (req, res) => {
   const { year, month } = req.query;
-  const photos = await albumService.getPhotosByMonth(
-    req.user!.id,
-    Number(year),
-    Number(month)
-  );
+
+  // Validate year and month are present and in valid range
+  const yearNum = Number(year);
+  const monthNum = Number(month);
+
+  if (!year || !month || isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+    return res.status(400).json({ success: false, error: 'Invalid year or month parameter' });
+  }
+
+  const photos = await albumService.getPhotosByMonth(req.user!.id, yearNum, monthNum);
   res.json({ success: true, data: photos });
 });
 
@@ -18,8 +23,15 @@ router.delete('/photos/:id', authMiddleware, async (req, res) => {
   try {
     await albumService.deletePhoto(Number(req.params.id), req.user!.id);
     res.json({ success: true });
-  } catch (e) {
-    res.status(404).json({ success: false, error: 'Not found' });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    if (message === 'Photo not found') {
+      res.status(404).json({ success: false, error: 'Not found' });
+    } else if (message === 'Photo belongs to another user') {
+      res.status(403).json({ success: false, error: 'Photo belongs to another user' });
+    } else {
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
   }
 });
 
