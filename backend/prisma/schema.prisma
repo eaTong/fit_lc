@@ -32,6 +32,7 @@ model User {
   triggerEvents       TriggerEvent[]
   trendPredictions    TrendPrediction[]
   userMilestones      UserMilestone[]
+  albumPhotos         AlbumPhoto[]
 
   @@map("users")
 }
@@ -212,6 +213,7 @@ model ChatMessage {
   role      String   @db.VarChar(20)
   content   String   @db.Text
   savedData Json?    @map("saved_data")
+  imageUrls Json?    @map("image_urls")
   createdAt DateTime @default(now()) @map("created_at")
   isFromCoach    Boolean  @default(false) @map("is_from_coach")
   coachMessageType String? @map("coach_message_type")
@@ -220,9 +222,26 @@ model ChatMessage {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   parent ChatMessage? @relation("CoachThread", fields: [parentId], references: [id])
   replies ChatMessage[] @relation("CoachThread")
+  albumPhotos AlbumPhoto[]
 
   @@index([userId, createdAt])
   @@map("chat_messages")
+}
+
+model AlbumPhoto {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  ossUrl        String    @db.VarChar(500)
+  thumbnailUrl String?   @map("thumbnail_url")
+  chatMessageId Int?     @map("chat_message_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatMessage ChatMessage? @relation(fields: [chatMessageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("album_photos")
 }
 
 // 肌肉层级树：肌肉群(level 1) → 主肌肉(level 2)
