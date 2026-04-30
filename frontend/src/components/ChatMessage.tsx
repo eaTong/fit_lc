@@ -66,6 +66,21 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
             {message.coachMessageType === 'encouragement' && <span>💪</span>}
           </div>
         )}
+
+        {/* User images */}
+        {isUser && message.imageUrls && message.imageUrls.length > 0 && (
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {message.imageUrls.map((url, index) => (
+              <img
+                key={index}
+                src={url}
+                alt={`Uploaded ${index + 1}`}
+                className="max-w-[200px] max-h-[200px] object-cover rounded border border-border"
+              />
+            ))}
+          </div>
+        )}
+
         <p className={`whitespace-pre-wrap ${isRevoked ? 'text-slate-400 line-through' : ''}`}>
           {isUser ? (
             message.content

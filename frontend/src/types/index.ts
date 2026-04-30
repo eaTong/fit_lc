@@ -145,6 +145,7 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  imageUrls?: string[];
   timestamp: Date;
   savedData?: SavedData;
   isFromCoach?: boolean;

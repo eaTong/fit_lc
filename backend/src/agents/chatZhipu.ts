@@ -7,14 +7,20 @@
 import axios, { AxiosInstance } from 'axios';
 import { getModelName, requireApiKey } from '../lib/aiConfig.js';
 
+interface MultimodalContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string };
+}
+
 interface MessageContent {
   role: 'user' | 'assistant' | 'system';
-  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  content: string | MultimodalContent[];
 }
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: string | { text: string; images?: string[] };
 }
 
 interface ChatOptions {
@@ -60,10 +66,27 @@ export class ZhipuChat {
     options?: ChatOptions
   ): Promise<{ content: string; usage?: ChatResponse['usage'] }> {
     // Convert ChatMessage[] to API format
-    const formattedMessages: MessageContent[] = messages.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+    const formattedMessages = messages.map((msg): MessageContent => {
+      // Handle multimodal content (text + images)
+      if (typeof msg.content === 'object' && msg.content !== null && 'images' in msg.content) {
+        const contentParts: MultimodalContent[] = [];
+        const msgContent = msg.content as { text?: string; images?: string[] };
+
+        if (msgContent.text) {
+          contentParts.push({ type: 'text', text: msgContent.text });
+        }
+
+        if (msgContent.images && msgContent.images.length > 0) {
+          for (const imageUrl of msgContent.images) {
+            contentParts.push({ type: 'image_url', image_url: { url: imageUrl } });
+          }
+        }
+
+        return { role: msg.role, content: contentParts };
+      }
+
+      return { role: msg.role, content: msg.content as string };
+    });
 
     const requestBody: Record<string, unknown> = {
       model: this.model,
@@ -115,7 +138,8 @@ export class ZhipuChat {
   async sendMessage(
     userMessage: string,
     systemPrompt?: string,
-    options?: ChatOptions
+    options?: ChatOptions,
+    imageUrls?: string[]
   ): Promise<{ content: string; usage?: ChatResponse['usage'] }> {
     const messages: ChatMessage[] = [];
 
@@ -123,7 +147,11 @@ export class ZhipuChat {
       messages.push({ role: 'system', content: systemPrompt });
     }
 
-    messages.push({ role: 'user', content: userMessage });
+    const content = imageUrls && imageUrls.length > 0
+      ? { text: userMessage, images: imageUrls }
+      : userMessage;
+
+    messages.push({ role: 'user', content });
 
     return this.chat(messages, options);
   }

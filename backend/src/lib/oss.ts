@@ -12,3 +12,9 @@ export async function uploadAvatar(userId: number, file: Buffer, ext: string): P
   const result = await client.put(filename, file);
   return result.url;
 }
+
+export async function uploadChatImage(userId: number, file: Buffer, ext: string): Promise<string> {
+  const filename = `chat-images/user-${userId}-${Date.now()}.${ext}`;
+  const result = await client.put(filename, file);
+  return result.url;
+}

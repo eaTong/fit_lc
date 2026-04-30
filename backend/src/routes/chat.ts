@@ -35,7 +35,7 @@ router.get('/messages', async (req: Request, res: Response) => {
 
 router.post('/message', chatRateLimiter, async (req: Request, res: Response) => {
   try {
-    const { message, historyMessages } = req.body;
+    const { message, imageUrls, historyMessages } = req.body;
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
@@ -45,12 +45,13 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     // Get or create user context
     const userContext = await userContextService.getOrCreateContext(userId);
 
-    // Call agent with context and history
+    // Call agent with context, history and optional images
     const { reply, savedData } = await runAgent(
       userId,
       message,
       userContext,
-      historyMessages || []
+      historyMessages || [],
+      imageUrls || []
     );
 
     // Save user message and assistant reply to database

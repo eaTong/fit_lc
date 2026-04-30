@@ -7,7 +7,7 @@ interface ChatState {
   isLoading: boolean;
   revokedMessageIds: Set<string>;
   lastUserMessageContent: string | null;
-  sendMessage: (content: string, historyMessages?: ChatMessage[]) => Promise<void>;
+  sendMessage: (content: string, historyMessages?: ChatMessage[], imageUrls?: string[]) => Promise<void>;
   loadLatestMessages: (limit?: number) => Promise<void>;
   clearMessages: () => void;
   removeLastSavedData: () => SavedData | undefined;
@@ -20,11 +20,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   revokedMessageIds: new Set(),
   lastUserMessageContent: null,
 
-  sendMessage: async (content, historyMessages = []) => {
+  sendMessage: async (content, historyMessages = [], imageUrls: string[] = []) => {
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
       content,
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       timestamp: new Date(),
     };
     set((state) => ({
@@ -33,7 +34,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
 
     try {
-      const { reply, savedData } = await chatApi.sendMessage(content, historyMessages);
+      const { reply, savedData } = await chatApi.sendMessage(content, historyMessages, imageUrls);
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',

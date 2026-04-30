@@ -36,8 +36,16 @@ function parseSavedData(reply: string): { parsed: string; savedData?: SavedData 
 }
 
 export const chatApi = {
-  async sendMessage(message: string, historyMessages: ChatMessage[] = []): Promise<{ reply: string; savedData?: SavedData }> {
-    const { data } = await client.post<{ reply: string; savedData?: SavedData }>('/chat/message', { message, historyMessages });
+  async sendMessage(
+    message: string,
+    historyMessages: ChatMessage[] = [],
+    imageUrls: string[] = []
+  ): Promise<{ reply: string; savedData?: SavedData }> {
+    const { data } = await client.post<{ reply: string; savedData?: SavedData }>('/chat/message', {
+      message,
+      historyMessages,
+      imageUrls,
+    });
     const { parsed, savedData } = parseSavedData(data.reply);
     return { reply: parsed, savedData };
   },
