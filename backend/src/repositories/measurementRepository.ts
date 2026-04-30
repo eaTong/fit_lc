@@ -32,12 +32,17 @@ export const measurementRepository = {
   },
 
   async findByUserAndDateRange(userId: number, startDate: string, endDate: string) {
+    // Extend end date to end of day for proper datetime comparison
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
     return prisma.bodyMeasurement.findMany({
       where: {
         userId,
         date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
+          gte: start,
+          lte: end
         },
         deletedAt: null
       },

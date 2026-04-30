@@ -95,7 +95,7 @@ model WorkoutExercise {
 model BodyMeasurement {
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
-  date      DateTime  @db.Date
+  date      DateTime  @db.DateTime
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
 

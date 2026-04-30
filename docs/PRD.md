@@ -2,7 +2,7 @@
 
 > **注意：** 本文档为正式版 PRD，记录已实现的功能。全部需求（包括未实现的）请参见 [PRD-planning.md](./PRD-planning.md)。
 
-**版本：** 1.8
+**版本：** 1.9
 **日期：** 2026-05-01
 **状态：** 已上线
 
@@ -296,7 +296,7 @@ AI回复内容支持Markdown格式渲染，包括：
 |------|------|------|
 | id | INT | 主键 |
 | userId | INT | 用户ID |
-| date | DATE | 训练日期 |
+| date | DATETIME | 训练日期时间 |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
 
@@ -318,9 +318,11 @@ AI回复内容支持Markdown格式渲染，包括：
 |------|------|------|
 | id | INT | 主键 |
 | userId | INT | 用户ID |
-| date | DATE | 测量日期 |
+| date | DATETIME | 测量日期时间（支持同一天多次记录） |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
+
+**支持同一天多次记录：** 体重(weight)和体脂率(bodyFat)可以一天记录多次（如早晩各一次），通过时间戳区分。
 
 #### 3.4.4 围度项目 (measurement_items)
 | 字段 | 类型 | 说明 |
@@ -972,3 +974,4 @@ GROUP BY m.group
 | 1.6 | 2026-04-30 | 简化底部Tab栏为3个Tab（首页/知识/我的），二级页面统一使用返回按钮header |
 | 1.7 | 2026-05-01 | Profile页面重构：头像昵称、统计行、身体数据、3个快速入口；设置拆分为/settings/profile和/settings/body；相册改为按月份分组显示所有照片；OSS签名URL修复 |
 | 1.8 | 2026-05-01 | "知识"页面改名为"动作"；整合肌肉库和动作库到同一页面；肌肉列表紧凑显示，点击展开详情并展示关联动作；增加动作筛选（难度、器械类型、类别）；新增动作详情页/exercises/:id，显示全部字段（视频、步骤、安全注意事项、常见错误、调整说明、转换指南）；exerciseType和variantType显示中文标签 |
+| 1.9 | 2026-05-01 | 围度记录date字段从DATE改为DATETIME，支持同一天多次记录（体重/体脂早晚记录）；支持bodyPart为weight和bodyFat；修复日期范围查询bug |

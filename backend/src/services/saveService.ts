@@ -45,12 +45,24 @@ export const saveService = {
       throw new Error(`保存围度失败：无效的 userId=${userId}`);
     }
 
+    // 解析日期：如果只提供日期（YYYY-MM-DD），添加当前时间；如果提供完整datetime，直接使用
+    let dateObj: Date;
+    if (date.includes('T')) {
+      // 完整datetime格式
+      dateObj = new Date(date);
+    } else {
+      // 只有日期，补充分当前时间
+      const [year, month, day] = date.split('-').map(Number);
+      const now = new Date();
+      dateObj = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
+    }
+
     // Use Prisma transaction to ensure atomicity
     const measurement = await prisma.$transaction(async (tx) => {
       const newMeasurement = await tx.bodyMeasurement.create({
         data: {
           userId,
-          date: new Date(date)
+          date: dateObj
         }
       });
 

@@ -13,16 +13,20 @@ export const saveMeasurementTool = new DynamicStructuredTool({
   - "今天胸围94，腰围78"
   - "测了一下臂围34"
   - "腰又粗了，现在是80"
+  - "今早体重70.5kg"
+  - "晚上称体重69.8kg"
 
-  支持部位：chest(胸), waist(腰), hips(臀), biceps(臂), thighs(腿), calves(小腿)
+  支持部位：chest(胸), waist(腰), hips(臀), biceps(臂), thighs(腿), calves(小腿), weight(体重kg), bodyFat(体脂率%)
 
-  输入：date (YYYY-MM-DD), measurements数组。注意：userId 会由系统自动注入。`,
+  输入：date (YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss), measurements数组。
+  注意：userId 会由系统自动注入。
+  体重和体脂率可以一天记录多次（使用不同时间戳）。`,
   schema: z.object({
-    date: z.string().describe("测量日期 YYYY-MM-DD"),
+    date: z.string().describe("测量日期时间 YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss，支持同一天多次记录"),
     measurements: z.array(z.object({
-      body_part: z.enum(["chest", "waist", "hips", "biceps", "thighs", "calves", "other"])
+      body_part: z.enum(["chest", "waist", "hips", "biceps", "thighs", "calves", "other", "weight", "bodyFat"])
         .describe("身体部位"),
-      value: z.number().describe("数值(cm)")
+      value: z.number().describe("数值(cm)或(kg/%)")
     }))
   }),
   func: async ({ userId, date, measurements }) => {

@@ -32,7 +32,7 @@ export interface Workout {
 }
 
 // 围度记录
-export type BodyPart = 'chest' | 'waist' | 'hips' | 'biceps' | 'thighs' | 'calves' | 'other';
+export type BodyPart = 'chest' | 'waist' | 'hips' | 'biceps' | 'thighs' | 'calves' | 'weight' | 'bodyFat' | 'other';
 
 export interface MeasurementItem {
   bodyPart: BodyPart;
