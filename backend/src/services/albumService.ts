@@ -9,9 +9,7 @@ export const albumService = {
       chatMessageId,
     }));
     await prisma.$transaction(async (tx) => {
-      for (const photo of photos) {
-        await tx.albumPhoto.create({ data: photo });
-      }
+      await tx.albumPhoto.createMany({ data: photos });
     });
   },
 

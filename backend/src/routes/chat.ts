@@ -67,7 +67,9 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
 
       // Sync images to album after user message is saved
       if (imageUrls && imageUrls.length > 0) {
-        albumService.syncPhotosFromMessage(userId, imageUrls, userMessage.id);
+        albumService.syncPhotosFromMessage(userId, imageUrls, userMessage.id).catch((err) => {
+        console.error('Failed to sync photos from message:', err);
+      });
       }
 
       await prisma.chatMessage.create({
