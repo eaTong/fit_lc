@@ -94,7 +94,7 @@ async function executeToolCall(toolName, toolInput, userId) {
   return result;
 }
 
-export async function runAgent(userId, message, userContext = null, historyMessages = []) {
+export async function runAgent(userId, message, userContext = null, historyMessages = [], imageUrls: string[] = []) {
   const model = await getModel();
 
   // 计算相对日期
@@ -206,7 +206,16 @@ ${contextSection}
         ? new HumanMessage(m.content)
         : new AIMessage(m.content)
     ),
-    new HumanMessage(message)
+    // Support multimodal message with images (LangChain format)
+    imageUrls.length > 0
+      ? new HumanMessage({
+          content: [
+            { type: "text", text: message },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...imageUrls.map(url => ({ type: "image_url", image_url: { url } as any }))
+          ]
+        })
+      : new HumanMessage(message)
   ];
 
   // First call - get tool calls if any

@@ -38,10 +38,10 @@ export default function Chat() {
     prevWorkoutsCount.current = totalWorkouts;
   }, [achievementStats]);
 
-  const handleSend = useCallback(async (content: string) => {
+  const handleSend = useCallback(async (content: string, imageUrls: string[] = []) => {
     // Get latest messages from store to avoid stale closure
     const latestMessages = useChatStore.getState().messages;
-    await sendMessage(content, getRecentHistory(latestMessages, 10));
+    await sendMessage(content, getRecentHistory(latestMessages, 10), imageUrls);
     // Refresh stats after sending message (in case workout was saved)
     fetchStats();
   }, [sendMessage, fetchStats]);

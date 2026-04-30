@@ -69,8 +69,8 @@ async function createZhipuLangChainModel() {
 /**
  * Extract messages from various LangChain input formats
  */
-function extractMessagesFromInput(input: any): Array<{ role: string; content: string }> {
-  const messages: Array<{ role: string; content: string }> = [];
+function extractMessagesFromInput(input: any): Array<{ role: string; content: string | { text: string; images?: string[] } }> {
+  const messages: Array<{ role: string; content: string | { text: string; images?: string[] } }> = [];
 
   if (!input) return messages;
 
@@ -80,16 +80,25 @@ function extractMessagesFromInput(input: any): Array<{ role: string; content: st
       if (item._getType) {
         // LangChain message object
         const type = item._getType();
-        const content = typeof item.content === 'string' ? item.content : JSON.stringify(item.content);
         if (type === 'human') {
-          messages.push({ role: 'user', content });
+          // Check if it's multimodal content with images
+          if (item.content && typeof item.content === 'object' && item.content.images) {
+            messages.push({ role: 'user', content: { text: item.content.text || '', images: item.content.images } });
+          } else {
+            const content = typeof item.content === 'string' ? item.content : JSON.stringify(item.content);
+            messages.push({ role: 'user', content });
+          }
         } else if (type === 'ai') {
-          messages.push({ role: 'assistant', content });
+          messages.push({ role: 'assistant', content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
         } else if (type === 'system') {
-          messages.push({ role: 'system', content });
+          messages.push({ role: 'system', content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
         }
       } else if (item.role && item.content) {
-        messages.push({ role: item.role, content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
+        if (item.content && typeof item.content === 'object' && item.content.images) {
+          messages.push({ role: item.role, content: { text: item.content.text || '', images: item.content.images } });
+        } else {
+          messages.push({ role: item.role, content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
+        }
       }
     }
   }
