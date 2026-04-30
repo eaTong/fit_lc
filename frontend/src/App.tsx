@@ -22,6 +22,7 @@ import Measurements from './pages/Measurements';
 import AdminExercises from './pages/admin/Exercises';
 import AdminMuscles from './pages/admin/Muscles';
 import Badges from './pages/Badges';
+import Gallery from './pages/Gallery';
 import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import Security from './pages/Security';
@@ -103,6 +104,7 @@ function App() {
                 <Route path="/plans/new" element={<PlanGenerate />} />
                 <Route path="/plans/:id" element={<PlanDetail />} />
                 <Route path="/plans/:id/execute" element={<PlanExecute />} />
+                <Route path="/gallery" element={<Gallery />} />
                 <Route path="/muscles" element={<Muscles />} />
                 <Route path="/exercises" element={<Exercises />} />
                 <Route path="/measurements" element={<Measurements />} />
