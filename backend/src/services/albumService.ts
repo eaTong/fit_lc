@@ -1,3 +1,4 @@
+import prisma from '../lib/prisma';
 import { albumRepository } from '../repositories/albumRepository';
 
 export const albumService = {
@@ -7,7 +8,11 @@ export const albumService = {
       ossUrl: url,
       chatMessageId,
     }));
-    await Promise.all(photos.map((p) => albumRepository.create(p)));
+    await prisma.$transaction(async (tx) => {
+      for (const photo of photos) {
+        await tx.albumPhoto.create({ data: photo });
+      }
+    });
   },
 
   async getPhotosByMonth(userId: number, year: number, month: number) {
@@ -16,8 +21,11 @@ export const albumService = {
 
   async deletePhoto(photoId: number, userId: number) {
     const photo = await albumRepository.findById(photoId);
-    if (!photo || photo.userId !== userId) {
+    if (!photo) {
       throw new Error('Photo not found');
+    }
+    if (photo.userId !== userId) {
+      throw new Error('Photo belongs to another user');
     }
     await albumRepository.softDelete(photoId, userId);
     return { success: true };
