@@ -12,21 +12,23 @@ describe('BottomTabBar', () => {
     );
   };
 
-  it('renders all 5 tabs', () => {
+  it('renders all 6 tabs', () => {
     renderWithRouter('/chat');
 
     expect(screen.getByText('首页')).toBeTruthy();
-    expect(screen.getByText('数据')).toBeTruthy();
+    expect(screen.getByText('历史')).toBeTruthy();
+    expect(screen.getByText('相册')).toBeTruthy();
     expect(screen.getByText('计划')).toBeTruthy();
     expect(screen.getByText('知识')).toBeTruthy();
     expect(screen.getByText('我的')).toBeTruthy();
   });
 
-  it('renders all 5 icons', () => {
+  it('renders all 6 icons', () => {
     renderWithRouter('/chat');
 
     expect(screen.getByText('🏠')).toBeTruthy();
     expect(screen.getByText('📊')).toBeTruthy();
+    expect(screen.getByText('🖼️')).toBeTruthy();
     expect(screen.getByText('📋')).toBeTruthy();
     expect(screen.getByText('📚')).toBeTruthy();
     expect(screen.getByText('👤')).toBeTruthy();
@@ -54,32 +56,18 @@ describe('BottomTabBar', () => {
     expect(homeTab?.className).toContain('text-accent-orange');
   });
 
-  it('highlights 首页 tab on /chat', () => {
-    renderWithRouter('/chat');
-
-    const homeTab = screen.getByText('首页').closest('a');
-    expect(homeTab?.className).toContain('text-accent-orange');
-  });
-
-  it('highlights 数据 tab on /history', () => {
+  it('highlights 历史 tab on /history', () => {
     renderWithRouter('/history');
 
-    const dataTab = screen.getByText('数据').closest('a');
-    expect(dataTab?.className).toContain('text-accent-orange');
+    const historyTab = screen.getByText('历史').closest('a');
+    expect(historyTab?.className).toContain('text-accent-orange');
   });
 
-  it('highlights 数据 tab on /trends', () => {
-    renderWithRouter('/trends');
+  it('highlights 相册 tab on /gallery', () => {
+    renderWithRouter('/gallery');
 
-    const dataTab = screen.getByText('数据').closest('a');
-    expect(dataTab?.className).toContain('text-accent-orange');
-  });
-
-  it('highlights 数据 tab on /measurements', () => {
-    renderWithRouter('/measurements');
-
-    const dataTab = screen.getByText('数据').closest('a');
-    expect(dataTab?.className).toContain('text-accent-orange');
+    const galleryTab = screen.getByText('相册').closest('a');
+    expect(galleryTab?.className).toContain('text-accent-orange');
   });
 
   it('highlights 知识 tab on /muscles', () => {
