@@ -6,7 +6,7 @@ import { queryMeasurementTool } from '../tools/queryMeasurement';
 import { generatePlanTool } from '../tools/generatePlan';
 import { adjustPlanTool } from '../tools/adjustPlan';
 import { analyzeExecutionTool } from '../tools/analyzeExecution';
-import { createModel } from './chatMiniMax';
+import { createChatModel } from './chatFactory';
 import { getWeekBounds, addDays, toDateStr } from '../utils/dateUtils';
 
 const tools = [
@@ -30,7 +30,7 @@ async function getModel() {
     return modelPromise;
   }
   modelPromise = (async () => {
-    const model = await createModel();
+    const model = await createChatModel();
     cachedModel = model.bindTools(tools as any);
     return cachedModel;
   })();
