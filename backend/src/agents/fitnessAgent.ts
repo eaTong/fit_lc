@@ -6,6 +6,7 @@ import { queryMeasurementTool } from '../tools/queryMeasurement';
 import { generatePlanTool } from '../tools/generatePlan';
 import { adjustPlanTool } from '../tools/adjustPlan';
 import { analyzeExecutionTool } from '../tools/analyzeExecution';
+import { analyzeImageTool } from '../tools/analyzeImage';
 import { createChatModel } from './chatFactory';
 import { getWeekBounds, addDays, toDateStr } from '../utils/dateUtils';
 
@@ -16,7 +17,8 @@ const tools = [
   queryMeasurementTool,
   generatePlanTool,
   adjustPlanTool,
-  analyzeExecutionTool
+  analyzeExecutionTool,
+  analyzeImageTool
 ];
 
 let cachedModel = null;
@@ -75,7 +77,8 @@ async function executeToolCall(toolName, toolInput, userId) {
     query_measurement: queryMeasurementTool,
     generate_plan: generatePlanTool,
     adjust_plan: adjustPlanTool,
-    analyze_execution: analyzeExecutionTool
+    analyze_execution: analyzeExecutionTool,
+    analyze_image: analyzeImageTool
   };
 
   const tool = toolMap[toolName];
