@@ -2,7 +2,7 @@ import { MonthPicker } from '@/components/MonthPicker';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { useAlbumStore } from '@/stores/albumStore';
 import { useEffect } from 'react';
-import { SubPageLayout } from '@/layouts/SubPageLayout';
+import SubPageLayout from '@/layouts/SubPageLayout';
 
 export default function Gallery() {
   const { loadPhotos, selectedYear, selectedMonth } = useAlbumStore();
