@@ -12,7 +12,6 @@ const chatRateLimiter = rateLimit({
   max: 20,
   message: { error: '请求过于频繁，请稍后再试' },
   keyGenerator: (req) => req.user?.id ? String(req.user.id) : (req.ip?.replace(/:/g, '_') || 'anonymous'),
-  validate: { ipKeyGenerator: false },
 });
 
 router.get('/messages', async (req: Request, res: Response) => {
