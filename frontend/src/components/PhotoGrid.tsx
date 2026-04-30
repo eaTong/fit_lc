@@ -18,7 +18,7 @@ export function PhotoGrid() {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2" data-testid="photo-grid">
         {photos.map((photo) => (
           <div
             key={photo.id}
