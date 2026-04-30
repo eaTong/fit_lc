@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 const tabs = [
   { path: '/chat', label: '首页', icon: '🏠' },
   { path: '/history', label: '数据', icon: '📊' },
+  { path: '/gallery', label: '相册', icon: '🖼️' },
   { path: '/plans', label: '计划', icon: '📋' },
   { path: '/muscles', label: '知识', icon: '📚' },
   { path: '/profile', label: '我的', icon: '👤' },
