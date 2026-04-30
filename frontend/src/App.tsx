@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/authStore';
 import BottomTabLayout from './layouts/BottomTabLayout';
 import SidebarLayout from './layouts/SidebarLayout';
 import SettingsLayout from './layouts/SettingsLayout';
+import SecondaryPageLayout from './layouts/SecondaryPageLayout';
 import ToastContainer from './components/Toast';
 import AppTipBanner from './components/AppTipBanner';
 import Login from './pages/Login';
@@ -97,20 +98,23 @@ function App() {
             <Route element={<UserLayout />}>
               <Route element={<BottomTabLayout />}>
                 <Route path="/chat" element={<Chat />} />
+                <Route path="/muscles" element={<Muscles />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/" element={<Navigate to="/chat" />} />
+              </Route>
+
+              {/* 二级页面布局 - 无底部导航栏 */}
+              <Route element={<SecondaryPageLayout />}>
                 <Route path="/history" element={<History />} />
                 <Route path="/trends" element={<Trends />} />
-                <Route path="/profile" element={<Profile />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/plans/new" element={<PlanGenerate />} />
                 <Route path="/plans/:id" element={<PlanDetail />} />
                 <Route path="/plans/:id/execute" element={<PlanExecute />} />
                 <Route path="/gallery" element={<Gallery />} />
-                <Route path="/muscles" element={<Muscles />} />
                 <Route path="/exercises" element={<Exercises />} />
                 <Route path="/measurements" element={<Measurements />} />
-                <Route path="/dashboard" element={<Navigate to="/history?tab=dashboard" />} />
                 <Route path="/badges" element={<Badges />} />
-                <Route path="/" element={<Navigate to="/chat" />} />
               </Route>
             </Route>
 
