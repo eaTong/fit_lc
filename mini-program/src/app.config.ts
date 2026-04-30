@@ -4,7 +4,6 @@ export default defineAppConfig({
     'pages/records/index',
     'pages/trends/index',
     'pages/exercises/index',
-    'pages/plans/index',
     'pages/profile/index',
     'pages/settings/index',
     'pages/badges/index',

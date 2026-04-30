@@ -8,5 +8,8 @@ export default defineConfig({
   outputRoot: 'dist',
   plugins: [],
   defineConstants: {},
-  framework: 'react'
+  framework: 'react',
+  alias: {
+    '@/': './src'
+  }
 })

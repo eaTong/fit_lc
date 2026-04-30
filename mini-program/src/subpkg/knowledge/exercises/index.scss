@@ -1,4 +1,6 @@
 // mini-program/src/subpkg/knowledge/exercises/index.scss
+@import '../../../styles/theme.scss';
+
 .exercise-detail {
   height: 100vh;
   background-color: $bg-primary;

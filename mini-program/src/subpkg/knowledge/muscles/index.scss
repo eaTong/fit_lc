@@ -1,4 +1,6 @@
 // mini-program/src/subpkg/knowledge/muscles/index.scss
+@import '../../../styles/theme.scss';
+
 .muscle-detail {
   height: 100vh;
   background-color: $bg-primary;
