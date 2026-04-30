@@ -36,11 +36,12 @@ describe('BottomTabBar', () => {
     renderWithRouter('/chat');
 
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(5);
+    expect(links).toHaveLength(6);
 
     const hrefs = links.map(link => link.getAttribute('href'));
     expect(hrefs).toContain('/chat');
     expect(hrefs).toContain('/history');
+    expect(hrefs).toContain('/gallery');
     expect(hrefs).toContain('/plans');
     expect(hrefs).toContain('/muscles');
     expect(hrefs).toContain('/profile');
