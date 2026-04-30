@@ -80,6 +80,20 @@ export default function Profile() {
         </div>
       </Link>
 
+      {/* 相册入口 */}
+      <Link
+        to="/gallery"
+        className="block p-4 bg-tertiary rounded border border-border hover:border-accent-orange transition-colors mb-4"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🖼️</span>
+            <span className="text-text-primary font-semibold">我的相册</span>
+          </div>
+          <span className="text-text-secondary">›</span>
+        </div>
+      </Link>
+
       {/* 最近训练 */}
       <Card>
         <div className="flex items-center justify-between mb-4">

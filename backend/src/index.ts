@@ -20,6 +20,7 @@ import usersRouter from './routes/users';
 import achievementsRouter from './routes/achievements';
 import triggersRouter from './routes/triggers';
 import uploadRouter from './routes/upload';
+import albumRoutes from './routes/album';
 import { authMiddleware } from './middleware/auth';
 import multer from 'multer';
 
@@ -138,6 +139,7 @@ app.use('/api/users', authMiddleware, usersRouter);
 app.use('/api/achievements', authMiddleware, achievementsRouter);
 app.use('/api/triggers', authMiddleware, triggersRouter);
 app.use('/api/upload', authMiddleware, uploadRouter);
+app.use('/api/album', authMiddleware, albumRoutes);
 
 app.listen(PORT, () => {
   console.log(`FitLC backend running on port ${PORT}`);
