@@ -20,9 +20,9 @@ export class GalleryPage extends BasePage {
   }
 
   async deleteFirstPhoto(): Promise<void> {
+    // Register handler BEFORE clicking to avoid race condition
+    this.page.once('dialog', dialog => dialog.accept());
     await this.page.locator('[data-testid="photo-grid"] img').first().click({ button: 'right' });
-    // Handle confirm dialog
-    this.page.on('dialog', dialog => dialog.accept());
     await this.page.click('button:has-text("删除")');
   }
 
