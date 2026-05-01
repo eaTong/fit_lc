@@ -100,6 +100,31 @@ const recordActions = {
     });
   },
 
+  fetchLatestMeasurement() {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      if (!token) {
+        reject(new Error('Not authenticated'));
+        return;
+      }
+
+      wx.request({
+        url: `${config.API_BASE_URL}/records/measurements/latest`,
+        method: 'GET',
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.measurement) {
+            store.setState({ latestMeasurement: res.data.measurement });
+            resolve(res.data.measurement);
+          } else {
+            resolve(null);
+          }
+        },
+        fail: () => reject(new Error('Network error'))
+      });
+    });
+  },
+
   deleteWorkout(id) {
     return new Promise((resolve, reject) => {
       const token = getToken();

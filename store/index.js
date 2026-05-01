@@ -6,6 +6,7 @@ class Store {
       token: null,
       workouts: [],
       measurements: [],
+      latestMeasurement: null,
       plans: [],
       chatMessages: [],
       isLoading: false
