@@ -1,6 +1,6 @@
 // Gallery Page - 相册页
-const { albumActions, authActions } = require('../../store/actions');
-const Store = require('../../store');
+const { albumActions, authActions } = require('../../../store/actions');
+const Store = require('../../../store');
 
 Component({
   data: {

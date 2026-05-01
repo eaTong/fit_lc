@@ -1,4 +1,4 @@
-const { planActions } = require('../../store/actions');
+const { planActions } = require('../../../store/actions');
 
 Component({
   data: {

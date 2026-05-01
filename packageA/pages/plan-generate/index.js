@@ -1,5 +1,5 @@
-const { planActions } = require('../../store/actions');
-const { checkAuth } = require('../../store/actions');
+const { planActions } = require('../../../store/actions');
+const { checkAuth } = require('../../../store/actions');
 
 Component({
   data: {

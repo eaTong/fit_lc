@@ -1,6 +1,6 @@
 // Measurements Page - 围度记录页
-const { recordActions, authActions } = require('../../store/actions');
-const Store = require('../../store');
+const { recordActions, authActions } = require('../../../store/actions');
+const Store = require('../../../store');
 
 Component({
   data: {

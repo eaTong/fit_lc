@@ -1,7 +1,7 @@
 // Trends Page - 趋势分析页
 // Tab: 围度趋势 / 训练趋势
-const { recordActions, authActions } = require('../../store/actions');
-const Store = require('../../store');
+const { recordActions, authActions } = require('../../../store/actions');
+const Store = require('../../../store');
 
 Component({
   data: {

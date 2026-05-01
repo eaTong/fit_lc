@@ -1,6 +1,6 @@
-const { achievementActions } = require('../../store/actions');
-const { authActions } = require('../../store/actions');
-const Store = require('../../store');
+const { achievementActions } = require('../../../store/actions');
+const { authActions } = require('../../../store/actions');
+const Store = require('../../../store');
 
 Component({
   data: {

@@ -1,6 +1,6 @@
-const { recordActions } = require('../../store/actions');
-const { authActions } = require('../../store/actions');
-const Store = require('../../store');
+const { recordActions } = require('../../../store/actions');
+const { authActions } = require('../../../store/actions');
+const Store = require('../../../store');
 
 Component({
   data: {
