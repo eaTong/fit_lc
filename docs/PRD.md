@@ -673,6 +673,7 @@ Router → Service → Repository
 | generate_plan | AI生成健身计划 |
 | adjust_plan | 调整现有计划 |
 | analyze_execution | 分析计划执行情况 |
+| analyze_image | 分析用户上传的图片（食物/身体照片） |
 
 ---
 

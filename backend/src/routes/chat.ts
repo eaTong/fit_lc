@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { runAgent } from '../agents/fitnessAgent';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
@@ -12,7 +12,7 @@ const chatRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
   message: { error: '请求过于频繁，请稍后再试' },
-  keyGenerator: (req) => req.user?.id ? String(req.user.id) : (req.ip?.replace(/:/g, '_') || 'anonymous'),
+  keyGenerator: (req) => req.user?.id ? String(req.user.id) : (ipKeyGenerator(req.ip || '') || 'anonymous'),
 });
 
 router.get('/messages', async (req: Request, res: Response) => {
@@ -62,6 +62,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
           userId,
           role: 'user',
           content: message,
+          imageUrls: imageUrls?.length > 0 ? imageUrls : undefined,
         },
       });
 

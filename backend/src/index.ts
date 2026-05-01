@@ -118,6 +118,20 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 
+// HTTP access logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  const originalSend = res.send;
+  res.send = function (body) {
+    const duration = Date.now() - start;
+    const userId = req.user?.id || '-';
+    const logLine = `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms user:${userId} ip:${req.ip}`;
+    writeLog(accessLogPath, logLine);
+    return originalSend.apply(this, arguments as any);
+  };
+  next();
+});
+
 // 公开路由
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', authWechatRoutes);

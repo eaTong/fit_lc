@@ -21,8 +21,8 @@ export function PhotoViewer() {
       data-testid="photo-viewer"
     >
       <button
-        className="absolute top-4 right-4 text-white text-2xl"
-        onClick={closeViewer}
+        className="absolute top-4 right-4 text-white text-2xl z-10"
+        onClick={(e) => { e.stopPropagation(); closeViewer(); }}
       >
         ✕
       </button>

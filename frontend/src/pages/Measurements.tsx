@@ -4,18 +4,23 @@ import { userApi } from '../api/user';
 import MeasurementCard from '../components/MeasurementCard';
 import MeasurementHistoryModal from '../components/MeasurementHistoryModal';
 
-const BODY_PARTS = [
+const BODY_PARTS_SINGLE = [
   { key: 'neck', label: '颈围' },
   { key: 'chest', label: '胸围' },
   { key: 'shoulder', label: '肩宽' },
-  { key: 'biceps_l', label: '左臂围' },
-  { key: 'biceps_r', label: '右臂围' },
   { key: 'waist', label: '腰围' },
   { key: 'hips', label: '臀围' },
-  { key: 'thigh_l', label: '左大腿围' },
-  { key: 'thigh_r', label: '右大腿围' },
-  { key: 'calf_l', label: '左小腿围' },
-  { key: 'calf_r', label: '右小腿围' },
+];
+
+const BODY_PARTS_PAIRED = [
+  { leftKey: 'biceps_l', rightKey: 'biceps_r', leftLabel: '左臂围', rightLabel: '右臂围' },
+  { leftKey: 'thigh_l', rightKey: 'thigh_r', leftLabel: '左大腿围', rightLabel: '右大腿围' },
+  { leftKey: 'calf_l', rightKey: 'calf_r', leftLabel: '左小腿围', rightLabel: '右小腿围' },
+];
+
+const ALL_PARTS = [
+  ...BODY_PARTS_SINGLE,
+  ...BODY_PARTS_PAIRED.map(p => ({ key: p.leftKey, label: p.leftLabel })),
 ];
 
 export default function Measurements() {
@@ -50,7 +55,7 @@ export default function Measurements() {
     setHistoryData(data);
   };
 
-  const selectedPartInfo = BODY_PARTS.find(p => p.key === selectedPart);
+  const selectedPartInfo = ALL_PARTS.find(p => p.key === selectedPart);
   const hasAnyData = Object.values(latestData).some(v => v !== null);
 
   return (
@@ -61,7 +66,7 @@ export default function Measurements() {
         <div className="text-center text-text-muted py-10">加载中...</div>
       ) : (
         <div className="bg-primary-secondary border-2 border-border">
-          {BODY_PARTS.map((part) => (
+          {BODY_PARTS_SINGLE.map((part) => (
             <MeasurementCard
               key={part.key}
               bodyPart={part.key}
@@ -69,7 +74,28 @@ export default function Measurements() {
               value={latestData[part.key]?.value ?? null}
               date={latestData[part.key]?.date}
               onClick={() => handlePartClick(part.key)}
+              className="border-b border-border"
             />
+          ))}
+          {BODY_PARTS_PAIRED.map((pair) => (
+            <div key={pair.leftKey} className="flex">
+              <MeasurementCard
+                bodyPart={pair.leftKey}
+                label={pair.leftLabel}
+                value={latestData[pair.leftKey]?.value ?? null}
+                date={latestData[pair.leftKey]?.date}
+                onClick={() => handlePartClick(pair.leftKey)}
+                className="flex-1 border-r border-border"
+              />
+              <MeasurementCard
+                bodyPart={pair.rightKey}
+                label={pair.rightLabel}
+                value={latestData[pair.rightKey]?.value ?? null}
+                date={latestData[pair.rightKey]?.date}
+                onClick={() => handlePartClick(pair.rightKey)}
+                className="flex-1"
+              />
+            </div>
           ))}
 
           {!hasAnyData && (

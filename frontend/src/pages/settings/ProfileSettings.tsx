@@ -17,6 +17,7 @@ export default function ProfileSettings() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [nickname, setNickname] = useState('');
   const [saving, setSaving] = useState(false);
+  const [newAvatar, setNewAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -28,10 +29,18 @@ export default function ProfileSettings() {
     setNickname(data?.nickname || '');
   };
 
+  const handleAvatarUpload = async (file: File): Promise<string> => {
+    const url = await userApi.uploadAvatar(file);
+    setNewAvatar(url);
+    return url;
+  };
+
   const saveProfile = async () => {
     setSaving(true);
     try {
-      await userApi.updateProfile({ nickname });
+      const updates: Partial<UserProfile> = { nickname };
+      if (newAvatar) updates.avatar = newAvatar;
+      await userApi.updateProfile(updates);
       navigate('/profile');
     } catch (err) {
       console.error('Failed to save profile:', err);
@@ -46,7 +55,7 @@ export default function ProfileSettings() {
 
       <div className="space-y-4 max-w-md">
         <Card variant="default">
-          <AvatarUpload currentAvatar={profile?.avatar} onUpload={userApi.uploadAvatar} />
+          <AvatarUpload currentAvatar={newAvatar || profile?.avatar} onUpload={handleAvatarUpload} />
           <div className="mt-4 space-y-4">
             <Input
               label="昵称"

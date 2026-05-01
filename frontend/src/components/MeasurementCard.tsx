@@ -9,6 +9,7 @@ interface MeasurementCardProps {
   date?: string;
   trend?: 'up' | 'down' | 'flat';
   onClick?: () => void;
+  className?: string;
 }
 
 const trendColors = {
@@ -23,7 +24,7 @@ const trendIcons = {
   flat: '—',
 };
 
-export default function MeasurementCard({ label, value, date, trend, onClick, onDelete, measurement }: MeasurementCardProps) {
+export default function MeasurementCard({ label, value, date, trend, onClick, onDelete, measurement, className = '' }: MeasurementCardProps) {
   // If measurement is provided, derive label and value from its first item (History page)
   const displayLabel = label ?? (measurement?.items[0] ? measurement.items[0].bodyPart : '');
   const displayValue = value ?? measurement?.items[0]?.value ?? null;
@@ -40,7 +41,7 @@ export default function MeasurementCard({ label, value, date, trend, onClick, on
   return (
     <div
       onClick={handleClick}
-      className="flex justify-between items-center py-3 px-4 border-b border-border cursor-pointer hover:bg-primary-tertiary transition-colors"
+      className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-primary-tertiary transition-colors ${className}`}
     >
       <div>
         <span className="text-text-primary">{displayLabel}</span>

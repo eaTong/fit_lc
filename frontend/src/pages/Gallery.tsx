@@ -1,11 +1,14 @@
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { useAlbumStore } from '@/stores/albumStore';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function Gallery() {
   const { photosByMonth, loading, error, openViewer, deletePhoto } = useAlbumStore();
+  const loaded = useRef(false);
 
   useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
     useAlbumStore.getState().loadPhotos();
   }, []);
 

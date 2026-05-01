@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { albumApi, AlbumPhoto, PhotosByMonth } from '../api/album';
+import { albumApi } from '../api/album';
+import type { AlbumPhoto, PhotosByMonth } from '../api/album';
 
 interface AlbumState {
   photosByMonth: PhotosByMonth;
@@ -29,14 +30,21 @@ export const useAlbumStore = create<AlbumState>((set) => ({
   },
 
   deletePhoto: async (id) => {
-    set({ loading: true, error: null });
+    // Optimistically remove from local state
+    set((state) => {
+      const newPhotosByMonth: PhotosByMonth = {};
+      for (const [month, photos] of Object.entries(state.photosByMonth)) {
+        const filtered = photos.filter((p) => p.id !== id);
+        if (filtered.length > 0) newPhotosByMonth[month] = filtered;
+      }
+      return { photosByMonth: newPhotosByMonth, loading: false, viewerPhoto: null };
+    });
     try {
       await albumApi.deletePhoto(id);
-      // Reload all photos after deletion
-      const photosByMonth = await albumApi.getAllPhotos();
-      set({ photosByMonth, loading: false, viewerPhoto: null });
     } catch (err: any) {
-      set({ error: err.message, loading: false });
+      // Reload on failure to restore state
+      const photosByMonth = await albumApi.getAllPhotos();
+      set({ photosByMonth, error: err.message });
     }
   },
 

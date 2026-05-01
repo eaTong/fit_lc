@@ -23,7 +23,10 @@ export const albumService = {
     if (photo.userId !== userId) {
       throw new Error('Photo belongs to another user');
     }
-    await albumRepository.softDelete(photoId, userId);
+    const result = await albumRepository.softDelete(photoId, userId);
+    if (!result) {
+      throw new Error('Photo not found');
+    }
     return { success: true };
   },
 

@@ -50,9 +50,11 @@ export const userApi = {
   },
 
   async uploadAvatar(file: File): Promise<string> {
-    const base64 = await fileToBase64(file);
-    const ext = file.name.split('.').pop() || 'jpg';
-    const { data } = await client.post('/users/me/avatar', { file: base64, ext });
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await client.post('/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return data.url;
   },
 
@@ -81,11 +83,3 @@ export const userApi = {
   },
 };
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}

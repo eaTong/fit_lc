@@ -9,6 +9,7 @@ import { analyzeExecutionTool } from '../tools/analyzeExecution';
 import { analyzeImageTool } from '../tools/analyzeImage';
 import { createChatModel } from './chatFactory';
 import { getWeekBounds, addDays, toDateStr } from '../utils/dateUtils';
+import { saveService } from '../services/saveService';
 
 const tools = [
   saveWorkoutTool,
@@ -67,6 +68,107 @@ function extractSavedDataFromToolResult(result) {
     };
   }
   return null;
+}
+
+// 解析文本中的围度数据作为后备
+function parseMeasurementFromText(text: string, userId: number) {
+  const results: { date: string; measurements: Array<{ body_part: string; value: number }> }[] = [];
+  const today = new Date().toISOString().split('T')[0];
+
+  // 胸围
+  const chestMatch = text.match(/胸围[是为]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  if (chestMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'chest', value: parseFloat(chestMatch[1]) }] });
+  }
+
+  // 腰围
+  const waistMatch = text.match(/腰围[是为]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  if (waistMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'waist', value: parseFloat(waistMatch[1]) }] });
+  }
+
+  // 臀围
+  const hipsMatch = text.match(/臀围[是为]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  if (hipsMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'hips', value: parseFloat(hipsMatch[1]) }] });
+  }
+
+  // 臂围 - 先匹配左右，再匹配通用
+  const leftBicepsMatch = text.match(/左臂围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const rightBicepsMatch = text.match(/右臂围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const bicepsMatch = text.match(/(?<!左)(?<!右)臂围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+
+  if (leftBicepsMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'biceps_l', value: parseFloat(leftBicepsMatch[1]) }] });
+  }
+  if (rightBicepsMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'biceps_r', value: parseFloat(rightBicepsMatch[1]) }] });
+  }
+  if (bicepsMatch && !leftBicepsMatch && !rightBicepsMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'biceps_l', value: parseFloat(bicepsMatch[1]) }] });
+  }
+
+  // 大腿围 - 先匹配左右，再匹配通用
+  const leftThighMatch = text.match(/左大腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const rightThighMatch = text.match(/右大腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const thighMatch = text.match(/(?<!左)(?<!右)大腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+
+  if (leftThighMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'thigh_l', value: parseFloat(leftThighMatch[1]) }] });
+  }
+  if (rightThighMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'thigh_r', value: parseFloat(rightThighMatch[1]) }] });
+  }
+  if (thighMatch && !leftThighMatch && !rightThighMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'thigh_l', value: parseFloat(thighMatch[1]) }] });
+  }
+
+  // 小腿围 - 先匹配左右，再匹配通用
+  const leftCalfMatch = text.match(/左小腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const rightCalfMatch = text.match(/右小腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+  const calfMatch = text.match(/(?<!左)(?<!右)小腿围[是为：：]*\s*(\d+(?:\.\d+)?)\s*(?:cm|厘米)?/i);
+
+  if (leftCalfMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'calf_l', value: parseFloat(leftCalfMatch[1]) }] });
+  }
+  if (rightCalfMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'calf_r', value: parseFloat(rightCalfMatch[1]) }] });
+  }
+  if (calfMatch && !leftCalfMatch && !rightCalfMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'calf_l', value: parseFloat(calfMatch[1]) }] });
+  }
+
+  // 体重
+  const weightMatch = text.match(/(?:体重|体重是)[是为]*\s*(\d+(?:\.\d+)?)\s*(?:kg|公斤)?/i);
+  if (weightMatch) {
+    results.push({ date: today, measurements: [{ body_part: 'weight', value: parseFloat(weightMatch[1]) }] });
+  }
+
+  return results;
+}
+
+// 解析文本中的训练数据作为后备
+function parseWorkoutFromText(text: string, userId: number) {
+  const exercises: Array<{ name: string; sets?: number; reps?: number; duration?: number }> = [];
+
+  // 俯卧撑
+  const pushupMatch = text.match(/(\d+)\s*个?俯卧撑/i);
+  if (pushupMatch) {
+    exercises.push({ name: '俯卧撑', reps: parseInt(pushupMatch[1]) });
+  }
+
+  // 深蹲
+  const squatMatch = text.match(/(\d+)\s*个?深蹲/i);
+  if (squatMatch) {
+    exercises.push({ name: '深蹲', reps: parseInt(squatMatch[1]) });
+  }
+
+  if (exercises.length === 0) return null;
+
+  return {
+    date: new Date().toISOString().split('T')[0],
+    exercises
+  };
 }
 
 async function executeToolCall(toolName, toolInput, userId) {
@@ -223,6 +325,7 @@ ${contextSection}
 
   // First call - get tool calls if any
   const response = await model.invoke(messages);
+  let savedData = null;
 
   // Extract tool calls - check both response.tool_calls (from bindTools) and content array
   let toolCalls = extractToolCallsFromContent(response.content);
@@ -236,16 +339,48 @@ ${contextSection}
     }));
   }
 
+  // If still no tool calls, try to parse measurement/workout data from text response
+  if (toolCalls.length === 0) {
+    const text = extractText(response.content);
+    console.log('Trying to parse text response for measurement/workout data');
+    console.log('Extracted text:', text);
+    const parsedMeasurements = parseMeasurementFromText(text, userId);
+    console.log('Parsed measurements:', parsedMeasurements);
+    const parsedWorkout = parseWorkoutFromText(text, userId);
+    console.log('Parsed workout:', parsedWorkout);
+
+    if (parsedMeasurements.length > 0) {
+      console.log('Parsed measurement data from text:', parsedMeasurements);
+      for (const m of parsedMeasurements) {
+        try {
+          const result = await saveService.saveMeasurement(userId, m.date, m.measurements);
+          console.log('Saved measurement via fallback:', result);
+          savedData = { id: result.id, type: 'measurement' };
+        } catch (err) {
+          console.error('Failed to save parsed measurement:', err);
+        }
+      }
+    } else if (parsedWorkout) {
+      console.log('Parsed workout data from text:', parsedWorkout);
+      try {
+        const result = await saveService.saveWorkout(userId, parsedWorkout.date, parsedWorkout.exercises);
+        console.log('Saved workout via fallback:', result);
+        savedData = { id: result.id, type: 'workout' };
+      } catch (err) {
+        console.error('Failed to save parsed workout:', err);
+      }
+    }
+  }
+
   console.log('Response tool_calls:', JSON.stringify(toolCalls));
 
-  // If no tool calls, return the text response with no savedData
+  // If no tool calls, return the text response with whatever savedData we have
   if (toolCalls.length === 0) {
     const reply = extractText(response.content);
-    return { reply, savedData: null };
+    return { reply, savedData };
   }
 
   // Execute tool calls and get results
-  let savedData = null;
   const toolMessages = [];
   for (const toolCall of toolCalls) {
     try {

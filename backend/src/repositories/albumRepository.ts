@@ -26,10 +26,14 @@ export const albumRepository = {
   },
 
   async softDelete(id: number, userId: number) {
-    return prisma.albumPhoto.updateMany({
+    const result = await prisma.albumPhoto.updateMany({
       where: { id, userId },
       data: { deletedAt: new Date() },
     });
+    if (result.count === 0) {
+      return null;
+    }
+    return result;
   },
 
   async findById(id: number) {
