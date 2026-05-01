@@ -281,6 +281,57 @@ const exerciseActions = {
   }
 };
 
+// Achievement Actions
+const achievementActions = {
+  fetchBadges() {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      if (!token) {
+        reject(new Error('Not authenticated'));
+        return;
+      }
+
+      wx.request({
+        url: `${config.API_BASE_URL}/achievement/badges`,
+        method: 'GET',
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.badges) {
+            resolve(res.data.badges);
+          } else {
+            reject(new Error(res.data.message || 'Failed to fetch badges'));
+          }
+        },
+        fail: () => reject(new Error('Network error'))
+      });
+    });
+  },
+
+  fetchStats() {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      if (!token) {
+        reject(new Error('Not authenticated'));
+        return;
+      }
+
+      wx.request({
+        url: `${config.API_BASE_URL}/achievement/stats`,
+        method: 'GET',
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.stats) {
+            resolve(res.data.stats);
+          } else {
+            resolve(null);
+          }
+        },
+        fail: () => reject(new Error('Network error'))
+      });
+    });
+  }
+};
+
 function checkAuth() {
   return authActions.checkAuth();
 }
@@ -291,5 +342,6 @@ module.exports = {
   recordActions,
   planActions,
   exerciseActions,
+  achievementActions,
   checkAuth
 };
