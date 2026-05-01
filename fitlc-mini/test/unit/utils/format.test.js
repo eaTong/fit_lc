@@ -1,4 +1,4 @@
-const { formatRelativeTime, formatWeight } = require('../../../../utils/format');
+const { formatRelativeTime, formatWeight } = require('../../../utils/format');
 
 describe('format utils', () => {
   describe('formatRelativeTime', () => {

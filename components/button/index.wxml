@@ -1,9 +1,0 @@
-<button
-  class="btn btn-{{type}} btn-{{size}} {{disabled ? 'btn-disabled' : ''}}"
-  disabled="{{disabled}}"
-  loading="{{loading}}"
-  open-type="{{openType}}"
-  bindtap="onTap"
->
-  <slot />
-</button>

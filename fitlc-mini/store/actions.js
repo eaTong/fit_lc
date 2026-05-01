@@ -1,7 +1,9 @@
 // Actions for Mini Program
 const Store = require('./index');
 const config = require('../config');
+const { get, post } = require('../api/client');
 const albumActions = require('../api/album');
+const chatActions = require('../api/chat');
 
 const store = new Store();
 
@@ -20,23 +22,15 @@ const authActions = {
   },
 
   login(code) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${config.API_BASE_URL}/auth/login`,
-        method: 'POST',
-        data: { code },
-        success: (res) => {
-          if (res.data.token) {
-            wx.setStorageSync(config.STORAGE_KEY.TOKEN, res.data.token);
-            wx.setStorageSync(config.STORAGE_KEY.USER, res.data.user);
-            store.setState({ token: res.data.token, user: res.data.user });
-            resolve(res.data);
-          } else {
-            reject(new Error(res.data.message || 'Login failed'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+    return post('/auth/login', { code }).then(res => {
+      if (res.token) {
+        wx.setStorageSync(config.STORAGE_KEY.TOKEN, res.token);
+        wx.setStorageSync(config.STORAGE_KEY.USER, res.user);
+        store.setState({ token: res.token, user: res.user });
+        return res;
+      } else {
+        throw new Error(res.message || 'Login failed');
+      }
     });
   },
 
@@ -50,286 +44,136 @@ const authActions = {
 // Record Actions
 const recordActions = {
   fetchWorkouts(start, end) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/records/workouts`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        data: { start, end },
-        success: (res) => {
-          if (res.data.workouts) {
-            store.setState({ workouts: res.data.workouts });
-            resolve(res.data.workouts);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch workouts'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+    return get('/records/workouts', { start, end }).then(workouts => {
+      store.setState({ workouts });
+      return workouts;
     });
   },
 
   fetchMeasurements(start, end) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/records/measurements`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        data: { start, end },
-        success: (res) => {
-          if (res.data.measurements) {
-            store.setState({ measurements: res.data.measurements });
-            resolve(res.data.measurements);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch measurements'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+    return get('/records/measurements', { start, end }).then(measurements => {
+      store.setState({ measurements });
+      return measurements;
     });
   },
 
   fetchLatestMeasurement() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
+    return get('/records/measurements/latest').then(res => {
+      if (res.measurement) {
+        store.setState({ latestMeasurement: res.measurement });
       }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/records/measurements/latest`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.measurement) {
-            store.setState({ latestMeasurement: res.data.measurement });
-            resolve(res.data.measurement);
-          } else {
-            resolve(null);
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+      return res.measurement || null;
     });
   },
 
   deleteWorkout(id) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
+    return post(`/records/workout/${id}/delete`).then(res => {
+      if (res.success) {
+        const workouts = store.getState().workouts.filter(w => w.id !== id);
+        store.setState({ workouts });
       }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/records/workout/${id}`,
-        method: 'DELETE',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.success) {
-            const workouts = store.getState().workouts.filter(w => w.id !== id);
-            store.setState({ workouts });
-            resolve(true);
-          } else {
-            reject(new Error(res.data.message || 'Failed to delete'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+      return res.success;
     });
   },
 
   deleteMeasurement(id) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
+    return post(`/records/measurement/${id}/delete`).then(res => {
+      if (res.success) {
+        const measurements = store.getState().measurements.filter(m => m.id !== id);
+        store.setState({ measurements });
       }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/records/measurement/${id}`,
-        method: 'DELETE',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.success) {
-            const measurements = store.getState().measurements.filter(m => m.id !== id);
-            store.setState({ measurements });
-            resolve(true);
-          } else {
-            reject(new Error(res.data.message || 'Failed to delete'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+      return res.success;
     });
+  },
+
+  syncAfterSave(savedData) {
+    // 刷新相关数据
+    if (savedData?.type === 'workout') {
+      this.fetchWorkouts();
+    } else if (savedData?.type === 'measurement') {
+      this.fetchMeasurements();
+      this.fetchLatestMeasurement();
+    }
   }
 };
 
 // Plan Actions
 const planActions = {
   fetchPlans() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/plans`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.plans) {
-            store.setState({ plans: res.data.plans });
-            resolve(res.data.plans);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch plans'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
+    return get('/plans').then(plans => {
+      store.setState({ plans });
+      return plans;
     });
+  },
+
+  generatePlan(params) {
+    return post('/plans/generate', params).then(plan => plan);
+  },
+
+  activatePlan(id) {
+    return post(`/plans/${id}/activate`).then(res => res.success);
   }
 };
 
 // Exercise Actions
 const exerciseActions = {
   fetchExercises() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/exercises`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.exercises) {
-            resolve(res.data.exercises);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch exercises'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+    return get('/exercises').then(res => res.exercises || []);
   },
 
   fetchExercise(id) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/exercises/${id}`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.exercise) {
-            resolve(res.data.exercise);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch exercise'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+    return get(`/exercises/${id}`).then(res => res.exercise);
   },
 
   fetchHierarchy() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/muscles/hierarchy`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.hierarchy) {
-            resolve(res.data.hierarchy);
-          } else {
-            resolve([]);
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+    return get('/muscles/hierarchy').then(res => res.hierarchy || []);
   }
 };
 
 // Achievement Actions
 const achievementActions = {
   fetchBadges() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/achievement/badges`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.badges) {
-            resolve(res.data.badges);
-          } else {
-            reject(new Error(res.data.message || 'Failed to fetch badges'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+    return get('/achievement/badges').then(res => res.badges || []);
   },
 
   fetchStats() {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
+    return get('/achievement/stats').then(res => res.stats || null);
+  }
+};
 
-      wx.request({
-        url: `${config.API_BASE_URL}/achievement/stats`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          if (res.data.stats) {
-            resolve(res.data.stats);
-          } else {
-            resolve(null);
-          }
-        },
-        fail: () => reject(new Error('Network error'))
+// Re-export chat actions with store integration
+const chatActionsExtended = {
+  ...chatActions,
+
+  loadMessages(limit = 50) {
+    store.setState({ isLoading: true });
+    return chatActions.fetchMessages(limit)
+      .then(messages => {
+        store.setState({ chatMessages: messages, isLoading: false });
+        return messages;
+      })
+      .catch(err => {
+        store.setState({ isLoading: false });
+        throw err;
       });
-    });
+  },
+
+  sendMessage(content) {
+    store.setState({ isLoading: true });
+    return chatActions.sendMessage(content)
+      .then(message => {
+        const messages = [...store.getState().chatMessages, message];
+        store.setState({ chatMessages: messages, isLoading: false });
+        return message;
+      })
+      .catch(err => {
+        store.setState({ isLoading: false });
+        throw err;
+      });
+  },
+
+  revokeMessage(messageId) {
+    return chatActions.revokeMessage(messageId);
   }
 };
 
@@ -344,6 +188,7 @@ module.exports = {
   planActions,
   exerciseActions,
   achievementActions,
+  chatActions: chatActionsExtended,
   albumActions,
   checkAuth
 };

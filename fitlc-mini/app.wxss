@@ -6,16 +6,6 @@ page {
   line-height: 1.5;
 }
 
-/* 颜色变量 */
---color-bg-primary: #0A0A0A;
---color-bg-secondary: #1A1A1A;
---color-bg-tertiary: #252525;
---color-accent: #FF4500;
---color-accent-red: #DC143C;
---color-text-primary: #FFFFFF;
---color-text-secondary: #888888;
---color-border: #333333;
-
 /* 通用样式 */
 .flex { display: flex; }
 .flex-col { display: flex; flex-direction: column; }
@@ -34,7 +24,7 @@ page {
 .p-sm { padding: 16rpx; }
 .p-md { padding: 24rpx; }
 .p-lg { padding: 32rpx; }
-.text-secondary { color: var(--color-text-secondary); }
-.text-accent { color: var(--color-accent); }
-.bg-secondary { background-color: var(--color-bg-secondary); }
-.bg-tertiary { background-color: var(--color-bg-tertiary); }
+.text-secondary { color: #888888; }
+.text-accent { color: #FF4500; }
+.bg-secondary { background-color: #1A1A1A; }
+.bg-tertiary { background-color: #252525; }

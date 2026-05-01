@@ -1,4 +1,4 @@
-const storage = require('../../../../utils/storage');
+const storage = require('../../../utils/storage');
 
 // Mock wx API
 global.wx = {

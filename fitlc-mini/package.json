@@ -5,10 +5,10 @@
     "test": "jest",
     "test:unit": "jest test/unit",
     "test:page": "jest test/page",
-    "test:e2e": "miniprogram-automator test"
+    "test:e2e": "node test/e2e/runner.js"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "miniprogram-automator": "^2.2.0"
+    "jest": "^27.5.1",
+    "miniprogram-automator": "^0.12.1"
   }
 }

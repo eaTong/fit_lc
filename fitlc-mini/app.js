@@ -1,6 +1,6 @@
 // app.js
-const Store = require('./store');
-const config = require('./config');
+const Store = require('./store/index');
+const config = require('./config/index');
 
 App({
   store: null,

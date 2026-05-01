@@ -26,7 +26,7 @@ const mockApp = {
 global.getApp = () => mockApp;
 
 // Mock actions
-jest.mock('../../../../store/actions', () => ({
+jest.mock('../../../store/actions', () => ({
   chatActions: {
     loadMessages: jest.fn(() => Promise.resolve()),
     sendMessage: jest.fn(() => Promise.resolve())
@@ -39,12 +39,12 @@ jest.mock('../../../../store/actions', () => ({
   }
 }));
 
-jest.mock('../../../../utils/storage', () => ({
+jest.mock('../../../utils/storage', () => ({
   getCachedMessages: () => [],
   setCachedMessages: jest.fn()
 }));
 
-jest.mock('../../../../utils/format', () => ({
+jest.mock('../../../utils/format', () => ({
   formatRelativeTime: () => '刚刚'
 }));
 
@@ -52,7 +52,7 @@ describe('Chat Page Logic', () => {
   describe('onLoad', () => {
     test('未登录重定向到登录页', () => {
       // Reset mock
-      const { authActions } = require('../../../../store/actions');
+      const { authActions } = require('../../../store/actions');
       authActions.checkAuth = () => false;
       wx.redirectTo = jest.fn();
 
@@ -77,7 +77,7 @@ describe('Chat Page Logic', () => {
 
     beforeEach(() => {
       jest.resetModules();
-      chatActions = require('../../../../store/actions').chatActions;
+      chatActions = require('../../../store/actions').chatActions;
       chatActions.sendMessage = jest.fn(() => Promise.resolve());
     });
 
