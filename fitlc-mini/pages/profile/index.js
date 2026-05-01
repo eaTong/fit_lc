@@ -5,6 +5,8 @@ const { achievementActions } = require('../../store/actions');
 Page({
   data: {
     user: null,
+    displayName: '默认用户',
+    avatarText: '👤',
     stats: null,
     latestMeasurement: null,
     loading: false
@@ -17,11 +19,19 @@ Page({
     }
 
     const app = getApp();
-    this.setData({ user: app.store.getState().user });
+    const user = app.store.getState().user;
+    this.setData({
+      user,
+      displayName: user?.nickname || user?.email || '默认用户',
+      avatarText: user?.email ? user.email[0].toUpperCase() : '👤'
+    });
 
     this.unsubscribe = app.store.subscribe(state => {
+      const user = state.user;
       this.setData({
-        user: state.user,
+        user,
+        displayName: user?.nickname || user?.email || '默认用户',
+        avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
         latestMeasurement: state.latestMeasurement
       });
     });

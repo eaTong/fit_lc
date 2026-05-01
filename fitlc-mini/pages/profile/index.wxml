@@ -2,11 +2,11 @@
   <!-- User Info Section -->
   <view class="user-section">
     <view class="user-avatar">
-      <text class="avatar-text">{{user.email}}</text>
+      <text class="avatar-text">{{avatarText}}</text>
     </view>
     <view class="user-info">
-      <text class="user-name">{{user.nickname || user.email}}</text>
-      <text class="user-email">{{user.email}}</text>
+      <text class="user-name">{{displayName}}</text>
+      <text class="user-email" wx:if="{{user.email}}">{{user.email}}</text>
     </view>
     <view class="settings-btn" bindtap="goToSettings">
       <text>⚙️</text>
