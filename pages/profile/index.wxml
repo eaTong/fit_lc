@@ -1,0 +1,94 @@
+<view class="profile-page">
+  <!-- User Info Section -->
+  <view class="user-section">
+    <view class="user-avatar">
+      <text class="avatar-text">{{user.email.[0]}}</text>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{user.nickname || user.email}}</text>
+      <text class="user-email">{{user.email}}</text>
+    </view>
+    <view class="settings-btn" bindtap="goToSettings">
+      <text>⚙️</text>
+    </view>
+  </view>
+
+  <!-- Stats Row -->
+  <view class="stats-row" wx:if="{{stats}}">
+    <view class="stat-item">
+      <text class="stat-value">{{stats.workoutCount || 0}}</text>
+      <text class="stat-label">训练</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.totalVolume || '0T'}}</text>
+      <text class="stat-label">容量</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.streak || 0}}</text>
+      <text class="stat-label">连续</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.badgeCount || 0}}</text>
+      <text class="stat-label">徽章</text>
+    </view>
+  </view>
+
+  <!-- Body Metrics -->
+  <view class="metrics-section" wx:if="{{latestMeasurement}}">
+    <view class="section-title">身体数据</view>
+    <view class="metrics-row">
+      <view class="metric-item">
+        <text class="metric-label">体重</text>
+        <text class="metric-value">{{latestMeasurement.weight || '--'}} kg</text>
+      </view>
+      <view class="metric-item">
+        <text class="metric-label">体脂</text>
+        <text class="metric-value">{{latestMeasurement.bodyFat || '--'}} %</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Quick Access Grid -->
+  <view class="quick-access">
+    <view class="section-title">快捷入口</view>
+    <view class="access-grid">
+      <view class="access-item" bindtap="goToHistory">
+        <text class="access-icon">📋</text>
+        <text class="access-label">训练记录</text>
+      </view>
+      <view class="access-item" bindtap="goToMeasurements">
+        <text class="access-icon">📏</text>
+        <text class="access-label">围度记录</text>
+      </view>
+      <view class="access-item" bindtap="goToPlans">
+        <text class="access-icon">📅</text>
+        <text class="access-label">训练计划</text>
+      </view>
+      <view class="access-item" bindtap="goToTrends">
+        <text class="access-icon">📈</text>
+        <text class="access-label">趋势分析</text>
+      </view>
+      <view class="access-item" bindtap="goToCalendar">
+        <text class="access-icon">🗓️</text>
+        <text class="access-label">日历</text>
+      </view>
+      <view class="access-item" bindtap="goToBadges">
+        <text class="access-icon">🏆</text>
+        <text class="access-label">徽章墙</text>
+      </view>
+      <view class="access-item" bindtap="goToGallery">
+        <text class="access-icon">📷</text>
+        <text class="access-label">相册</text>
+      </view>
+      <view class="access-item" bindtap="goToExercises">
+        <text class="access-icon">💪</text>
+        <text class="access-label">动作库</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Logout Button -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="onLogout">退出登录</button>
+  </view>
+</view>
