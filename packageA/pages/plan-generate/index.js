@@ -93,7 +93,7 @@ Component({
         wx.showToast({ title: '计划生成成功', icon: 'success' });
         setTimeout(() => {
           wx.navigateTo({
-            url: `/pages/plan-detail/index?id=${plan.id}`
+            url: `/packageA/pages/plan-detail/index?id=${plan.id}`
           });
         }, 1500);
       }).catch(err => {

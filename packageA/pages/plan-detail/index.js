@@ -112,7 +112,7 @@ Component({
       if (!planId) return;
 
       wx.navigateTo({
-        url: `/pages/plan-execute/index?id=${planId}`
+        url: `/packageA/pages/plan-execute/index?id=${planId}`
       });
     },
 

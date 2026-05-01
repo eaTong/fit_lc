@@ -66,7 +66,7 @@ Page({
   },
 
   onMusclePageTap() {
-    wx.navigateTo({ url: '/pages/muscles/index' });
+    // 肌肉库已移除，不跳转
   },
 
   filterExercises() {
@@ -103,7 +103,7 @@ Page({
 
   onExerciseTap(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/exercises-detail/index?id=${id}` });
+    wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
   },
 
   clearFilters() {
