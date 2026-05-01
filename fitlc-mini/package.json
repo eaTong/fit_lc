@@ -1,0 +1,14 @@
+{
+  "name": "fitlc-mini-test",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest test/unit",
+    "test:page": "jest test/page",
+    "test:e2e": "miniprogram-automator test"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "miniprogram-automator": "^2.2.0"
+  }
+}
