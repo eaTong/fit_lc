@@ -230,6 +230,54 @@ const exerciseActions = {
         fail: () => reject(new Error('Network error'))
       });
     });
+  },
+
+  fetchExercise(id) {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      if (!token) {
+        reject(new Error('Not authenticated'));
+        return;
+      }
+
+      wx.request({
+        url: `${config.API_BASE_URL}/exercises/${id}`,
+        method: 'GET',
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.exercise) {
+            resolve(res.data.exercise);
+          } else {
+            reject(new Error(res.data.message || 'Failed to fetch exercise'));
+          }
+        },
+        fail: () => reject(new Error('Network error'))
+      });
+    });
+  },
+
+  fetchHierarchy() {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      if (!token) {
+        reject(new Error('Not authenticated'));
+        return;
+      }
+
+      wx.request({
+        url: `${config.API_BASE_URL}/muscles/hierarchy`,
+        method: 'GET',
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.hierarchy) {
+            resolve(res.data.hierarchy);
+          } else {
+            resolve([]);
+          }
+        },
+        fail: () => reject(new Error('Network error'))
+      });
+    });
   }
 };
 
