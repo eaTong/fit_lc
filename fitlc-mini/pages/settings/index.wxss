@@ -41,6 +41,22 @@
   font-size: 28rpx;
 }
 
+.avatar-value {
+  flex-direction: row-reverse;
+}
+
+.avatar-img {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-left: 16rpx;
+}
+
+.avatar-placeholder {
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+
 .item-value text {
   color: var(--color-text-secondary);
 }

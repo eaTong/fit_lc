@@ -26,6 +26,29 @@ Page({
     });
   },
 
+  uploadAvatar() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const filePath = res.tempFilePaths[0];
+        wx.showLoading({ title: '上传中...' });
+
+        userActions.uploadAvatar(filePath).then(url => {
+          const profile = { ...this.data.profile, avatar: url };
+          this.setData({ profile });
+          wx.hideLoading();
+          wx.showToast({ title: '上传成功', icon: 'success' });
+        }).catch(err => {
+          wx.hideLoading();
+          console.error('upload avatar failed:', err);
+          wx.showToast({ title: '上传失败', icon: 'none' });
+        });
+      }
+    });
+  },
+
   editNickname() {
     wx.showModal({
       title: '修改昵称',

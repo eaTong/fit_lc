@@ -1,7 +1,7 @@
 // Actions for Mini Program
 const Store = require('./index');
 const config = require('../config');
-const { get, post, put } = require('../api/client');
+const { get, post, put, upload } = require('../api/client');
 const albumActions = require('../api/album');
 const chatActions = require('../api/chat');
 
@@ -231,6 +231,20 @@ const userActions = {
     return post('/users/me/metrics', data).then(record => {
       getStore().setState({ latestMetrics: record });
       return record;
+    });
+  },
+
+  uploadAvatar(filePath) {
+    const ext = filePath.split('.').pop() || 'jpg';
+    return upload('/users/me/avatar', filePath, 'avatar').then(res => {
+      const url = res.url;
+      const user = getStore().getState().user;
+      const profile = getStore().getState().userProfile;
+      getStore().setState({
+        user: { ...user, avatar: url },
+        userProfile: { ...profile, avatar: url }
+      });
+      return url;
     });
   }
 };
