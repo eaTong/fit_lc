@@ -213,9 +213,10 @@ Page({
     // 筛选时重新从后端加载第一页
     this.setData({ loading: true });
     exerciseActions.fetchExercises(1, 20).then(result => {
+      const filtered = this.filterExercisesInternal(result.exercises);
       this.setData({
         exercises: result.exercises,
-        filteredExercises: result.exercises,
+        filteredExercises: filtered,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
