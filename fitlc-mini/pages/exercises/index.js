@@ -13,10 +13,14 @@ Page({
       difficulty: ''
     },
     loading: false,
+    loadingMore: false,
     showMuscleTree: false,
     expandedMuscles: [],
     selectedMuscleInfo: null,
-    filteredExercises: []
+    filteredExercises: [],
+    pageSize: 20,
+    page: 1,
+    hasMore: true
   },
 
   onLoad() {
@@ -204,7 +208,37 @@ Page({
 
   filterExercises() {
     const filtered = this.filterExercisesInternal(this.data.exercises);
-    this.setData({ filteredExercises: filtered });
+    const { pageSize } = this.data;
+    const displayExercises = filtered.slice(0, pageSize);
+    this.setData({
+      filteredExercises: displayExercises,
+      page: 1,
+      hasMore: filtered.length > pageSize
+    });
+  },
+
+  onScrollToLower() {
+    if (this.data.loadingMore || !this.data.hasMore) return;
+    this.loadMore();
+  },
+
+  loadMore() {
+    const { filteredExercises, page, pageSize, exercises, selectedMuscleId, searchKeyword, filters, expandedMuscles } = this.data;
+
+    this.setData({ loadingMore: true });
+
+    const allFiltered = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId, searchKeyword, filters, expandedMuscles });
+    const nextPage = page + 1;
+    const start = 0;
+    const end = nextPage * pageSize;
+    const newExercises = allFiltered.slice(start, end);
+
+    this.setData({
+      filteredExercises: newExercises,
+      page: nextPage,
+      hasMore: newExercises.length < allFiltered.length,
+      loadingMore: false
+    });
   },
 
   getFilteredExercises() {

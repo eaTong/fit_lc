@@ -190,9 +190,18 @@
 .difficulty-intermediate { color: #FF9800; }
 .difficulty-advanced { color: #F44336; }
 
-.loading, .empty {
+.loading, .empty, .loading-more, .no-more {
   text-align: center;
   padding: 80rpx;
   font-size: 32rpx;
   color: #888888;
+}
+
+.loading-more, .no-more {
+  padding: 24rpx;
+  font-size: 28rpx;
+}
+
+.no-more {
+  color: #555555;
 }

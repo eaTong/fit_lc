@@ -111,7 +111,7 @@
       </view>
 
       <!-- Exercise Grid -->
-      <scroll-view class="exercise-list" scroll-y>
+      <scroll-view class="exercise-list" scroll-y bindscrolltolower="onScrollToLower">
         <view class="exercise-grid">
           <view
             wx:for="{{getFilteredExercises()}}"
@@ -129,8 +129,12 @@
           </view>
         </view>
         <view wx:if="{{loading}}" class="loading">加载中...</view>
-        <view wx:if="{{!loading && getFilteredExercises().length === 0}}" class="empty">
+        <view wx:if="{{loadingMore}}" class="loading-more">加载更多...</view>
+        <view wx:if="{{!loading && !loadingMore && getFilteredExercises().length === 0}}" class="empty">
           暂无动作
+        </view>
+        <view wx:if="{{!hasMore && getFilteredExercises().length > 0}}" class="no-more">
+          没有更多了
         </view>
       </scroll-view>
     </view>
