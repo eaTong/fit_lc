@@ -3,18 +3,7 @@
     "pages/login/index",
     "pages/chat/index",
     "pages/exercises/index",
-    "pages/profile/index",
-    "pages/plans/index",
-    "pages/plan-detail/index",
-    "pages/plan-execute/index",
-    "pages/plan-generate/index",
-    "pages/history/index",
-    "pages/trends/index",
-    "pages/measurements/index",
-    "pages/calendar/index",
-    "pages/exercise-detail/index",
-    "pages/badges/index",
-    "pages/gallery/index"
+    "pages/profile/index"
   ],
   "tabBar": {
     "color": "#888888",
@@ -33,5 +22,33 @@
     "navigationBarTitleText": "FitLC",
     "navigationBarTextStyle": "white"
   },
-  "requiredBackgroundModes": ["audio"]
+  "requiredBackgroundModes": ["audio"],
+  "subPackages": [
+    {
+      "root": "packageA/",
+      "pages": [
+        { "path": "plans/index", "name": "plans" },
+        { "path": "plan-detail/index", "name": "plan-detail" },
+        { "path": "plan-execute/index", "name": "plan-execute" },
+        { "path": "plan-generate/index", "name": "plan-generate" }
+      ]
+    },
+    {
+      "root": "packageB/",
+      "pages": [
+        { "path": "history/index", "name": "history" },
+        { "path": "trends/index", "name": "trends" },
+        { "path": "measurements/index", "name": "measurements" },
+        { "path": "calendar/index", "name": "calendar" }
+      ]
+    },
+    {
+      "root": "packageC/",
+      "pages": [
+        { "path": "exercise-detail/index", "name": "exercise-detail" },
+        { "path": "badges/index", "name": "badges" },
+        { "path": "gallery/index", "name": "gallery" }
+      ]
+    }
+  ]
 }
