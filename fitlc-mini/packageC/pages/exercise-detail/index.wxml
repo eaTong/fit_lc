@@ -11,7 +11,7 @@
   </view>
 
   <!-- Exercise Detail -->
-  <view wx:else-if="{{exercise}}" class="exercise-detail">
+  <view wx:elif="{{exercise}}" class="exercise-detail">
     <!-- Header -->
     <view class="header">
       <button class="btn-back" bindtap="onBack">返回</button>
