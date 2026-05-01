@@ -17,6 +17,11 @@ describe('storage utils', () => {
       expect(storage.getCachedMessages()).toEqual([]);
     });
 
+    test('返回null当解析失败', () => {
+      wx.getStorageSync.mockReturnValue('invalid-json');
+      expect(storage.getCachedMessages()).toBeNull();
+    });
+
     test('返回解析后的缓存数据', () => {
       const messages = [{ id: '1', text: 'hello' }];
       wx.getStorageSync.mockReturnValue(JSON.stringify(messages));
@@ -27,11 +32,20 @@ describe('storage utils', () => {
   describe('setCachedMessages', () => {
     test('正确存储消息', () => {
       const messages = [{ id: '1', text: 'hello' }];
-      storage.setCachedMessages(messages);
+      const result = storage.setCachedMessages(messages);
+      expect(result).toBe(true);
       expect(wx.setStorageSync).toHaveBeenCalledWith(
         'fitlc_messages',
         JSON.stringify(messages)
       );
+    });
+
+    test('存储失败返回false', () => {
+      wx.setStorageSync.mockImplementation(() => {
+        throw new Error('storage error');
+      });
+      const result = storage.setCachedMessages([]);
+      expect(result).toBe(false);
     });
   });
 });
