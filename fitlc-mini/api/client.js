@@ -31,6 +31,10 @@ function request(options) {
 
 // GET 请求
 function get(url, data) {
+  // 添加时间戳防止缓存
+  const cacheBust = `_t=${Date.now()}`;
+  const separator = url.includes('?') ? '&' : '?';
+  url = `${url}${separator}${cacheBust}`;
   return request({ url, method: 'GET', data });
 }
 
