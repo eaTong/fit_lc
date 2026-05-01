@@ -82,11 +82,23 @@
   font-weight: 600;
   color: var(--color-text-primary);
   padding: 24rpx 32rpx 16rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-arrow {
+  font-size: 32rpx;
+  color: var(--color-text-secondary);
 }
 
 .metrics-section {
   background-color: var(--color-bg-secondary);
   margin-top: 16rpx;
+}
+
+.metrics-section:active {
+  background-color: var(--color-bg-tertiary);
 }
 
 .metrics-row {

@@ -33,9 +33,12 @@
     </view>
   </view>
 
-  <!-- Body Metrics -->
-  <view class="metrics-section">
-    <view class="section-title">身体数据</view>
+  <!-- Body Metrics - Tappable -->
+  <view class="metrics-section" bindtap="goToSettings">
+    <view class="section-title">
+      <text>身体数据</text>
+      <text class="section-arrow">›</text>
+    </view>
     <view class="metrics-row">
       <view class="metric-item">
         <text class="metric-label">身高</text>
