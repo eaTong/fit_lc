@@ -153,7 +153,7 @@ const achievementActions = {
   },
 
   fetchStats() {
-    return get('/achievement/stats').then(res => res.stats || null);
+    return get('/achievements/stats').then(res => res.stats || null);
   }
 };
 
