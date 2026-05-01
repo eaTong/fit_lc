@@ -1,6 +1,5 @@
 const { achievementActions } = require('../../../store/actions');
 const { authActions } = require('../../../store/actions');
-const Store = require('../../../store');
 
 Component({
   data: {
@@ -26,7 +25,7 @@ Component({
   methods: {
     initStore() {
       const app = getApp();
-      this.store = app.store || new Store();
+      this.store = app.store;
       this.setData({
         badges: this.store.getState().badges || []
       });
