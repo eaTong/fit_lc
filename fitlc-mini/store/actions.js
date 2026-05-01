@@ -67,7 +67,7 @@ const recordActions = {
   },
 
   fetchLatestMeasurement() {
-    return get('/records/measurements/latest').then(res => {
+    return get('/users/me/measurements/latest').then(res => {
       if (res.measurement) {
         getStore().setState({ latestMeasurement: res.measurement });
       }
