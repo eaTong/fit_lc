@@ -200,6 +200,26 @@ function checkAuth() {
   return authActions.checkAuth();
 }
 
+// User Actions
+const userActions = {
+  fetchProfile() {
+    return get('/users/me/profile').then(profile => {
+      getStore().setState({ userProfile: profile });
+      return profile;
+    });
+  },
+
+  fetchLatestMetrics() {
+    return get('/users/me/metrics', { limit: 1 }).then(res => {
+      const latest = res.records && res.records.length > 0 ? res.records[0] : null;
+      if (latest) {
+        getStore().setState({ latestMetrics: latest });
+      }
+      return latest;
+    });
+  }
+};
+
 module.exports = {
   store: global.store,
   authActions,
@@ -209,5 +229,6 @@ module.exports = {
   achievementActions,
   chatActions: chatActionsExtended,
   albumActions,
+  userActions,
   checkAuth
 };

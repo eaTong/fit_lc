@@ -92,17 +92,19 @@
 .metrics-row {
   display: flex;
   padding: 0 32rpx 24rpx;
+  flex-wrap: wrap;
 }
 
 .metric-item {
-  flex: 1;
+  width: 22%;
   padding: 16rpx;
   background-color: var(--color-bg-tertiary);
   border-radius: 8px;
-  margin-right: 16rpx;
+  margin-right: 4%;
+  margin-bottom: 16rpx;
 }
 
-.metric-item:last-child {
+.metric-item:nth-child(4n) {
   margin-right: 0;
 }
 

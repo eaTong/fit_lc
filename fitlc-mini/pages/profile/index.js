@@ -1,6 +1,7 @@
 const { authActions } = require('../../store/actions');
 const { recordActions } = require('../../store/actions');
 const { achievementActions } = require('../../store/actions');
+const { userActions } = require('../../store/actions');
 
 Page({
   data: {
@@ -9,6 +10,12 @@ Page({
     avatarText: '👤',
     stats: null,
     latestMeasurement: null,
+    userProfile: null,
+    latestMetrics: null,
+    height: null,
+    weight: null,
+    bodyFat: null,
+    bmi: null,
     loading: false
   },
 
@@ -54,11 +61,24 @@ Page({
 
     Promise.all([
       recordActions.fetchLatestMeasurement(),
-      achievementActions.fetchStats()
-    ]).then(([measurements, stats]) => {
+      achievementActions.fetchStats(),
+      userActions.fetchProfile(),
+      userActions.fetchLatestMetrics()
+    ]).then(([measurements, stats, profile, metrics]) => {
+      const height = profile?.height;
+      const weight = metrics?.weight;
+      const bodyFat = metrics?.bodyFat;
+      const bmi = height && weight ? (weight / ((height / 100) * (height / 100))).toFixed(1) : null;
+
       this.setData({
         latestMeasurement: measurements,
         stats,
+        userProfile: profile,
+        latestMetrics: metrics,
+        height,
+        weight,
+        bodyFat,
+        bmi,
         loading: false
       });
     }).catch(err => {

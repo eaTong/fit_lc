@@ -34,16 +34,24 @@
   </view>
 
   <!-- Body Metrics -->
-  <view class="metrics-section" wx:if="{{latestMeasurement}}">
+  <view class="metrics-section">
     <view class="section-title">身体数据</view>
     <view class="metrics-row">
       <view class="metric-item">
+        <text class="metric-label">身高</text>
+        <text class="metric-value">{{height ? height + ' cm' : '--'}}</text>
+      </view>
+      <view class="metric-item">
         <text class="metric-label">体重</text>
-        <text class="metric-value">{{latestMeasurement.weight || '--'}} kg</text>
+        <text class="metric-value">{{weight ? weight + ' kg' : '--'}}</text>
       </view>
       <view class="metric-item">
         <text class="metric-label">体脂</text>
-        <text class="metric-value">{{latestMeasurement.bodyFat || '--'}} %</text>
+        <text class="metric-value">{{bodyFat ? bodyFat + ' %' : '--'}}</text>
+      </view>
+      <view class="metric-item">
+        <text class="metric-label">BMI</text>
+        <text class="metric-value">{{bmi || '--'}}</text>
       </view>
     </view>
   </view>
