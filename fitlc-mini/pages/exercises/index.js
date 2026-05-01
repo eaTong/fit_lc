@@ -33,13 +33,16 @@ Page({
 
   loadData() {
     this.setData({ loading: true });
+    console.log('[Exercises] Starting to load data...');
     Promise.all([
       exerciseActions.fetchExercises(),
       exerciseActions.fetchHierarchy()
     ]).then(([exercises, hierarchy]) => {
+      console.log('[Exercises] Data loaded:', { exercisesCount: exercises?.length, hierarchyCount: hierarchy?.length });
       // 初始展开所有有子肌肉的项
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
       const filteredExercises = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId: null, searchKeyword: '', filters: { category: '', equipment: '', difficulty: '' }, expandedMuscles });
+      console.log('[Exercises] Filtered exercises:', filteredExercises.length);
       this.setData({
         exercises,
         muscleHierarchy: hierarchy,

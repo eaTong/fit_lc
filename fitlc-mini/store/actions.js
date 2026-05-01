@@ -5,7 +5,16 @@ const { get, post } = require('../api/client');
 const albumActions = require('../api/album');
 const chatActions = require('../api/chat');
 
-const store = new Store();
+// 获取全局 store 实例
+function getStore() {
+  if (getApp && getApp().store) {
+    return getApp().store;
+  }
+  if (!global.store) {
+    global.store = new Store();
+  }
+  return global.store;
+}
 
 // Helper to get auth token
 function getToken() {
@@ -17,16 +26,16 @@ const authActions = {
   checkAuth() {
     const token = getToken();
     if (!token) return false;
-    store.setState({ token });
+    getStore().setState({ token });
     return true;
   },
 
   login(code) {
-    return post('/auth/login', { code }).then(res => {
+    return post('/auth/wechat', { code }).then(res => {
       if (res.token) {
         wx.setStorageSync(config.STORAGE_KEY.TOKEN, res.token);
         wx.setStorageSync(config.STORAGE_KEY.USER, res.user);
-        store.setState({ token: res.token, user: res.user });
+        getStore().setState({ token: res.token, user: res.user });
         return res;
       } else {
         throw new Error(res.message || 'Login failed');
@@ -37,7 +46,7 @@ const authActions = {
   logout() {
     wx.removeStorageSync(config.STORAGE_KEY.TOKEN);
     wx.removeStorageSync(config.STORAGE_KEY.USER);
-    store.setState({ token: null, user: null });
+    getStore().setState({ token: null, user: null });
   }
 };
 
@@ -45,14 +54,14 @@ const authActions = {
 const recordActions = {
   fetchWorkouts(start, end) {
     return get('/records/workouts', { start, end }).then(workouts => {
-      store.setState({ workouts });
+      getStore().setState({ workouts });
       return workouts;
     });
   },
 
   fetchMeasurements(start, end) {
     return get('/records/measurements', { start, end }).then(measurements => {
-      store.setState({ measurements });
+      getStore().setState({ measurements });
       return measurements;
     });
   },
@@ -60,7 +69,7 @@ const recordActions = {
   fetchLatestMeasurement() {
     return get('/records/measurements/latest').then(res => {
       if (res.measurement) {
-        store.setState({ latestMeasurement: res.measurement });
+        getStore().setState({ latestMeasurement: res.measurement });
       }
       return res.measurement || null;
     });
@@ -69,8 +78,8 @@ const recordActions = {
   deleteWorkout(id) {
     return post(`/records/workout/${id}/delete`).then(res => {
       if (res.success) {
-        const workouts = store.getState().workouts.filter(w => w.id !== id);
-        store.setState({ workouts });
+        const workouts = getStore().getState().workouts.filter(w => w.id !== id);
+        getStore().setState({ workouts });
       }
       return res.success;
     });
@@ -79,15 +88,14 @@ const recordActions = {
   deleteMeasurement(id) {
     return post(`/records/measurement/${id}/delete`).then(res => {
       if (res.success) {
-        const measurements = store.getState().measurements.filter(m => m.id !== id);
-        store.setState({ measurements });
+        const measurements = getStore().getState().measurements.filter(m => m.id !== id);
+        getStore().setState({ measurements });
       }
       return res.success;
     });
   },
 
   syncAfterSave(savedData) {
-    // 刷新相关数据
     if (savedData?.type === 'workout') {
       this.fetchWorkouts();
     } else if (savedData?.type === 'measurement') {
@@ -101,7 +109,7 @@ const recordActions = {
 const planActions = {
   fetchPlans() {
     return get('/plans').then(plans => {
-      store.setState({ plans });
+      getStore().setState({ plans });
       return plans;
     });
   },
@@ -118,7 +126,11 @@ const planActions = {
 // Exercise Actions
 const exerciseActions = {
   fetchExercises() {
-    return get('/exercises').then(res => res.exercises || []);
+    console.log('[ExerciseActions] fetchExercises called');
+    return get('/exercises').then(res => {
+      console.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length);
+      return res.exercises || [];
+    });
   },
 
   fetchExercise(id) {
@@ -126,7 +138,11 @@ const exerciseActions = {
   },
 
   fetchHierarchy() {
-    return get('/muscles/hierarchy').then(res => res.hierarchy || []);
+    console.log('[ExerciseActions] fetchHierarchy called');
+    return get('/muscles/hierarchy').then(res => {
+      console.log('[ExerciseActions] fetchHierarchy result:', res?.hierarchy?.length);
+      return res.hierarchy || [];
+    });
   }
 };
 
@@ -146,28 +162,31 @@ const chatActionsExtended = {
   ...chatActions,
 
   loadMessages(limit = 50) {
-    store.setState({ isLoading: true });
+    console.log('[ChatActions] loadMessages called, limit:', limit);
+    getStore().setState({ isLoading: true });
     return chatActions.fetchMessages(limit)
       .then(messages => {
-        store.setState({ chatMessages: messages, isLoading: false });
+        console.log('[ChatActions] messages fetched:', messages.length, JSON.stringify(messages));
+        getStore().setState({ chatMessages: messages, isLoading: false });
         return messages;
       })
       .catch(err => {
-        store.setState({ isLoading: false });
+        console.error('[ChatActions] loadMessages error:', err);
+        getStore().setState({ isLoading: false });
         throw err;
       });
   },
 
   sendMessage(content) {
-    store.setState({ isLoading: true });
+    getStore().setState({ isLoading: true });
     return chatActions.sendMessage(content)
       .then(message => {
-        const messages = [...store.getState().chatMessages, message];
-        store.setState({ chatMessages: messages, isLoading: false });
+        const messages = [...getStore().getState().chatMessages, message];
+        getStore().setState({ chatMessages: messages, isLoading: false });
         return message;
       })
       .catch(err => {
-        store.setState({ isLoading: false });
+        getStore().setState({ isLoading: false });
         throw err;
       });
   },
@@ -182,7 +201,7 @@ function checkAuth() {
 }
 
 module.exports = {
-  store,
+  store: global.store,
   authActions,
   recordActions,
   planActions,
