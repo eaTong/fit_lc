@@ -12,7 +12,7 @@
     "pages/trends/index",
     "pages/measurements/index",
     "pages/calendar/index",
-    "pages/exercise-detail/index"
+    "pages/gallery/index",
   ],
   "tabBar": {
     "color": "#888888",

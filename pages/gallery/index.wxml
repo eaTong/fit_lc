@@ -1,0 +1,72 @@
+<view class="gallery-page">
+  <!-- Header -->
+  <view class="page-header">
+    <text class="header-title">相册</text>
+  </view>
+
+  <!-- Month Selector -->
+  <view class="month-selector">
+    <view class="month-nav" bindtap="onPreMonth">
+      <text class="nav-btn">&lt;</text>
+    </view>
+    <picker
+      mode="selector"
+      range="{{months}}"
+      range-key="label"
+      value="{{currentIndex}}"
+      bindchange="onMonthChange"
+      class="month-picker"
+    >
+      <text class="month-label">{{getCurrentMonthLabel()}}</text>
+    </picker>
+    <view class="month-nav" bindtap="onNextMonth">
+      <text class="nav-btn">&gt;</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:elif="{{isEmpty}}" class="empty-container">
+    <text class="empty-icon">🖼️</text>
+    <text class="empty-text">暂无照片</text>
+    <text class="empty-hint">去聊天页记录你的第一条围度吧</text>
+  </view>
+
+  <!-- Photo Grid -->
+  <scroll-view
+    wx:else
+    class="content-container"
+    scroll-y
+    enable-back-to-top
+    bindscrolltoupper="onRefresh"
+    upper-threshold="50"
+  >
+    <!-- Grouped by Date -->
+    <block wx:for="{{Object.keys(groupedPhotos)}}" wx:for-key="dateKey" wx:for-item="dateKey">
+      <view class="date-group">
+        <text class="date-label">{{dateKey}}</text>
+        <view class="photo-grid">
+          <view
+            wx:for="{{groupedPhotos[dateKey]}}"
+            wx:for-key="photo.id"
+            wx:for-item="photo"
+            class="photo-item"
+            data-photo="{{photo}}"
+            bindtap="onPhotoTap"
+          >
+            <image
+              class="photo-image"
+              src="{{photo.url}}"
+              mode="aspectFill"
+              lazy-load
+            />
+          </view>
+        </view>
+      </view>
+    </block>
+  </scroll-view>
+</view>

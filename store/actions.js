@@ -1,6 +1,7 @@
 // Actions for Mini Program
 const Store = require('./index');
 const config = require('../config');
+const albumActions = require('../api/album');
 
 const store = new Store();
 
@@ -343,5 +344,6 @@ module.exports = {
   planActions,
   exerciseActions,
   achievementActions,
+  albumActions,
   checkAuth
 };
