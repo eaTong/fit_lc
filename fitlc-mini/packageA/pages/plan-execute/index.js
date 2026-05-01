@@ -1,5 +1,4 @@
 const { planActions } = require('../../../store/actions');
-const Store = require('../../../store');
 
 Component({
   data: {
@@ -21,7 +20,7 @@ Component({
   methods: {
     initStore() {
       const app = getApp();
-      const store = app.store || new Store();
+      const store = app.store;
       this.store = store;
 
       this.unsubscribe = store.subscribe((state) => {
