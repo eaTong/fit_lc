@@ -41,13 +41,17 @@ Page({
       console.log('[Exercises] Data loaded:', { exercisesCount: exercises?.length, hierarchyCount: hierarchy?.length });
       // 初始展开所有有子肌肉的项
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
-      const filteredExercises = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId: null, searchKeyword: '', filters: { category: '', equipment: '', difficulty: '' }, expandedMuscles });
-      console.log('[Exercises] Filtered exercises:', filteredExercises.length);
+      const allFiltered = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId: null, searchKeyword: '', filters: { category: '', equipment: '', difficulty: '' }, expandedMuscles });
+      // 只加载第一页，避免setData数据过大
+      const { pageSize } = this.data;
+      const filteredExercises = allFiltered.slice(0, pageSize);
+      console.log('[Exercises] Filtered exercises:', filteredExercises.length, 'total:', allFiltered.length);
       this.setData({
         exercises,
         muscleHierarchy: hierarchy,
         expandedMuscles,
         filteredExercises,
+        hasMore: allFiltered.length > pageSize,
         loading: false
       });
     }).catch(err => {
