@@ -63,7 +63,7 @@ Page({
 
     if (selectedMuscleId) {
       filtered = filtered.filter(ex =>
-        ex.muscles && ex.muscles.some(m => m.id === selectedMuscleId || m.parentId === selectedMuscleId)
+        ex.muscles && ex.muscles.some(em => em.muscleId === selectedMuscleId || em.muscle?.parentId === selectedMuscleId)
       );
 
       // 排序：主肌肉匹配排前面，辅助肌群匹配排后面，再按器械分组
@@ -72,8 +72,8 @@ Page({
         const bMuscles = b.muscles || [];
 
         // 检查主肌肉匹配（直接匹配）
-        const aIsPrimary = aMuscles.some(m => m.id === selectedMuscleId);
-        const bIsPrimary = bMuscles.some(m => m.id === selectedMuscleId);
+        const aIsPrimary = aMuscles.some(em => em.muscleId === selectedMuscleId && em.role === 'primary');
+        const bIsPrimary = bMuscles.some(em => em.muscleId === selectedMuscleId && em.role === 'primary');
 
         if (aIsPrimary && !bIsPrimary) return -1;
         if (!aIsPrimary && bIsPrimary) return 1;
