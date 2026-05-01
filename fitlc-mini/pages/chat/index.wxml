@@ -25,7 +25,7 @@
           <text>✓ 已保存</text>
           <text class="revoke-btn" data-id="{{item.id}}" bindtap="onMessageTap">撤销</text>
         </view>
-        <text class="message-time">{{formatTime(item.timestamp)}}</text>
+        <text class="message-time">{{formatTime(item.createdAt)}}</text>
       </view>
     </view>
   </scroll-view>
@@ -37,20 +37,35 @@
 
   <!-- Input Area -->
   <view class="input-area">
-    <view class="input-container">
-      <input
-        class="chat-input"
+    <!-- 文字模式 -->
+    <view wx:if="{{inputMode === 'text'}}" class="input-container">
+      <text class="action-btn switch-btn" bindtap="onSwitchMode">🎤</text>
+      <textarea
+        class="chat-textarea"
         value="{{inputValue}}"
         placeholder="输入训练内容..."
         bindinput="onInput"
-        bindconfirm="onSend"
+        auto-height
+        maxlength="2000"
       />
       <view class="input-actions">
-        <text class="action-btn voice-btn {{isRecording ? 'recording' : ''}}" bindtap="onVoiceTap">
-          {{isRecording ? '⏹' : '🎤'}}
-        </text>
         <text class="action-btn image-btn" bindtap="onImageTap">📷</text>
         <text class="action-btn send-btn" bindtap="onSend">➤</text>
+      </view>
+    </view>
+
+    <!-- 语音模式 -->
+    <view wx:if="{{inputMode === 'voice'}}" class="input-container voice-mode">
+      <text class="action-btn switch-btn" bindtap="onSwitchMode">⌨️</text>
+      <view
+        class="voice-hint {{isRecording ? 'recording' : ''}}"
+        catchtouchstart="onVoiceTouchStart"
+        catchtouchend="onVoiceTouchEnd"
+      >
+        <text>{{isRecording ? '松开发送' : '按住说话'}}</text>
+      </view>
+      <view class="input-actions">
+        <text class="action-btn image-btn" bindtap="onImageTap">📷</text>
       </view>
     </view>
   </view>

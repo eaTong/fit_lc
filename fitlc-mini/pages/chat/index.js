@@ -10,6 +10,7 @@ Page({
     inputValue: '',
     isLoading: false,
     isRecording: false,
+    inputMode: 'text',  // 'text' | 'voice'
     scrollTop: 0,
     user: null
   },
@@ -51,9 +52,14 @@ Page({
   },
 
   loadMessages() {
-    chatActions.loadMessages(50).catch(err => {
-      console.error('load messages failed:', err);
-    });
+    console.log('Loading messages...');
+    chatActions.loadMessages(50)
+      .then(messages => {
+        console.log('Messages loaded:', messages.length, messages);
+      })
+      .catch(err => {
+        console.error('load messages failed:', err);
+      });
   },
 
   onInput(e) {
@@ -75,12 +81,30 @@ Page({
     });
   },
 
-  onVoiceTap() {
-    if (this.data.isRecording) {
+  onSwitchMode() {
+    const newMode = this.data.inputMode === 'text' ? 'voice' : 'text';
+    // 如果正在录音，停止
+    if (this.data.isRecording && newMode === 'text') {
       this.stopRecording();
-    } else {
-      this.startRecording();
     }
+    this.setData({ inputMode: newMode });
+  },
+
+  onVoiceTouchStart() {
+    if (this.data.inputMode !== 'voice') return;
+    this.startRecording();
+  },
+
+  onVoiceTouchEnd() {
+    if (this.data.inputMode !== 'voice' || !this.data.isRecording) return;
+    this.stopRecording();
+    // 发送语音消息
+    this.sendVoiceMessage();
+  },
+
+  sendVoiceMessage() {
+    // TODO: 上传录音文件并发送
+    wx.showToast({ title: '语音发送功能开发中', icon: 'none' });
   },
 
   startRecording() {
