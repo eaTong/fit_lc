@@ -2,10 +2,23 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { userService } from '../services/userService';
 import { uploadAvatar } from '../lib/oss';
-import { getCoachConfig, updateCoachConfig } from '../services/coachConfigService';
+import multer from 'multer';
 
 const router = Router();
 router.use(authMiddleware);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (jpg/png/webp) are allowed'));
+    }
+  }
+});
 
 router.get('/me/profile', async (req, res) => {
   try {
@@ -36,10 +49,14 @@ router.put('/me/password', async (req, res) => {
   }
 });
 
-router.post('/me/avatar', async (req, res) => {
+router.post('/me/avatar', upload.single('avatar'), async (req, res) => {
   try {
-    const { file, ext } = req.body;
-    const url = await uploadAvatar(req.user.id, Buffer.from(file, 'base64'), ext || 'jpg');
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const ext = req.file.originalname.split('.').pop() || 'jpg';
+    const url = await uploadAvatar(req.user.id, req.file.buffer, ext);
     await userService.updateProfile(req.user.id, { avatar: url });
     res.json({ url });
   } catch (err: any) {
