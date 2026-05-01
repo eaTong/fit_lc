@@ -41,10 +41,15 @@ export const userService = {
   },
 
   async addMetric(userId: number, data: { date: string; weight: number; bodyFat?: number }) {
-    return prisma.bodyMetrics.create({
-      data: {
+    return prisma.bodyMetrics.upsert({
+      where: { userId_date: { userId, date: new Date(data.date) } },
+      create: {
         userId,
         date: new Date(data.date),
+        weight: data.weight,
+        bodyFat: data.bodyFat,
+      },
+      update: {
         weight: data.weight,
         bodyFat: data.bodyFat,
       },
