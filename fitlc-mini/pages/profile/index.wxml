@@ -2,7 +2,8 @@
   <!-- User Info Section -->
   <view class="user-section">
     <view class="user-avatar">
-      <text class="avatar-text">{{avatarText}}</text>
+      <image class="avatar-img" src="{{avatarUrl}}" wx:if="{{avatarUrl}}" />
+      <text class="avatar-text" wx:else>{{avatarText}}</text>
     </view>
     <view class="user-info">
       <text class="user-name">{{displayName}}</text>

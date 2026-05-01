@@ -8,6 +8,7 @@ Page({
     user: null,
     displayName: '默认用户',
     avatarText: '👤',
+    avatarUrl: '',
     stats: null,
     latestMeasurement: null,
     userProfile: null,
@@ -30,7 +31,8 @@ Page({
     this.setData({
       user,
       displayName: user?.nickname || user?.email || '默认用户',
-      avatarText: user?.email ? user.email[0].toUpperCase() : '👤'
+      avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
+      avatarUrl: user?.avatar || ''
     });
 
     this.unsubscribe = app.store.subscribe(state => {
@@ -39,6 +41,7 @@ Page({
         user,
         displayName: user?.nickname || user?.email || '默认用户',
         avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
+        avatarUrl: user?.avatar || '',
         latestMeasurement: state.latestMeasurement
       });
     });
@@ -79,6 +82,7 @@ Page({
         weight,
         bodyFat,
         bmi,
+        avatarUrl: profile?.avatar || this.data.avatarUrl,
         loading: false
       });
     }).catch(err => {
