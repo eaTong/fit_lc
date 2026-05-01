@@ -18,9 +18,6 @@ function request(options) {
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
-        } else if (res.statusCode === 304) {
-          // 304 Not Modified - 返回空数据让前端处理
-          resolve(res.data || null);
         } else {
           reject(new Error(res.data?.message || 'Request failed'));
         }
