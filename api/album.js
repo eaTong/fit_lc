@@ -1,61 +1,26 @@
 // Album API - 相册相关 API
-const config = require('../config');
-
-function getToken() {
-  return wx.getStorageSync(config.STORAGE_KEY.TOKEN);
-}
+const { request, get, del, upload } = require('./client');
 
 // Album Actions
 const albumActions = {
+  // 获取指定月份的照片
   fetchPhotos(year, month) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      wx.request({
-        url: `${config.API_BASE_URL}/album/photos`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
-        data: { year, month },
-        success: (res) => {
-          if (res.data.photos) {
-            resolve(res.data.photos);
-          } else {
-            resolve([]);
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+    return get('/album/photos', { year, month }).then(res => res.photos || []);
   },
 
-  uploadImage(filePath) {
-    return new Promise((resolve, reject) => {
-      const token = getToken();
-      if (!token) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
+  // 获取所有照片（按月分组）
+  fetchAllPhotos() {
+    return get('/album/photos').then(res => res.data || {});
+  },
 
-      wx.uploadFile({
-        url: `${config.API_BASE_URL}/album/upload`,
-        filePath,
-        name: 'image',
-        header: { Authorization: `Bearer ${token}` },
-        success: (res) => {
-          const data = JSON.parse(res.data);
-          if (data.photo) {
-            resolve(data.photo);
-          } else {
-            reject(new Error(data.message || 'Upload failed'));
-          }
-        },
-        fail: () => reject(new Error('Network error'))
-      });
-    });
+  // 删除照片
+  deletePhoto(id) {
+    return del(`/album/photos/${id}`);
+  },
+
+  // 上传图片
+  uploadImage(filePath) {
+    return upload('/album/upload', filePath, 'image').then(res => res.photo);
   }
 };
 
