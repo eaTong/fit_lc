@@ -5,7 +5,8 @@
     "pages/exercises/index",
     "pages/profile/index",
     "pages/plans/index",
-    "pages/plan-detail/index"
+    "pages/plan-detail/index",
+    "pages/plan-execute/index"
   ],
   "tabBar": {
     "color": "#888888",
