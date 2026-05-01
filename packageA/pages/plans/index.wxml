@@ -1,0 +1,90 @@
+<view class="page-container">
+  <!-- Header -->
+  <view class="header">
+    <text class="title">健身计划</text>
+    <view class="create-btn" bindtap="onCreatePlan">
+      <text class="btn-text">生成新计划</text>
+    </view>
+  </view>
+
+  <!-- Tab Switcher -->
+  <view class="tab-switcher">
+    <view
+      wx:for="{{statusTabs}}"
+      wx:key="id"
+      class="tab-item {{activeTab === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onTabChange"
+    >
+      <text class="tab-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:elif="{{filteredPlans.length === 0}}" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-title">暂无{{activeTab === 'all' ? '' : statusTabs[activeTab]?.label || ''}}计划</text>
+    <text class="empty-desc">开始创建你的第一个健身计划吧</text>
+    <view class="empty-btn" bindtap="onCreatePlan">
+      <text class="btn-text">生成新计划</text>
+    </view>
+  </view>
+
+  <!-- Plan Cards -->
+  <view wx:else class="plans-list">
+    <view
+      wx:for="{{filteredPlans}}"
+      wx:key="id"
+      class="plan-card"
+      data-id="{{item.id}}"
+      bindtap="goToPlanDetail"
+    >
+      <!-- Card Header -->
+      <view class="card-header">
+        <view class="plan-info">
+          <text class="plan-name">{{item.name}}</text>
+          <view class="status-badge" style="background-color: {{getStatusColor(item.status)}}">
+            <text class="status-text">{{getStatusLabel(item.status)}}</text>
+          </view>
+        </view>
+        <text class="arrow-icon">›</text>
+      </view>
+
+      <!-- Card Content -->
+      <view class="card-content">
+        <view class="info-row">
+          <text class="info-label">目标</text>
+          <text class="info-value">{{getGoalLabel(item.goal)}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">频率</text>
+          <text class="info-value">每周{{item.frequency}}次</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">周期</text>
+          <text class="info-value">{{item.duration_weeks}}周</text>
+        </view>
+        <view class="info-row" wx:if="{{item.next_training_day}}">
+          <text class="info-label">下一个训练日</text>
+          <text class="info-value">{{formatDate(item.next_training_day)}}</text>
+        </view>
+      </view>
+
+      <!-- Progress Bar -->
+      <view class="progress-section">
+        <view class="progress-bar">
+          <view
+            class="progress-fill"
+            style="width: {{calculateProgress(item)}}%"
+          ></view>
+        </view>
+        <text class="progress-text">已完成 {{calculateProgress(item)}}%</text>
+      </view>
+    </view>
+  </view>
+</view>

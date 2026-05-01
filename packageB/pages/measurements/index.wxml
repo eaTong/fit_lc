@@ -1,0 +1,114 @@
+<view class="measurements-page">
+  <!-- Header -->
+  <view class="page-header">
+    <text class="header-title">围度记录</text>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:elif="{{isEmpty}}" class="empty-container">
+    <text class="empty-icon">📏</text>
+    <text class="empty-text">暂无围度记录</text>
+    <text class="empty-hint">去聊天页记录你的第一条围度吧</text>
+  </view>
+
+  <!-- Content -->
+  <scroll-view
+    wx:else
+    class="content-container"
+    scroll-y
+    enable-back-to-top
+    bindscrolltoupper="onRefresh"
+    upper-threshold="50"
+  >
+    <!-- Latest Measurement Card -->
+    <view wx:if="{{latestMeasurement}}" class="latest-card">
+      <view class="latest-header">
+        <text class="latest-label">最新记录</text>
+        <text class="latest-date">{{formatDate(latestMeasurement.date)}}</text>
+      </view>
+      <view class="latest-detail-date">{{formatDetailDate(latestMeasurement.date)}}</view>
+
+      <view class="measurements-grid">
+        <!-- Weight -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.weight}}">
+          <text class="item-label">体重</text>
+          <text class="item-value">{{latestMeasurement.weight}}</text>
+          <text class="item-unit">kg</text>
+        </view>
+
+        <!-- Chest -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.chest}}">
+          <text class="item-label">胸围</text>
+          <text class="item-value">{{latestMeasurement.chest}}</text>
+          <text class="item-unit">cm</text>
+        </view>
+
+        <!-- Waist -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.waist}}">
+          <text class="item-label">腰围</text>
+          <text class="item-value">{{latestMeasurement.waist}}</text>
+          <text class="item-unit">cm</text>
+        </view>
+
+        <!-- Hips -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.hips}}">
+          <text class="item-label">臀围</text>
+          <text class="item-value">{{latestMeasurement.hips}}</text>
+          <text class="item-unit">cm</text>
+        </view>
+
+        <!-- Arm -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.arm}}">
+          <text class="item-label">臂围</text>
+          <text class="item-value">{{latestMeasurement.arm}}</text>
+          <text class="item-unit">cm</text>
+        </view>
+
+        <!-- Thigh -->
+        <view class="measurement-item" wx:if="{{latestMeasurement.thigh}}">
+          <text class="item-label">腿围</text>
+          <text class="item-value">{{latestMeasurement.thigh}}</text>
+          <text class="item-unit">cm</text>
+        </view>
+      </view>
+
+      <!-- Other Items -->
+      <view wx:if="{{latestMeasurement.items && latestMeasurement.items.length > 0}}" class="other-items">
+        <text class="other-items-label">其他部位：</text>
+        <text class="other-items-value">{{getMeasurementParts(latestMeasurement)}}</text>
+      </view>
+    </view>
+
+    <!-- History Section -->
+    <view class="history-section">
+      <text class="section-title">历史记录</text>
+
+      <view
+        wx:for="{{measurements}}"
+        wx:key="id"
+        class="history-item"
+        data-measurement="{{item}}"
+        bindtap="onMeasurementTap"
+      >
+        <view class="history-icon">
+          <text>📏</text>
+        </view>
+        <view class="history-content">
+          <view class="history-header">
+            <text class="history-date">{{formatDate(item.date)}}</text>
+            <text class="history-detail-date">{{formatDetailDate(item.date)}}</text>
+          </view>
+          <text class="history-parts">{{getMeasurementParts(item)}}</text>
+        </view>
+        <view class="history-arrow">
+          <text>></text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

@@ -1,0 +1,76 @@
+<view class="history-page">
+  <!-- Header -->
+  <view class="history-header">
+    <text class="header-title">历史记录</text>
+  </view>
+
+  <!-- Tab Switcher -->
+  <view class="tab-container">
+    <view
+      class="tab-item {{activeTab === 'all' ? 'active' : ''}}"
+      data-tab="all"
+      bindtap="onTabChange"
+    >
+      <text class="tab-text">全部</text>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'workout' ? 'active' : ''}}"
+      data-tab="workout"
+      bindtap="onTabChange"
+    >
+      <text class="tab-text">训练</text>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'measurement' ? 'active' : ''}}"
+      data-tab="measurement"
+      bindtap="onTabChange"
+    >
+      <text class="tab-text">围度</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:elif="{{isEmpty}}" class="empty-container">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无记录</text>
+    <text class="empty-hint">去聊天页记录你的第一条训练吧</text>
+  </view>
+
+  <!-- Records List -->
+  <scroll-view
+    wx:else
+    class="records-container"
+    scroll-y
+    enable-back-to-top
+    bindscrolltoupper="onRefresh"
+    upper-threshold="50"
+  >
+    <view
+      wx:for="{{filteredRecords}}"
+      wx:key="id"
+      class="record-item"
+      data-record="{{item}}"
+      bindtap="onRecordTap"
+    >
+      <view class="record-icon">
+        <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
+      </view>
+      <view class="record-content">
+        <view class="record-header">
+          <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
+          <text class="record-date">{{formatDate(item.date)}}</text>
+        </view>
+        <text class="record-summary">{{item.summary}}</text>
+        <text class="record-detail">{{item.detail}}</text>
+      </view>
+      <view class="record-arrow">
+        <text>></text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

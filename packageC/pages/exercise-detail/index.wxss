@@ -1,0 +1,192 @@
+.container {
+  min-height: 100vh;
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+  padding: 20rpx;
+}
+
+.loading-container,
+.error-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 300rpx;
+}
+
+.loading-text,
+.error-text,
+.empty-text {
+  color: #888888;
+  font-size: 28rpx;
+}
+
+.error-text,
+.empty-text {
+  margin-bottom: 30rpx;
+}
+
+.exercise-detail {
+  padding-bottom: 40rpx;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  margin-bottom: 20rpx;
+}
+
+.btn-back {
+  background-color: #1A1A1A;
+  color: #FFFFFF;
+  border: 2px solid #333333;
+  border-radius: 4rpx;
+  font-size: 26rpx;
+  padding: 12rpx 24rpx;
+  line-height: 1.5;
+}
+
+.btn-back::after {
+  border: none;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  flex: 1;
+  text-align: center;
+}
+
+.placeholder {
+  width: 120rpx;
+}
+
+/* Card */
+.card {
+  background-color: #1A1A1A;
+  border-radius: 4rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-card {
+  border: 1px solid #333333;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1px solid #252525;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #888888;
+  font-size: 28rpx;
+}
+
+.info-value {
+  color: #FFFFFF;
+  font-size: 28rpx;
+  text-align: right;
+  flex: 1;
+  margin-left: 20rpx;
+}
+
+.info-value.primary {
+  color: #FF4500;
+  font-weight: bold;
+}
+
+/* Section Title */
+.section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1px solid #333333;
+}
+
+/* Steps */
+.steps-card {
+  border: 1px solid #333333;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  background-color: #FF4500;
+  color: #FFFFFF;
+  border-radius: 50%;
+  font-size: 24rpx;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.step-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  line-height: 1.6;
+}
+
+/* Related Exercises */
+.related-card {
+  border: 1px solid #333333;
+}
+
+.related-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.related-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #252525;
+}
+
+.related-item:last-child {
+  border-bottom: none;
+}
+
+.related-name {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  flex: 1;
+}
+
+.related-arrow {
+  color: #888888;
+  font-size: 28rpx;
+  margin-left: 20rpx;
+}
