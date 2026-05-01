@@ -45,3 +45,6 @@ backend/output/*.json
 frontend/node_modules/
 frontend/dist/
 frontend/test-results/.worktrees/
+
+
+tmp/
