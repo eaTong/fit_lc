@@ -5,22 +5,6 @@
   background-color: var(--color-bg-primary, #0A0A0A);
 }
 
-.page-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  background-color: var(--color-bg-secondary, #1A1A1A);
-  border-bottom: 1px solid var(--color-border, #333333);
-  flex-shrink: 0;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: var(--color-text-primary, #FFFFFF);
-}
-
 /* Month Selector */
 .month-selector {
   display: flex;

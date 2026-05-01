@@ -1,9 +1,4 @@
 <view class="gallery-page">
-  <!-- Header -->
-  <view class="page-header">
-    <text class="header-title">相册</text>
-  </view>
-
   <!-- Month Selector -->
   <view class="month-selector">
     <view class="month-nav" bindtap="onPreMonth">
