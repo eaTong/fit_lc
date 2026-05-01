@@ -7,7 +7,8 @@
     "pages/plans/index",
     "pages/plan-detail/index",
     "pages/plan-execute/index",
-    "pages/plan-generate/index"
+    "pages/plan-generate/index",
+    "pages/history/index"
   ],
   "tabBar": {
     "color": "#888888",
