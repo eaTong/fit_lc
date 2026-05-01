@@ -73,6 +73,13 @@ Page({
       const bodyFat = metrics?.bodyFat;
       const bmi = height && weight ? (weight / ((height / 100) * (height / 100))).toFixed(1) : null;
 
+      // Update nickname from profile if available
+      const nickname = profile?.nickname || this.data.user?.nickname;
+      const email = profile?.email || this.data.user?.email;
+      const avatarUrl = profile?.avatar || this.data.avatarUrl;
+      const displayName = nickname || email || '默认用户';
+      const avatarText = email ? email[0].toUpperCase() : '👤';
+
       this.setData({
         latestMeasurement: measurements,
         stats,
@@ -82,7 +89,9 @@ Page({
         weight,
         bodyFat,
         bmi,
-        avatarUrl: profile?.avatar || this.data.avatarUrl,
+        displayName,
+        avatarText,
+        avatarUrl,
         loading: false
       });
     }).catch(err => {
