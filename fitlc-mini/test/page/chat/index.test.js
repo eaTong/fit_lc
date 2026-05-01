@@ -5,7 +5,8 @@ global.wx = {
   redirectTo: jest.fn(),
   getStorageSync: jest.fn(),
   setStorageSync: jest.fn(),
-  showToast: jest.fn()
+  showToast: jest.fn(),
+  pageScrollTo: jest.fn()
 };
 
 // Mock getApp
@@ -72,6 +73,14 @@ describe('Chat Page Logic', () => {
   });
 
   describe('onSend', () => {
+    let chatActions;
+
+    beforeEach(() => {
+      jest.resetModules();
+      chatActions = require('../../../../store/actions').chatActions;
+      chatActions.sendMessage = jest.fn(() => Promise.resolve());
+    });
+
     test('空消息不发送', () => {
       const inputValue = '';
       const isLoading = false;
@@ -79,11 +88,10 @@ describe('Chat Page Logic', () => {
       if (!inputValue.trim() || isLoading) {
         // should not send
       } else {
-        // send
+        chatActions.sendMessage(inputValue);
       }
 
-      // 空消息不触发发送
-      expect(true).toBe(true);
+      expect(chatActions.sendMessage).not.toHaveBeenCalled();
     });
 
     test('加载中不发送', () => {
@@ -93,11 +101,10 @@ describe('Chat Page Logic', () => {
       if (!inputValue.trim() || isLoading) {
         // should not send
       } else {
-        // send
+        chatActions.sendMessage(inputValue);
       }
 
-      // 加载中不触发发送
-      expect(true).toBe(true);
+      expect(chatActions.sendMessage).not.toHaveBeenCalled();
     });
   });
 
