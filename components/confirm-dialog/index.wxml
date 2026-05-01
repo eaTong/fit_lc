@@ -1,0 +1,14 @@
+<view wx:if="{{show}}" class="dialog-mask" bindtap="onCancel">
+  <view class="dialog-content" catchtap>
+    <view class="dialog-header">
+      <text class="dialog-title">{{title}}</text>
+    </view>
+    <view class="dialog-body">
+      <text>{{message}}</text>
+    </view>
+    <view class="dialog-footer">
+      <button class="btn-cancel" bindtap="onCancel">{{cancelText}}</button>
+      <button class="btn-confirm btn-{{confirmType}}" bindtap="onConfirm">{{confirmText}}</button>
+    </view>
+  </view>
+</view>

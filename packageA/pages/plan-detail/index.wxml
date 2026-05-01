@@ -1,0 +1,96 @@
+<view class="page-container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <text class="title">计划详情</text>
+    <view class="placeholder"></view>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Error -->
+  <view wx:elif="{{error}}" class="error-container">
+    <text class="error-text">{{error}}</text>
+  </view>
+
+  <!-- Plan Content -->
+  <view wx:elif="{{plan}}" class="plan-content">
+    <!-- Plan Header Card -->
+    <view class="plan-header-card">
+      <view class="plan-title-row">
+        <text class="plan-name">{{plan.name}}</text>
+        <view class="status-badge" style="background-color: {{plan.status === 'active' ? '#4CAF50' : plan.status === 'completed' ? '#2196F3' : '#888888'}}">
+          <text class="status-text">{{getStatusLabel(plan.status)}}</text>
+        </view>
+      </view>
+      <view class="plan-meta">
+        <view class="meta-item">
+          <text class="meta-label">目标</text>
+          <text class="meta-value">{{getGoalLabel(plan.goal)}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">频率</text>
+          <text class="meta-value">每周{{plan.frequency}}次</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">周期</text>
+          <text class="meta-value">{{plan.duration_weeks}}周</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Week Days Schedule -->
+    <view class="schedule-section">
+      <text class="section-title">每周训练安排</text>
+      <view class="week-days">
+        <view
+          wx:for="{{weekDays}}"
+          wx:key="dayIndex"
+          class="day-card"
+        >
+          <view class="day-header">
+            <text class="day-label">{{item.day}}</text>
+            <text class="exercise-count">{{item.exercises.length}}个动作</text>
+          </view>
+          <view class="exercise-list">
+            <view
+              wx:for="{{item.exercises}}"
+              wx:for-item="exercise"
+              wx:key="id"
+              class="exercise-item"
+            >
+              <text class="exercise-name">{{exercise.name}}</text>
+              <text class="exercise-info">{{formatExerciseInfo(exercise)}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Empty Days State -->
+    <view wx:if="{{weekDays.length === 0}}" class="empty-state">
+      <text class="empty-icon">📅</text>
+      <text class="empty-title">暂无训练安排</text>
+      <text class="empty-desc">该计划还没有分配训练动作</text>
+    </view>
+  </view>
+
+  <!-- Empty Plan -->
+  <view wx:elif="{{!plan && !isLoading}}" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-title">计划不存在</text>
+    <text class="empty-desc">无法找到该训练计划</text>
+  </view>
+
+  <!-- Bottom Action -->
+  <view wx:if="{{plan && plan.status !== 'completed'}}" class="bottom-action">
+    <view class="start-btn" bindtap="onStartExecute">
+      <text class="start-btn-text">开始执行</text>
+    </view>
+  </view>
+</view>

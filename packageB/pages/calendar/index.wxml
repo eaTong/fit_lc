@@ -1,0 +1,91 @@
+<view class="calendar-page">
+  <!-- Header -->
+  <view class="calendar-header">
+    <text class="header-title">日历</text>
+  </view>
+
+  <!-- Month Navigator -->
+  <view class="month-navigator">
+    <view class="nav-btn" bindtap="onPrevMonth">
+      <text class="nav-arrow">&lt;</text>
+    </view>
+    <text class="month-label">{{getMonthLabel()}}</text>
+    <view class="nav-btn" bindtap="onNextMonth">
+      <text class="nav-arrow">&gt;</text>
+    </view>
+  </view>
+
+  <!-- Weekday Headers -->
+  <view class="weekday-header">
+    <view wx:for="{{weekdays}}" wx:key="index" class="weekday-cell">
+      <text class="weekday-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- Calendar Grid -->
+  <view class="calendar-grid">
+    <view
+      wx:for="{{days}}"
+      wx:key="index"
+      class="day-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.selected ? 'selected' : ''}}"
+      data-date="{{item.dateStr}}"
+      bindtap="onDayTap"
+    >
+      <text class="day-text">{{item.day}}</text>
+      <view class="record-dots">
+        <view wx:if="{{item.hasWorkout}}" class="dot dot-workout"></view>
+        <view wx:if="{{item.hasMeasurement}}" class="dot dot-measurement"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Legend -->
+  <view class="legend">
+    <view class="legend-item">
+      <view class="dot dot-workout"></view>
+      <text class="legend-text">训练</text>
+    </view>
+    <view class="legend-item">
+      <view class="dot dot-measurement"></view>
+      <text class="legend-text">围度</text>
+    </view>
+  </view>
+
+  <!-- Detail Panel -->
+  <view wx:if="{{showDetail}}" class="detail-overlay" bindtap="onCloseDetail">
+    <view class="detail-panel" catchtap="noop">
+      <view class="detail-header">
+        <text class="detail-date">{{formatDisplayDate(selectedDate)}}</text>
+        <view class="detail-close" bindtap="onCloseDetail">
+          <text>X</text>
+        </view>
+      </view>
+
+      <view wx:if="{{selectedDateRecords.length === 0}}" class="detail-empty">
+        <text class="detail-empty-text">暂无记录</text>
+      </view>
+
+      <scroll-view wx:else class="detail-records" scroll-y>
+        <view
+          wx:for="{{selectedDateRecords}}"
+          wx:key="id"
+          class="detail-record"
+          data-record="{{item}}"
+          bindtap="onRecordTap"
+        >
+          <view class="record-icon">
+            <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
+          </view>
+          <view class="record-info">
+            <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
+            <text class="record-summary">{{item.summary}}</text>
+            <text class="record-detail">{{item.detail}}</text>
+          </view>
+          <view class="record-arrow">
+            <text>&gt;</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

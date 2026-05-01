@@ -1,0 +1,11 @@
+<view wx:if="{{show}}" class="modal-mask" bindtap="onMaskTap">
+  <view class="modal-content" catchtap>
+    <view class="modal-header">
+      <text class="modal-title">{{title}}</text>
+      <text wx:if="{{closable}}" class="modal-close" bindtap="onClose">✕</text>
+    </view>
+    <view class="modal-body">
+      <slot />
+    </view>
+  </view>
+</view>

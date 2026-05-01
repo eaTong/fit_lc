@@ -1,0 +1,127 @@
+/* pages/plan-generate/index.wxss - Plan Generate Page Styles */
+
+.page-container {
+  min-height: 100vh;
+  background-color: #0A0A0A;
+  padding: 20rpx;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 20rpx;
+}
+
+.back-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1A1A1A;
+  border: 2px solid #333333;
+  border-radius: 4rpx;
+}
+
+.back-icon {
+  font-size: 40rpx;
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.placeholder {
+  width: 60rpx;
+}
+
+/* Form Container */
+.form-container {
+  padding: 20rpx 0;
+}
+
+/* Form Item */
+.form-item {
+  background-color: #1A1A1A;
+  border: 2px solid #333333;
+  border-radius: 4rpx;
+  margin-bottom: 20rpx;
+  padding: 30rpx;
+}
+
+.form-label {
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+/* Picker Value */
+.picker-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #252525;
+  padding: 24rpx 30rpx;
+  border-radius: 4rpx;
+}
+
+.picker-text {
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+
+.picker-text.placeholder {
+  color: #888888;
+}
+
+.picker-arrow {
+  color: #888888;
+  font-size: 36rpx;
+}
+
+/* Error Text */
+.error-text {
+  color: #FF4500;
+  font-size: 28rpx;
+  text-align: center;
+  padding: 20rpx 0;
+}
+
+/* Submit Button */
+.submit-btn {
+  background-color: #FF4500;
+  padding: 28rpx 0;
+  border-radius: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40rpx;
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
+}
+
+.submit-btn.loading {
+  background-color: #666666;
+  box-shadow: none;
+}
+
+.submit-btn:active {
+  background-color: #e03e00;
+}
+
+.submit-btn.loading:active {
+  background-color: #666666;
+}
+
+.submit-btn-text {
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: bold;
+}
