@@ -2,8 +2,15 @@
 page {
   background-color: #0A0A0A;
   color: #FFFFFF;
-  font-size: 28rpx;
+  font-size: 32rpx;
   line-height: 1.5;
+}
+
+/* 全局重置 */
+view, text, scroll-view, textarea, input, button {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* 通用样式 */
