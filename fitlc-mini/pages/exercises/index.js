@@ -13,7 +13,10 @@ Page({
       difficulty: ''
     },
     loading: false,
-    showMuscleTree: true
+    showMuscleTree: false,
+    expandedMuscles: [],
+    selectedMuscleInfo: null,
+    filteredExercises: []
   },
 
   onLoad() {
@@ -21,20 +24,23 @@ Page({
       wx.redirectTo({ url: '/pages/login/index' });
       return;
     }
-
     this.loadData();
   },
 
   loadData() {
     this.setData({ loading: true });
-
     Promise.all([
       exerciseActions.fetchExercises(),
       exerciseActions.fetchHierarchy()
     ]).then(([exercises, hierarchy]) => {
+      // 初始展开所有有子肌肉的项
+      const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
+      const filteredExercises = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId: null, searchKeyword: '', filters: { category: '', equipment: '', difficulty: '' }, expandedMuscles });
       this.setData({
         exercises,
         muscleHierarchy: hierarchy,
+        expandedMuscles,
+        filteredExercises,
         loading: false
       });
     }).catch(err => {
@@ -43,51 +49,45 @@ Page({
     });
   },
 
-  onMuscleSelect(e) {
-    const muscleId = e.currentTarget.dataset.id;
-    this.setData({ selectedMuscleId: muscleId });
-    // 重新筛选
-    this.filterExercises();
-  },
-
-  onAllMuscles() {
-    this.setData({ selectedMuscleId: null });
-    this.filterExercises();
-  },
-
-  onSearch(e) {
-    const keyword = e.detail.value;
-    this.setData({ searchKeyword: keyword });
-    this.filterExercises();
-  },
-
-  onMuscleTreeToggle() {
-    this.setData({ showMuscleTree: !this.showMuscleTree });
-  },
-
-  onMusclePageTap() {
-    // 肌肉库已移除，不跳转
-  },
-
-  filterExercises() {
-    const { exercises, selectedMuscleId, searchKeyword, filters } = this.data;
+  filterExercisesInternal(exercises, stateOverride) {
+    const state = stateOverride || this.data;
+    const { selectedMuscleId, searchKeyword, filters, expandedMuscles } = state;
     let filtered = exercises;
 
     if (selectedMuscleId) {
       filtered = filtered.filter(ex =>
-        ex.muscles && ex.muscles.some(m => m.id === selectedMuscleId)
+        ex.muscles && ex.muscles.some(m => m.id === selectedMuscleId || m.parentId === selectedMuscleId)
       );
+
+      // 排序：主肌肉匹配排前面，辅助肌群匹配排后面，再按器械分组
+      filtered.sort((a, b) => {
+        const aMuscles = a.muscles || [];
+        const bMuscles = b.muscles || [];
+
+        // 检查主肌肉匹配（直接匹配）
+        const aIsPrimary = aMuscles.some(m => m.id === selectedMuscleId);
+        const bIsPrimary = bMuscles.some(m => m.id === selectedMuscleId);
+
+        if (aIsPrimary && !bIsPrimary) return -1;
+        if (!aIsPrimary && bIsPrimary) return 1;
+
+        // 都在主肌肉匹配中，按器械分组
+        const equipmentOrder = ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight'];
+        const aIdx = equipmentOrder.indexOf(a.equipment);
+        const bIdx = equipmentOrder.indexOf(b.equipment);
+        const aOrder = aIdx === -1 ? 999 : aIdx;
+        const bOrder = bIdx === -1 ? 999 : bIdx;
+
+        if (aOrder !== bOrder) return aOrder - bOrder;
+
+        // 同组内按名称排序
+        return a.name.localeCompare(b.name);
+      });
     }
 
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase();
-      filtered = filtered.filter(ex =>
-        ex.name.toLowerCase().includes(kw)
-      );
-    }
-
-    if (filters.category) {
-      filtered = filtered.filter(ex => ex.category === filters.category);
+      filtered = filtered.filter(ex => ex.name.toLowerCase().includes(kw));
     }
 
     if (filters.equipment) {
@@ -98,7 +98,117 @@ Page({
       filtered = filtered.filter(ex => ex.difficulty === filters.difficulty);
     }
 
+    return filtered;
+  },
+
+  onMuscleTreeToggle() {
+    this.setData({ showMuscleTree: !this.data.showMuscleTree });
+  },
+
+  onAllMuscles() {
+    this.setData({ selectedMuscleId: null, selectedMuscleInfo: null, expandedMuscles: [] });
+  },
+
+  onMuscleSelect(e) {
+    const muscleId = e.currentTarget.dataset.id;
+    const { muscleHierarchy, selectedMuscleId, expandedMuscles } = this.data;
+
+    // 判断是否为子肌肉（点击的是子肌肉）
+    let isChild = false;
+    let parentMuscle = null;
+    for (const group of muscleHierarchy) {
+      if (group.children) {
+        const child = group.children.find(c => c.id === muscleId);
+        if (child) {
+          isChild = true;
+          parentMuscle = group;
+          break;
+        }
+      }
+    }
+
+    // 找到选中的肌肉信息
+    let muscleInfo = null;
+    for (const group of muscleHierarchy) {
+      if (group.id === muscleId) {
+        muscleInfo = group;
+        break;
+      }
+      if (group.children) {
+        const child = group.children.find(c => c.id === muscleId);
+        if (child) {
+          muscleInfo = child;
+          break;
+        }
+      }
+    }
+
+    let newExpandedMuscles = [...expandedMuscles];
+
+    if (isChild) {
+      // 点击子肌肉：只选择，不改变展开状态
+      this.setData({
+        selectedMuscleId: muscleId,
+        selectedMuscleInfo: muscleInfo
+      });
+    } else {
+      // 点击父肌肉：切换展开状态
+      if (newExpandedMuscles.includes(muscleId)) {
+        newExpandedMuscles = newExpandedMuscles.filter(id => id !== muscleId);
+      } else {
+        newExpandedMuscles.push(muscleId);
+      }
+      this.setData({
+        selectedMuscleId: muscleId,
+        expandedMuscles: newExpandedMuscles,
+        selectedMuscleInfo: muscleInfo
+      });
+    }
+    this.filterExercises();
+  },
+
+  onSearch(e) {
+    const keyword = e.detail.value;
+    this.setData({ searchKeyword: keyword });
+    this.filterExercises();
+  },
+
+  onFilterEquipment(e) {
+    const equipment = e.currentTarget.dataset.value;
+    const current = this.data.filters.equipment;
+    this.setData({
+      filters: { ...this.data.filters, equipment: current === equipment ? '' : equipment }
+    });
+    this.filterExercises();
+  },
+
+  onFilterDifficulty(e) {
+    const difficulty = e.currentTarget.dataset.value;
+    const current = this.data.filters.difficulty;
+    this.setData({
+      filters: { ...this.data.filters, difficulty: current === difficulty ? '' : difficulty }
+    });
+    this.filterExercises();
+  },
+
+  clearFilters() {
+    this.setData({
+      selectedMuscleId: null,
+      searchKeyword: '',
+      filters: { category: '', equipment: '', difficulty: '' },
+      selectedMuscleInfo: null,
+      expandedMuscles: []
+    });
+    this.filterExercises();
+  },
+
+  filterExercises() {
+    const filtered = this.filterExercisesInternal(this.data.exercises);
     this.setData({ filteredExercises: filtered });
+  },
+
+  getFilteredExercises() {
+    return this.data.filteredExercises;
   },
 
   onExerciseTap(e) {
@@ -106,16 +216,7 @@ Page({
     wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
   },
 
-  clearFilters() {
-    this.setData({
-      selectedMuscleId: null,
-      searchKeyword: '',
-      filters: { category: '', equipment: '', difficulty: '' }
-    });
-    this.filterExercises();
-  },
-
-  getFilteredExercises() {
-    return this.data.filteredExercises || this.data.exercises;
+  onMusclePageTap() {
+    // 肌肉库已移除，不跳转
   }
 });
