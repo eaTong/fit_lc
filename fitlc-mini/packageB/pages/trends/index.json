@@ -1,4 +1,6 @@
 {
+  "navigationBarTitleText": "趋势分析",
+  "navigationBarBackgroundColor": "#0A0A0A",
   "usingComponents": {
     "ec-canvas": "/components/ec-canvas/index"
   }

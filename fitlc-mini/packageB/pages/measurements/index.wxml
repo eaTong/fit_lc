@@ -1,9 +1,4 @@
 <view class="measurements-page">
-  <!-- Header -->
-  <view class="page-header">
-    <text class="header-title">围度记录</text>
-  </view>
-
   <!-- Loading -->
   <view wx:if="{{loading}}" class="loading-container">
     <text class="loading-text">加载中...</text>

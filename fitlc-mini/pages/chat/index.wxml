@@ -1,10 +1,4 @@
 <view class="chat-page">
-  <!-- Header -->
-  <view class="chat-header">
-    <text class="header-title">FitLC</text>
-    <text class="header-user">{{user.email}}</text>
-  </view>
-
   <!-- Messages -->
   <scroll-view
     class="messages-container"

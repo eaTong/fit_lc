@@ -1,9 +1,4 @@
 <view class="calendar-page">
-  <!-- Header -->
-  <view class="calendar-header">
-    <text class="header-title">日历</text>
-  </view>
-
   <!-- Month Navigator -->
   <view class="month-navigator">
     <view class="nav-btn" bindtap="onPrevMonth">

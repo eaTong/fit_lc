@@ -1,9 +1,4 @@
 <view class="history-page">
-  <!-- Header -->
-  <view class="history-header">
-    <text class="header-title">历史记录</text>
-  </view>
-
   <!-- Tab Switcher -->
   <view class="tab-container">
     <view
