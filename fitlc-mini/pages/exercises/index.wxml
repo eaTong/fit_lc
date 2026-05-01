@@ -1,76 +1,138 @@
 <view class="exercises-page">
-  <!-- Header -->
+  <!-- Header with Filters -->
   <view class="exercises-header">
-    <view class="search-bar">
-      <input
-        class="search-input"
-        placeholder="搜索动作..."
-        value="{{searchKeyword}}"
-        bindinput="onSearch"
-      />
-    </view>
-    <view class="header-actions">
-      <text class="action-btn" bindtap="onMuscleTreeToggle">
-        {{showMuscleTree ? '收起' : '肌肉'}}
-      </text>
-      <text class="action-btn" bindtap="onMusclePageTap">肌肉库</text>
+    <input
+      class="search-input"
+      placeholder="搜索动作..."
+      value="{{searchKeyword}}"
+      bindinput="onSearch"
+    />
+    <view class="filter-row">
+      <view class="filter-group">
+        <text class="filter-label">器械:</text>
+        <text
+          class="filter-tag {{filters.equipment === 'barbell' ? 'active' : ''}}"
+          data-value="barbell"
+          bindtap="onFilterEquipment"
+        >杠铃</text>
+        <text
+          class="filter-tag {{filters.equipment === 'dumbbell' ? 'active' : ''}}"
+          data-value="dumbbell"
+          bindtap="onFilterEquipment"
+        >哑铃</text>
+        <text
+          class="filter-tag {{filters.equipment === 'cable' ? 'active' : ''}}"
+          data-value="cable"
+          bindtap="onFilterEquipment"
+        >绳索</text>
+        <text
+          class="filter-tag {{filters.equipment === 'machine' ? 'active' : ''}}"
+          data-value="machine"
+          bindtap="onFilterEquipment"
+        >器械</text>
+        <text
+          class="filter-tag {{filters.equipment === 'bodyweight' ? 'active' : ''}}"
+          data-value="bodyweight"
+          bindtap="onFilterEquipment"
+        >自重</text>
+      </view>
+      <view class="filter-group">
+        <text class="filter-label">难度:</text>
+        <text
+          class="filter-tag {{filters.difficulty === 'beginner' ? 'active' : ''}}"
+          data-value="beginner"
+          bindtap="onFilterDifficulty"
+        >初级</text>
+        <text
+          class="filter-tag {{filters.difficulty === 'intermediate' ? 'active' : ''}}"
+          data-value="intermediate"
+          bindtap="onFilterDifficulty"
+        >中级</text>
+        <text
+          class="filter-tag {{filters.difficulty === 'advanced' ? 'active' : ''}}"
+          data-value="advanced"
+          bindtap="onFilterDifficulty"
+        >高级</text>
+      </view>
     </view>
   </view>
 
-  <!-- Muscle Tree (Left Sidebar) -->
-  <view wx:if="{{showMuscleTree}}" class="muscle-tree">
-    <view
-      class="muscle-item all {{selectedMuscleId === null ? 'active' : ''}}"
-      bindtap="onAllMuscles"
-    >
-      <text>全部动作</text>
-    </view>
-    <block wx:for="{{muscleHierarchy}}" wx:key="id">
-      <view class="muscle-group">
+  <view class="main-content">
+    <!-- Left Sidebar: Muscle Tree (48px wide) -->
+    <view class="muscle-sidebar">
+      <view
+        class="muscle-item {{selectedMuscleId === null ? 'active' : ''}}"
+        bindtap="onAllMuscles"
+      >
+        <text>全部</text>
+      </view>
+      <block wx:for="{{muscleHierarchy}}" wx:key="id">
         <view
-          class="muscle-item parent {{selectedMuscleId === item.id ? 'active' : ''}}"
+          class="muscle-item {{selectedMuscleId === item.id ? 'active' : ''}}"
           data-id="{{item.id}}"
           bindtap="onMuscleSelect"
         >
           <text>{{item.name}}</text>
         </view>
+        <!-- Children always shown when present -->
         <view wx:if="{{item.children}}" class="muscle-children">
           <view
             wx:for="{{item.children}}"
+            wx:for-item="child"
             wx:key="id"
-            class="muscle-item child {{selectedMuscleId === item.id ? 'active' : ''}}"
-            data-id="{{item.id}}"
+            class="muscle-item child {{selectedMuscleId === child.id ? 'active' : ''}}"
+            data-id="{{child.id}}"
             bindtap="onMuscleSelect"
           >
-            <text>{{item.name}}</text>
+            <text>{{child.name}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- Right Content: Muscle Info + Exercise List -->
+    <view class="content-area">
+      <!-- Muscle Info Card (collapsible) -->
+      <view wx:if="{{selectedMuscleInfo}}" class="muscle-info-card">
+        <view class="muscle-info-header" bindtap="onMuscleSelect" data-id="{{selectedMuscleId}}">
+          <text class="muscle-name">{{selectedMuscleInfo.name}}</text>
+          <text class="toggle-icon">{{expandedMuscles.includes(selectedMuscleId) ? '收起' : '展开'}}</text>
+        </view>
+        <view wx:if="{{expandedMuscles.includes(selectedMuscleId)}}" class="muscle-info-body">
+          <view wx:if="{{selectedMuscleInfo.function}}" class="info-row">
+            <text class="info-label">功能:</text>
+            <text class="info-value">{{selectedMuscleInfo.function}}</text>
+          </view>
+          <view wx:if="{{selectedMuscleInfo.trainingTips}}" class="info-row">
+            <text class="info-label">训练技巧:</text>
+            <text class="info-value">{{selectedMuscleInfo.trainingTips}}</text>
           </view>
         </view>
       </view>
-    </block>
-  </view>
 
-  <!-- Exercise Grid -->
-  <scroll-view class="exercise-list" scroll-y>
-    <view class="exercise-grid">
-      <view
-        wx:for="{{getFilteredExercises()}}"
-        wx:key="id"
-        class="exercise-card"
-        data-id="{{item.id}}"
-        bindtap="onExerciseTap"
-      >
-        <view class="exercise-name">{{item.name}}</view>
-        <view class="exercise-info">
-          <text class="tag">{{item.category}}</text>
-          <text class="tag">{{item.equipment}}</text>
-          <text class="tag difficulty-{{item.difficulty}}">{{item.difficulty}}</text>
+      <!-- Exercise Grid -->
+      <scroll-view class="exercise-list" scroll-y>
+        <view class="exercise-grid">
+          <view
+            wx:for="{{getFilteredExercises()}}"
+            wx:key="id"
+            class="exercise-card"
+            data-id="{{item.id}}"
+            bindtap="onExerciseTap"
+          >
+            <view class="exercise-name">{{item.name}}</view>
+            <view class="exercise-tags">
+              <text class="tag">{{item.category}}</text>
+              <text class="tag">{{item.equipment}}</text>
+              <text class="tag difficulty-{{item.difficulty}}">{{item.difficulty}}</text>
+            </view>
+          </view>
         </view>
-      </view>
+        <view wx:if="{{loading}}" class="loading">加载中...</view>
+        <view wx:if="{{!loading && getFilteredExercises().length === 0}}" class="empty">
+          暂无动作
+        </view>
+      </scroll-view>
     </view>
-
-    <view wx:if="{{loading}}" class="loading">加载中...</view>
-    <view wx:if="{{!loading && getFilteredExercises().length === 0}}" class="empty">
-      暂无动作
-    </view>
-  </scroll-view>
+  </view>
 </view>

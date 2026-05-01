@@ -2,106 +2,188 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg-primary);
+  background-color: #0A0A0A;
 }
 
 .exercises-header {
   padding: 16rpx 24rpx;
-  background-color: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.search-bar {
-  background-color: var(--color-bg-tertiary);
-  border-radius: 32rpx;
-  padding: 12rpx 24rpx;
-  margin-bottom: 16rpx;
+  background-color: #1A1A1A;
+  border-bottom: 1px solid #333333;
 }
 
 .search-input {
-  font-size: 28rpx;
-  color: var(--color-text-primary);
+  background-color: #252525;
+  border-radius: 10rpx;
+  padding: 20rpx 28rpx;
+  font-size: 32rpx;
+  color: #FFFFFF;
+  margin-bottom: 18rpx;
 }
 
-.header-actions {
+.filter-row {
   display: flex;
-  justify-content: flex-end;
-  gap: 32rpx;
+  flex-direction: column;
+  gap: 12rpx;
 }
 
-.action-btn {
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.filter-label {
   font-size: 28rpx;
-  color: var(--color-accent);
-  padding: 8rpx 16rpx;
+  color: #888888;
+  width: 64rpx;
 }
 
-.muscle-tree {
-  width: 200rpx;
-  background-color: var(--color-bg-secondary);
-  border-right: 1px solid var(--color-border);
+.filter-tag {
+  font-size: 26rpx;
+  padding: 10rpx 20rpx;
+  background-color: #252525;
+  border-radius: 6px;
+  color: #888888;
+}
+
+.filter-tag.active {
+  background-color: #FF4500;
+  color: #FFFFFF;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Left Sidebar: Muscle Tree */
+.muscle-sidebar {
+  width: 140rpx;
+  background-color: #1A1A1A;
+  border-right: 1px solid #333333;
   flex-shrink: 0;
   overflow-y: auto;
 }
 
 .muscle-item {
-  padding: 20rpx 24rpx;
-  font-size: 26rpx;
-  color: var(--color-text-secondary);
-  border-bottom: 1px solid var(--color-border);
+  padding: 20rpx 12rpx;
+  font-size: 28rpx;
+  color: #888888;
+  text-align: center;
+  border-bottom: 1px solid #333333;
 }
 
 .muscle-item.active {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-accent);
+  background-color: #252525;
+  color: #FF4500;
+  border-left: 4rpx solid #FF4500;
 }
 
 .muscle-item.child {
-  padding-left: 48rpx;
-  font-size: 24rpx;
+  padding-left: 20rpx;
+  font-size: 26rpx;
 }
 
 .muscle-children {
-  background-color: var(--color-bg-primary);
+  background-color: #0A0A0A;
 }
 
+/* Right Content Area */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Muscle Info Card */
+.muscle-info-card {
+  background-color: #1A1A1A;
+  border-bottom: 1px solid #333333;
+  padding: 16rpx 24rpx;
+}
+
+.muscle-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muscle-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #FF4500;
+}
+
+.toggle-icon {
+  font-size: 24rpx;
+  color: #888888;
+}
+
+.muscle-info-body {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1px solid #333333;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 8rpx;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #888888;
+  width: 140rpx;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  flex: 1;
+}
+
+/* Exercise List */
 .exercise-list {
   flex: 1;
-  padding: 24rpx;
+  padding: 16rpx 24rpx;
 }
 
 .exercise-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 24rpx;
+  gap: 16rpx;
 }
 
 .exercise-card {
-  width: calc(50% - 12rpx);
-  background-color: var(--color-bg-secondary);
-  border-radius: 8px;
+  width: calc(50% - 10rpx);
+  background-color: #1A1A1A;
+  border-radius: 10rpx;
   padding: 24rpx;
-  border: 1px solid var(--color-border);
+  border: 1px solid #333333;
 }
 
 .exercise-name {
-  font-size: 28rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 16rpx;
+  color: #FFFFFF;
+  margin-bottom: 14rpx;
 }
 
-.exercise-info {
+.exercise-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8rpx;
+  gap: 10rpx;
 }
 
 .tag {
-  font-size: 20rpx;
-  padding: 4rpx 12rpx;
-  background-color: var(--color-bg-tertiary);
-  border-radius: 4px;
-  color: var(--color-text-secondary);
+  font-size: 24rpx;
+  padding: 6rpx 14rpx;
+  background-color: #252525;
+  border-radius: 6px;
+  color: #888888;
 }
 
 .difficulty-beginner { color: #4CAF50; }
@@ -110,7 +192,7 @@
 
 .loading, .empty {
   text-align: center;
-  padding: 60rpx;
-  font-size: 28rpx;
-  color: var(--color-text-secondary);
+  padding: 80rpx;
+  font-size: 32rpx;
+  color: #888888;
 }
