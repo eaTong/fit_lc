@@ -10,7 +10,8 @@
     "pages/plan-generate/index",
     "pages/history/index",
     "pages/trends/index",
-    "pages/measurements/index"
+    "pages/measurements/index",
+    "pages/calendar/index"
   ],
   "tabBar": {
     "color": "#888888",
