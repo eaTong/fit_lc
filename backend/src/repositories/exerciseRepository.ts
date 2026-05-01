@@ -6,6 +6,8 @@ export const exerciseRepository = {
     equipment?: string;
     difficulty?: string;
     status?: string;
+    page?: number;
+    pageSize?: number;
   }) {
     const where: any = {};
     if (filters?.category) where.category = filters.category;
@@ -13,13 +15,27 @@ export const exerciseRepository = {
     if (filters?.difficulty) where.difficulty = filters.difficulty;
     if (filters?.status) where.status = filters.status;
 
-    return prisma.exercise.findMany({
-      where,
-      include: {
-        muscles: { include: { muscle: true } },
-      },
-      orderBy: { name: 'asc' }
-    });
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 20;
+    const skip = (page - 1) * pageSize;
+
+    const [exercises, total] = await Promise.all([
+      prisma.exercise.findMany({
+        where,
+        include: {
+          muscles: { include: { muscle: true } },
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.exercise.count({ where }),
+    ]);
+
+    return {
+      exercises,
+      pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+    };
   },
 
   async findById(id: number) {

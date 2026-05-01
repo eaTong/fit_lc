@@ -10,14 +10,16 @@ router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
   try {
-    const { category, equipment, difficulty, status } = req.query;
-    const exercises = await exerciseRepository.findAll({
+    const { category, equipment, difficulty, status, page, pageSize } = req.query;
+    const result = await exerciseRepository.findAll({
       category: category as string,
       equipment: equipment as string,
       difficulty: difficulty as string,
       status: status as string,
+      page: page ? parseInt(page as string) : undefined,
+      pageSize: pageSize ? parseInt(pageSize as string) : undefined,
     });
-    res.json({ exercises });
+    res.json(result);
   } catch (err) {
     console.error('Get exercises error:', err);
     res.status(500).json({ error: 'Failed to get exercises' });

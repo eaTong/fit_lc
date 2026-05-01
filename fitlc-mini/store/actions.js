@@ -125,11 +125,11 @@ const planActions = {
 
 // Exercise Actions
 const exerciseActions = {
-  fetchExercises() {
-    console.log('[ExerciseActions] fetchExercises called');
-    return get('/exercises').then(res => {
-      console.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length);
-      return res.exercises || [];
+  fetchExercises(page = 1, pageSize = 20) {
+    console.log('[ExerciseActions] fetchExercises called, page:', page);
+    return get('/exercises', { page, pageSize }).then(res => {
+      console.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length, 'total:', res?.pagination?.total);
+      return res;
     });
   },
 

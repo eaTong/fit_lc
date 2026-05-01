@@ -35,23 +35,19 @@ Page({
     this.setData({ loading: true });
     console.log('[Exercises] Starting to load data...');
     Promise.all([
-      exerciseActions.fetchExercises(),
+      exerciseActions.fetchExercises(1, 20),
       exerciseActions.fetchHierarchy()
-    ]).then(([exercises, hierarchy]) => {
-      console.log('[Exercises] Data loaded:', { exercisesCount: exercises?.length, hierarchyCount: hierarchy?.length });
+    ]).then(([result, hierarchy]) => {
+      console.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
       // 初始展开所有有子肌肉的项
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
-      const allFiltered = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId: null, searchKeyword: '', filters: { category: '', equipment: '', difficulty: '' }, expandedMuscles });
-      // 只加载第一页，避免setData数据过大
-      const { pageSize } = this.data;
-      const filteredExercises = allFiltered.slice(0, pageSize);
-      console.log('[Exercises] Filtered exercises:', filteredExercises.length, 'total:', allFiltered.length);
       this.setData({
-        exercises,
+        exercises: result.exercises,
         muscleHierarchy: hierarchy,
         expandedMuscles,
-        filteredExercises,
-        hasMore: allFiltered.length > pageSize,
+        filteredExercises: result.exercises,
+        page: 1,
+        hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
       });
     }).catch(err => {
@@ -214,13 +210,19 @@ Page({
   },
 
   filterExercises() {
-    const filtered = this.filterExercisesInternal(this.data.exercises);
-    const { pageSize } = this.data;
-    const displayExercises = filtered.slice(0, pageSize);
-    this.setData({
-      filteredExercises: displayExercises,
-      page: 1,
-      hasMore: filtered.length > pageSize
+    // 筛选时重新从后端加载第一页
+    this.setData({ loading: true });
+    exerciseActions.fetchExercises(1, 20).then(result => {
+      this.setData({
+        exercises: result.exercises,
+        filteredExercises: result.exercises,
+        page: 1,
+        hasMore: result.pagination.page < result.pagination.totalPages,
+        loading: false
+      });
+    }).catch(err => {
+      console.error('filter exercises failed:', err);
+      this.setData({ loading: false });
     });
   },
 
@@ -230,21 +232,23 @@ Page({
   },
 
   loadMore() {
-    const { filteredExercises, page, pageSize, exercises, selectedMuscleId, searchKeyword, filters, expandedMuscles } = this.data;
+    const { page, exercises } = this.data;
+    const nextPage = page + 1;
 
     this.setData({ loadingMore: true });
 
-    const allFiltered = this.filterExercisesInternal(exercises, { exercises, selectedMuscleId, searchKeyword, filters, expandedMuscles });
-    const nextPage = page + 1;
-    const start = 0;
-    const end = nextPage * pageSize;
-    const newExercises = allFiltered.slice(start, end);
-
-    this.setData({
-      filteredExercises: newExercises,
-      page: nextPage,
-      hasMore: newExercises.length < allFiltered.length,
-      loadingMore: false
+    exerciseActions.fetchExercises(nextPage, 20).then(result => {
+      const newExercises = [...exercises, ...result.exercises];
+      this.setData({
+        exercises: newExercises,
+        filteredExercises: newExercises,
+        page: nextPage,
+        hasMore: result.pagination.page < result.pagination.totalPages,
+        loadingMore: false
+      });
+    }).catch(err => {
+      console.error('load more failed:', err);
+      this.setData({ loadingMore: false });
     });
   },
 
