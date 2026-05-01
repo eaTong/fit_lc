@@ -41,11 +41,17 @@ Page({
       console.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
       // 初始展开所有有子肌肉的项
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
+      const filteredExercises = this.filterExercisesInternal(result.exercises, {
+        selectedMuscleId: null,
+        searchKeyword: '',
+        filters: { category: '', equipment: '', difficulty: '' },
+        expandedMuscles
+      });
       this.setData({
         exercises: result.exercises,
         muscleHierarchy: hierarchy,
         expandedMuscles,
-        filteredExercises: result.exercises,
+        filteredExercises,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
