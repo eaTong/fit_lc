@@ -3,7 +3,8 @@
     "pages/chat/index",
     "pages/login/index",
     "pages/exercises/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/settings/index"
   ],
   "window": {
     "backgroundTextStyle": "dark",
