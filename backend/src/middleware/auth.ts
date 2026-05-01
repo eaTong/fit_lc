@@ -3,8 +3,9 @@ import { Request, Response, NextFunction } from 'express';
 
 interface JWTPayload {
   userId: number;
-  email: string;
+  email?: string;
   roles?: string[];
+  role?: string;
 }
 
 declare global {
