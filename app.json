@@ -3,7 +3,9 @@
     "pages/login/index",
     "pages/chat/index",
     "pages/exercises/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/plans/index",
+    "pages/plan-detail/index"
   ],
   "tabBar": {
     "color": "#888888",
