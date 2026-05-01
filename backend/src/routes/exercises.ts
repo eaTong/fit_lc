@@ -10,6 +10,11 @@ router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
   try {
+    // 禁用缓存
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const { category, equipment, difficulty, status, page, pageSize } = req.query;
     const result = await exerciseRepository.findAll({
       category: category as string,
