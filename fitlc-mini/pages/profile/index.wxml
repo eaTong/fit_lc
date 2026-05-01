@@ -2,7 +2,7 @@
   <!-- User Info Section -->
   <view class="user-section">
     <view class="user-avatar">
-      <text class="avatar-text">{{user.email.[0]}}</text>
+      <text class="avatar-text">{{user.email}}</text>
     </view>
     <view class="user-info">
       <text class="user-name">{{user.nickname || user.email}}</text>

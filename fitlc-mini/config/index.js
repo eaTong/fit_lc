@@ -1,6 +1,6 @@
 module.exports = {
-  API_BASE_URL: 'https://fitlc.com/api',
-  APP_ID: 'wxxxxxxxxxxxx',
+  API_BASE_URL: 'http://localhost:3000/api',
+  APP_ID: 'wxe79d7a77258e35c7',
   STORAGE_KEY: {
     TOKEN: 'fitlc_token',
     USER: 'fitlc_user',

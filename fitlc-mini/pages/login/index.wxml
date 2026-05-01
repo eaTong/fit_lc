@@ -10,10 +10,9 @@
       class="wechat-login-btn"
       type="primary"
       loading="{{loading}}"
-      open-type="getPhoneNumber"
-      bindgetphonenumber="onGetPhoneNumber"
+      bindtap="onLogin"
     >
-      微信授权登录
+      微信登录
     </button>
 
     <text wx:if="{{error}}" class="error-text">{{error}}</text>

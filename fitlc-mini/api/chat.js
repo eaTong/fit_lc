@@ -10,7 +10,7 @@ const chatActions = {
 
   // 发送消息
   sendMessage(content) {
-    return post('/chat/message', { content }).then(res => res.message);
+    return post('/chat/message', { message: content }).then(res => res.message);
   },
 
   // 撤销消息

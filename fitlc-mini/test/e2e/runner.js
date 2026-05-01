@@ -35,10 +35,10 @@ async function runTests() {
 
     // Load test specs
     const specFiles = [
-      './specs/login.spec.js',
-      './specs/chat.spec.js',
-      './specs/profile.spec.js',
-      './specs/exercises.spec.js'
+      './specs/login.test.js',
+      './specs/chat.test.js',
+      './specs/profile.test.js',
+      './specs/exercises.test.js'
     ];
 
     for (const specFile of specFiles) {

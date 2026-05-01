@@ -14,15 +14,12 @@ Page({
     }
   },
 
-  onGetPhoneNumber(e) {
-    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
-      this.setData({ error: '授权失败，请重试' });
-      return;
-    }
+  onLogin() {
+    if (this.data.loading) return;
 
     this.setData({ loading: true, error: '' });
 
-    // 获取 code
+    // 使用静默登录
     wx.login({
       success: (loginRes) => {
         if (!loginRes.code) {

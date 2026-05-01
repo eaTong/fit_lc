@@ -13,12 +13,20 @@ const WECHAT_SECRET = process.env.WECHAT_SECRET;
 router.post('/wechat', async (req, res) => {
   try {
     const { code } = req.body;
+    console.log('[WeChat Login] Received code:', code);
+    console.log('[WeChat Login] APPID:', WECHAT_APPID ? `${WECHAT_APPID.slice(0, 8)}...` : 'MISSING');
 
     if (!code) {
       return res.status(400).json({ message: 'code is required' });
     }
 
+    if (!WECHAT_APPID || !WECHAT_SECRET) {
+      console.error('[WeChat Login] Missing credentials');
+      return res.status(500).json({ message: 'Server misconfiguration' });
+    }
+
     // Exchange code for session_key and openid
+    console.log('[WeChat Login] Calling WeChat API...');
     const wechatRes = await axios.get('https://api.weixin.qq.com/sns/jscode2session', {
       params: {
         appid: WECHAT_APPID,
@@ -28,12 +36,16 @@ router.post('/wechat', async (req, res) => {
       }
     });
 
+    console.log('[WeChat Login] WeChat response:', JSON.stringify(wechatRes.data));
+
     const { openid, unionid, session_key, errcode, errmsg } = wechatRes.data;
 
     if (errcode) {
-      console.error('Wechat API error:', errcode, errmsg);
-      return res.status(400).json({ message: 'Invalid code' });
+      console.error('[WeChat Login] WeChat API error:', errcode, errmsg);
+      return res.status(400).json({ message: 'Invalid code', wechatError: errcode, wechatMsg: errmsg });
     }
+
+    console.log('[WeChat Login] OpenID:', openid);
 
     // Find or create user
     let user = await prisma.user.findFirst({
@@ -46,7 +58,10 @@ router.post('/wechat', async (req, res) => {
       include: { userProfile: true }
     });
 
+    console.log('[WeChat Login] Found user:', user?.id);
+
     if (!user) {
+      console.log('[WeChat Login] Creating new user...');
       // Create new user with normal role
       user = await prisma.user.create({
         data: {
@@ -63,6 +78,7 @@ router.post('/wechat', async (req, res) => {
         },
         include: { userProfile: true }
       });
+      console.log('[WeChat Login] Created user:', user.id);
     }
 
     // Generate JWT
@@ -71,6 +87,8 @@ router.post('/wechat', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    console.log('[WeChat Login] Success! Token generated for user:', user.id);
 
     res.json({
       token,
@@ -82,7 +100,7 @@ router.post('/wechat', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Wechat login error:', error);
+    console.error('[WeChat Login] Error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
