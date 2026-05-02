@@ -18,6 +18,8 @@ Page({
     expandedMuscles: [],
     selectedMuscleInfo: null,
     filteredExercises: [],
+    filteredExerciseCount: 0,
+    muscleExpanded: false,
     pageSize: 20,
     page: 1,
     hasMore: true
@@ -118,8 +120,18 @@ Page({
     this.setData({ showMuscleTree: !this.data.showMuscleTree });
   },
 
+  onMuscleToggle() {
+    this.setData({ muscleExpanded: !this.data.muscleExpanded });
+  },
+
   onAllMuscles() {
-    this.setData({ selectedMuscleId: null, selectedMuscleInfo: null, expandedMuscles: [] });
+    this.setData({
+      selectedMuscleId: null,
+      selectedMuscleInfo: null,
+      expandedMuscles: [],
+      muscleExpanded: false,
+      filteredExerciseCount: 0
+    });
   },
 
   onMuscleSelect(e) {
@@ -162,7 +174,8 @@ Page({
       // 点击子肌肉：只选择，不改变展开状态
       this.setData({
         selectedMuscleId: muscleId,
-        selectedMuscleInfo: muscleInfo
+        selectedMuscleInfo: muscleInfo,
+        muscleExpanded: false
       });
     } else {
       // 点击父肌肉：切换展开状态
@@ -174,7 +187,8 @@ Page({
       this.setData({
         selectedMuscleId: muscleId,
         expandedMuscles: newExpandedMuscles,
-        selectedMuscleInfo: muscleInfo
+        selectedMuscleInfo: muscleInfo,
+        muscleExpanded: false
       });
     }
     this.filterExercises();
@@ -223,6 +237,7 @@ Page({
       this.setData({
         exercises: result.exercises,
         filteredExercises: filtered,
+        filteredExerciseCount: filtered.length,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false

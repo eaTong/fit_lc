@@ -92,20 +92,30 @@
 
     <!-- Right Content: Muscle Info + Exercise List -->
     <view class="content-area">
-      <!-- Muscle Info Card (collapsible) -->
+      <!-- Muscle Info Card (always visible when muscle selected) -->
       <view wx:if="{{selectedMuscleInfo}}" class="muscle-info-card">
-        <view class="muscle-info-header" bindtap="onMuscleSelect" data-id="{{selectedMuscleId}}">
-          <text class="muscle-name">{{selectedMuscleInfo.name}}</text>
-          <text class="toggle-icon">{{expandedMuscles.includes(selectedMuscleId) ? '收起' : '展开'}}</text>
-        </view>
-        <view wx:if="{{expandedMuscles.includes(selectedMuscleId)}}" class="muscle-info-body">
-          <view wx:if="{{selectedMuscleInfo.function}}" class="info-row">
-            <text class="info-label">功能:</text>
-            <text class="info-value">{{selectedMuscleInfo.function}}</text>
+        <view class="muscle-info-header" bindtap="onMuscleToggle">
+          <view class="muscle-title-row">
+            <text class="muscle-name">{{selectedMuscleInfo.name}}</text>
+            <text class="muscle-count">{{filteredExerciseCount}} 个动作</text>
           </view>
-          <view wx:if="{{selectedMuscleInfo.trainingTips}}" class="info-row">
-            <text class="info-label">训练技巧:</text>
-            <text class="info-value">{{selectedMuscleInfo.trainingTips}}</text>
+          <text class="toggle-icon {{muscleExpanded ? 'expanded' : ''}}">▼</text>
+        </view>
+        <!-- Always show function, expandable for more -->
+        <view class="muscle-function">{{selectedMuscleInfo.function}}</view>
+        <!-- Expandable details -->
+        <view wx:if="{{muscleExpanded}}" class="muscle-details">
+          <view wx:if="{{selectedMuscleInfo.origin}}" class="detail-row">
+            <text class="detail-label">起点</text>
+            <text class="detail-value">{{selectedMuscleInfo.origin}}</text>
+          </view>
+          <view wx:if="{{selectedMuscleInfo.insertion}}" class="detail-row">
+            <text class="detail-label">止点</text>
+            <text class="detail-value">{{selectedMuscleInfo.insertion}}</text>
+          </view>
+          <view wx:if="{{selectedMuscleInfo.trainingTips}}" class="detail-row">
+            <text class="detail-label">训练技巧</text>
+            <text class="detail-value">{{selectedMuscleInfo.trainingTips}}</text>
           </view>
         </view>
       </view>
