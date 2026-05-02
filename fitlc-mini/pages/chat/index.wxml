@@ -16,6 +16,16 @@
         <text wx:else>{{item.role === 'user' ? '👤' : ''}}</text>
       </view>
       <view class="message-content {{item.role}}">
+        <!-- 用户消息的图片 -->
+        <view wx:if="{{item.imageUrls && item.imageUrls.length > 0}}" class="message-images">
+          <image
+            wx:for="{{item.imageUrls}}"
+            wx:key="*this"
+            src="{{item}}"
+            mode="aspectFill"
+            class="message-image"
+          />
+        </view>
         <text class="message-text">{{item.content}}</text>
         <view wx:if="{{item.savedData}}" class="saved-indicator">
           <text>✓ 已保存</text>
@@ -33,6 +43,14 @@
 
   <!-- Input Area -->
   <view class="input-area">
+    <!-- 待发送图片预览 -->
+    <view wx:if="{{pendingImages.length > 0}}" class="pending-images">
+      <view wx:for="{{pendingImages}}" wx:key="*this" class="pending-image-item">
+        <image src="{{item.path}}" mode="aspectFill" class="pending-image" />
+        <text class="remove-btn" data-index="{{index}}" bindtap="onRemovePendingImage">×</text>
+      </view>
+    </view>
+
     <!-- 文字模式 -->
     <view wx:if="{{inputMode === 'text'}}" class="input-container">
       <text class="action-btn switch-btn" bindtap="onSwitchMode">🎤</text>

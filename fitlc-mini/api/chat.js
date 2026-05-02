@@ -9,8 +9,29 @@ const chatActions = {
   },
 
   // 发送消息
-  sendMessage(content) {
-    return post('/chat/message', { message: content }).then(res => res.message);
+  // content: 文字内容
+  // imageUrls: 图片URL数组（可选）
+  sendMessage(content, imageUrls = []) {
+    const timestamp = Date.now();
+    return post('/chat/message', { message: content, imageUrls }).then(res => {
+      // 后端返回 { reply, savedData }
+      // 返回用户消息和AI回复，构造完整的消息对象
+      const userMessage = {
+        id: `temp-${timestamp}-user`,
+        role: 'user',
+        content: content,
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+        createdAt: new Date().toISOString()
+      };
+      const assistantMessage = {
+        id: `temp-${timestamp}-assistant`,
+        role: 'assistant',
+        content: res.reply,
+        savedData: res.savedData,
+        createdAt: new Date().toISOString()
+      };
+      return [userMessage, assistantMessage];
+    });
   },
 
   // 撤销消息

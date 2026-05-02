@@ -30,7 +30,11 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const muscle = await muscleRepository.findById(parseInt(req.params.id));
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid muscle ID' });
+    }
+    const muscle = await muscleRepository.findById(id);
     if (!muscle) return res.status(404).json({ error: 'Muscle not found' });
     res.json({ muscle });
   } catch (err) {

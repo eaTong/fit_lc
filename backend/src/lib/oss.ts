@@ -23,3 +23,9 @@ export async function uploadChatImage(userId: number, file: Buffer, ext: string)
   await client.put(filename, file);
   return `${OSS_HOST}/${filename}`;
 }
+
+export async function uploadAudio(userId: number, file: Buffer, ext: string): Promise<string> {
+  const filename = `voice-messages/user-${userId}-${Date.now()}.${ext}`;
+  await client.put(filename, file);
+  return `${OSS_HOST}/${filename}`;
+}

@@ -180,16 +180,17 @@ const chatActionsExtended = {
       });
   },
 
-  sendMessage(content) {
-    getStore().setState({ isLoading: true });
-    return chatActions.sendMessage(content)
-      .then(message => {
-        const messages = [...getStore().getState().chatMessages, message];
-        getStore().setState({ chatMessages: messages, isLoading: false });
-        return message;
+  sendMessage(content, imageUrls = []) {
+    const store = getStore();
+    store.setState({ isLoading: true });
+    return chatActions.sendMessage(content, imageUrls)
+      .then(newMessages => {
+        const messages = [...store.getState().chatMessages, ...newMessages];
+        store.setState({ chatMessages: messages, isLoading: false });
+        return newMessages;
       })
       .catch(err => {
-        getStore().setState({ isLoading: false });
+        store.setState({ isLoading: false });
         throw err;
       });
   },
