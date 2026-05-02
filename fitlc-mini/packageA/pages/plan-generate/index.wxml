@@ -1,14 +1,5 @@
 <view class="page-container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onBack">
-      <text class="back-icon">‹</text>
-    </view>
-    <text class="title">生成训练计划</text>
-    <view class="placeholder"></view>
-  </view>
-
-  <!-- Form -->
+  <!-- Form Container -->
   <view class="form-container">
     <!-- Goal Picker -->
     <view class="form-item">

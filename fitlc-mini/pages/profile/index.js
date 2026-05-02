@@ -114,16 +114,8 @@ Page({
   },
 
   // Navigation handlers - subpackage pages use packageX/pages/xxx/index
-  goToHistory() {
-    wx.navigateTo({ url: '/packageB/pages/history/index' });
-  },
-
   goToMeasurements() {
     wx.navigateTo({ url: '/packageB/pages/measurements/index' });
-  },
-
-  goToTrends() {
-    wx.navigateTo({ url: '/packageB/pages/trends/index' });
   },
 
   goToCalendar() {
@@ -140,10 +132,6 @@ Page({
 
   goToGallery() {
     wx.navigateTo({ url: '/packageC/pages/gallery/index' });
-  },
-
-  goToExercises() {
-    wx.switchTab({ url: '/pages/exercises/index' });
   },
 
   goToSettings() {

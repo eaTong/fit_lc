@@ -15,6 +15,9 @@ Component({
     workoutDates: [],
     measurementDates: [],
 
+    // All records combined
+    allRecords: [],
+
     // Selected date detail
     selectedDate: null,
     selectedDateRecords: [],
@@ -44,18 +47,45 @@ Component({
     initStore() {
       const app = getApp();
       this.store = app.store;
-      this.setData({
-        workoutDates: this.store.getState().workouts || [],
-        measurementDates: this.store.getState().measurements || []
-      });
+      this.buildAllRecords(
+        this.store.getState().workouts || [],
+        this.store.getState().measurements || []
+      );
       this.generateCalendar();
 
       this.unsubscribe = this.store.subscribe(state => {
-        this.setData({
-          workoutDates: state.workouts || [],
-          measurementDates: state.measurements || []
-        });
+        this.buildAllRecords(state.workouts || [], state.measurements || []);
         this.generateCalendar();
+      });
+    },
+
+    buildAllRecords(workouts, measurements) {
+      const workoutRecords = (workouts || []).map(w => ({
+        id: w.id,
+        type: 'workout',
+        date: w.date,
+        summary: `${w.exercises?.length || 0}个动作`,
+        detail: `共${this.calculateTotalSets(w)}组`,
+        data: w
+      }));
+
+      const measurementRecords = (measurements || []).map(m => ({
+        id: m.id,
+        type: 'measurement',
+        date: m.date,
+        summary: `${m.items?.length || 0}个部位`,
+        detail: this.getMeasurementParts(m),
+        data: m
+      }));
+
+      const allRecords = [...workoutRecords, ...measurementRecords].sort((a, b) =>
+        new Date(b.date) - new Date(a.date)
+      );
+
+      this.setData({
+        workoutDates: workouts || [],
+        measurementDates: measurements || [],
+        allRecords
       });
     },
 
@@ -74,12 +104,8 @@ Component({
         recordActions.fetchWorkouts(),
         recordActions.fetchMeasurements()
       ]).then(([workouts, measurements]) => {
-        this.setData({
-          workoutDates: workouts || [],
-          measurementDates: measurements || [],
-          loading: false
-        });
-        this.generateCalendar();
+        this.buildAllRecords(workouts, measurements);
+        this.setData({ loading: false });
       }).catch(err => {
         this.setData({ loading: false });
         console.error('fetch records failed:', err);
@@ -174,6 +200,24 @@ Component({
     getMeasurementParts(measurement) {
       if (!measurement.items || measurement.items.length === 0) return '-';
       return measurement.items.map(item => item.body_part).join('、');
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = now - date;
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (diff < oneDay) {
+        return '今天';
+      } else if (diff < 2 * oneDay) {
+        return '昨天';
+      } else if (diff < 7 * oneDay) {
+        return `${Math.floor(diff / oneDay)}天前`;
+      } else {
+        return `${date.getMonth() + 1}月${date.getDate()}日`;
+      }
     },
 
     onPrevMonth() {

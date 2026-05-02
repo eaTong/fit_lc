@@ -46,6 +46,38 @@
     </view>
   </view>
 
+  <!-- All Records List (when no date selected) -->
+  <view wx:if="{{!showDetail}}" class="records-section">
+    <view class="section-header">
+      <text class="section-title">全部记录</text>
+      <text class="record-count">{{allRecords.length}}条</text>
+    </view>
+    <scroll-view class="records-list" scroll-y>
+      <view
+        wx:for="{{allRecords}}"
+        wx:key="id"
+        class="record-item"
+        data-record="{{item}}"
+        bindtap="onRecordTap"
+      >
+        <view class="record-icon">
+          <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
+        </view>
+        <view class="record-info">
+          <view class="record-header">
+            <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
+            <text class="record-date">{{formatDate(item.date)}}</text>
+          </view>
+          <text class="record-summary">{{item.summary}}</text>
+          <text class="record-detail">{{item.detail}}</text>
+        </view>
+        <view class="record-arrow">
+          <text>></text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- Detail Panel -->
   <view wx:if="{{showDetail}}" class="detail-overlay" bindtap="onCloseDetail">
     <view class="detail-panel" catchtap="noop">

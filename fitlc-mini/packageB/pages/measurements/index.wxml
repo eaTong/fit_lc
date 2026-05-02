@@ -1,4 +1,22 @@
 <view class="measurements-page">
+  <!-- Tab Switcher -->
+  <view class="tab-container">
+    <view
+      class="tab-item {{activeTab === 'list' ? 'active' : ''}}"
+      data-tab="list"
+      bindtap="onTabChange"
+    >
+      <text class="tab-text">记录</text>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'trend' ? 'active' : ''}}"
+      data-tab="trend"
+      bindtap="onTabChange"
+    >
+      <text class="tab-text">趋势</text>
+    </view>
+  </view>
+
   <!-- Loading -->
   <view wx:if="{{loading}}" class="loading-container">
     <text class="loading-text">加载中...</text>
@@ -11,9 +29,9 @@
     <text class="empty-hint">去聊天页记录你的第一条围度吧</text>
   </view>
 
-  <!-- Content -->
+  <!-- List Tab Content -->
   <scroll-view
-    wx:else
+    wx:elif="{{activeTab === 'list'}}"
     class="content-container"
     scroll-y
     enable-back-to-top
@@ -102,6 +120,71 @@
         </view>
         <view class="history-arrow">
           <text>></text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- Trend Tab Content -->
+  <scroll-view
+    wx:elif="{{activeTab === 'trend'}}"
+    class="content-container"
+    scroll-y
+  >
+    <!-- Date Range Selector -->
+    <view class="date-range-selector">
+      <view
+        class="range-btn {{dateRange === '30' ? 'active' : ''}}"
+        data-range="30"
+        bindtap="onDateRangeChange"
+      >
+        <text>30天</text>
+      </view>
+      <view
+        class="range-btn {{dateRange === '90' ? 'active' : ''}}"
+        data-range="90"
+        bindtap="onDateRangeChange"
+      >
+        <text>90天</text>
+      </view>
+      <view
+        class="range-btn {{dateRange === '365' ? 'active' : ''}}"
+        data-range="365"
+        bindtap="onDateRangeChange"
+      >
+        <text>1年</text>
+      </view>
+    </view>
+
+    <!-- Measurement Trend Chart -->
+    <view class="chart-section">
+      <text class="chart-title">围度记录趋势</text>
+      <view class="chart-container">
+        <ec-canvas wx:if="{{measurementTrendData.categories.length > 0}}" canvas-id="measurement-trend" ec="{{ measurementTrendEc }}"></ec-canvas>
+        <view wx:else class="chart-empty">
+          <text>暂无趋势数据</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Workout Frequency Chart -->
+    <view class="chart-section">
+      <text class="chart-title">每周训练次数</text>
+      <view class="chart-container">
+        <ec-canvas wx:if="{{workoutTrendData.categories.length > 0}}" canvas-id="workout-trend" ec="{{ workoutTrendEc }}"></ec-canvas>
+        <view wx:else class="chart-empty">
+          <text>暂无训练数据</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Muscle Volume Pie Chart -->
+    <view class="chart-section">
+      <text class="chart-title">肌肉训练容量</text>
+      <view class="chart-container">
+        <ec-canvas wx:if="{{musclePieData.length > 0}}" canvas-id="muscle-pie" ec="{{ musclePieEc }}"></ec-canvas>
+        <view wx:else class="chart-empty">
+          <text>暂无训练数据</text>
         </view>
       </view>
     </view>

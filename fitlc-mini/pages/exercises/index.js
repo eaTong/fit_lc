@@ -243,25 +243,6 @@ Page({
     wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
   },
 
-  getExerciseTags(category, equipment, difficulty) {
-    const categoryMap = {
-      chest: '胸部', back: '背部', shoulders: '肩部', arms: '手臂',
-      legs: '腿部', core: '核心', cardio: '有氧', fullbody: '全身'
-    };
-    const equipmentMap = {
-      barbell: '杠铃', dumbbell: '哑铃', cable: '绳索',
-      machine: '器械', bodyweight: '自重', other: '其他'
-    };
-    const difficultyMap = {
-      beginner: '初级', intermediate: '中级', advanced: '高级'
-    };
-    return [
-      categoryMap[category] || category,
-      equipmentMap[equipment] || equipment,
-      difficultyMap[difficulty] || difficulty
-    ];
-  },
-
   onMusclePageTap() {
     // 肌肉库已移除，不跳转
   }

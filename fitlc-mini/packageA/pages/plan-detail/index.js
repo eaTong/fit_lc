@@ -116,10 +116,6 @@ Component({
       });
     },
 
-    onBack() {
-      wx.navigateBack();
-    },
-
     getGoalLabel(goal) {
       const labels = {
         bulk: '增肌',

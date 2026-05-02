@@ -51,9 +51,7 @@
     {
       "root": "packageB",
       "pages": [
-        "pages/history/index",
         "pages/measurements/index",
-        "pages/trends/index",
         "pages/calendar/index"
       ]
     },

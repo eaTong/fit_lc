@@ -312,3 +312,61 @@
   color: var(--color-text-secondary, #888888);
   font-size: 24rpx;
 }
+
+/* Records Section (All Records List) */
+.records-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-primary, #0A0A0A);
+  min-height: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx 16rpx;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-primary, #FFFFFF);
+}
+
+.record-count {
+  font-size: 24rpx;
+  color: var(--color-text-secondary, #888888);
+}
+
+.records-list {
+  flex: 1;
+  padding: 0 24rpx 24rpx;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg-secondary, #1A1A1A);
+  border-radius: 8rpx;
+  padding: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.record-item:active {
+  opacity: 0.8;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.record-date {
+  font-size: 22rpx;
+  color: var(--color-text-secondary, #888888);
+}

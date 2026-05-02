@@ -40,7 +40,11 @@ export const userService = {
     return { records, total, page, limit };
   },
 
-  async addMetric(userId: number, data: { date: string; weight: number; bodyFat?: number }) {
+  async addMetric(userId: number, data: { date: string; weight?: number; bodyFat?: number }) {
+    const updateData: { weight?: number; bodyFat?: number } = {};
+    if (data.weight !== undefined) updateData.weight = data.weight;
+    if (data.bodyFat !== undefined) updateData.bodyFat = data.bodyFat;
+
     return prisma.bodyMetrics.upsert({
       where: { userId_date: { userId, date: new Date(data.date) } },
       create: {
@@ -49,10 +53,7 @@ export const userService = {
         weight: data.weight,
         bodyFat: data.bodyFat,
       },
-      update: {
-        weight: data.weight,
-        bodyFat: data.bodyFat,
-      },
+      update: updateData,
     });
   },
 

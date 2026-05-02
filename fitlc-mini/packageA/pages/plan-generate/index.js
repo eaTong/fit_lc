@@ -107,10 +107,6 @@ Component({
           icon: 'none'
         });
       });
-    },
-
-    onBack() {
-      wx.navigateBack();
     }
   }
 });

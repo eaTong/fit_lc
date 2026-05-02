@@ -31,21 +31,24 @@ export const measurementRepository = {
     });
   },
 
-  async findByUserAndDateRange(userId: number, startDate: string, endDate: string) {
-    // Extend end date to end of day for proper datetime comparison
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+  async findByUserAndDateRange(userId: number, startDate?: string, endDate?: string) {
+    const where: any = {
+      userId,
+      deletedAt: null
+    };
+
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) where.date.gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date.lte = end;
+      }
+    }
 
     return prisma.bodyMeasurement.findMany({
-      where: {
-        userId,
-        date: {
-          gte: start,
-          lte: end
-        },
-        deletedAt: null
-      },
+      where,
       include: {
         items: {
           select: {

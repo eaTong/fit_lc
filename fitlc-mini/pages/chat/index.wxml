@@ -10,10 +10,12 @@
       wx:key="id"
       class="message-item {{item.role}}"
     >
-      <view class="message-avatar">
-        <text>{{item.role === 'user' ? '👤' : '🤖'}}</text>
+      <view class="message-avatar {{item.role}}">
+        <image wx:if="{{item.role === 'user' && user.avatar}}" class="avatar-img" src="{{user.avatar}}" mode="aspectFill" />
+        <image wx:elif="{{item.role === 'assistant'}}" class="avatar-img" src="/assets/logo.png" mode="aspectFill" />
+        <text wx:else>{{item.role === 'user' ? '👤' : ''}}</text>
       </view>
-      <view class="message-content">
+      <view class="message-content {{item.role}}">
         <text class="message-text">{{item.content}}</text>
         <view wx:if="{{item.savedData}}" class="saved-indicator">
           <text>✓ 已保存</text>

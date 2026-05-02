@@ -18,10 +18,13 @@ router.get('/workouts', async (req: Request, res: Response) => {
     const { start, end } = req.query;
     const userId = req.user!.id;
 
+    const startStr = getQueryString(start);
+    const endStr = getQueryString(end);
+
     const workouts = await workoutRepository.findByUserAndDateRange(
       userId,
-      getQueryString(start) || '1970-01-01',
-      getQueryString(end) || '2100-12-31'
+      startStr || undefined,
+      endStr || undefined
     );
 
     res.json({ workouts });
@@ -37,10 +40,13 @@ router.get('/measurements', async (req: Request, res: Response) => {
     const { start, end } = req.query;
     const userId = req.user!.id;
 
+    const startStr = getQueryString(start);
+    const endStr = getQueryString(end);
+
     const measurements = await measurementRepository.findByUserAndDateRange(
       userId,
-      getQueryString(start) || '1970-01-01',
-      getQueryString(end) || '2100-12-31'
+      startStr || undefined,
+      endStr || undefined
     );
 
     res.json({ measurements });

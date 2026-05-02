@@ -26,7 +26,10 @@ const authActions = {
   checkAuth() {
     const token = getToken();
     if (!token) return false;
-    getStore().setState({ token });
+    const user = wx.getStorageSync(config.STORAGE_KEY.USER) || null;
+    getStore().setState({ token, user });
+    // 获取最新用户信息（包含头像）
+    userActions.fetchProfile();
     return true;
   },
 
@@ -204,7 +207,10 @@ function checkAuth() {
 const userActions = {
   fetchProfile() {
     return get('/users/me/profile').then(profile => {
-      getStore().setState({ userProfile: profile });
+      const user = getStore().getState().user;
+      const updatedUser = { ...user, nickname: profile.nickname, avatar: profile.avatar };
+      getStore().setState({ userProfile: profile, user: updatedUser });
+      wx.setStorageSync(config.STORAGE_KEY.USER, updatedUser);
       return profile;
     });
   },

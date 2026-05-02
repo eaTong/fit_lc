@@ -40,15 +40,10 @@
   margin-bottom: 32rpx;
   align-items: flex-start;
   padding: 16rpx 20rpx;
-  background-color: var(--color-bg-secondary);
-  border-radius: 16rpx;
-  border: 1rpx solid var(--color-border);
 }
 
 .message-item.user {
   flex-direction: row-reverse;
-  background-color: var(--color-bg-tertiary);
-  border-color: rgba(255, 69, 0, 0.2);
 }
 
 .message-avatar {
@@ -63,11 +58,26 @@
   flex-shrink: 0;
   border: 2rpx solid var(--color-border);
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.message-avatar.assistant {
+  background: linear-gradient(135deg, var(--color-accent), #DC143C);
+}
+
+.avatar-img {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 80%;
   margin: 0 16rpx;
+}
+
+.assistant .message-content {
+  background: linear-gradient(135deg, rgba(255, 69, 0, 0.05), rgba(220, 20, 60, 0.05));
 }
 
 .message-text {
@@ -90,7 +100,6 @@
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-  border: 1rpx solid var(--color-border);
 }
 
 .saved-indicator {

@@ -37,16 +37,20 @@ export const workoutRepository = {
     });
   },
 
-  async findByUserAndDateRange(userId: number, startDate: string, endDate: string) {
+  async findByUserAndDateRange(userId: number, startDate?: string, endDate?: string) {
+    const where: any = {
+      userId,
+      deletedAt: null
+    };
+
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) where.date.gte = new Date(startDate);
+      if (endDate) where.date.lte = new Date(endDate);
+    }
+
     return prisma.workout.findMany({
-      where: {
-        userId,
-        date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
-        },
-        deletedAt: null
-      },
+      where,
       include: {
         exercises: {
           select: {

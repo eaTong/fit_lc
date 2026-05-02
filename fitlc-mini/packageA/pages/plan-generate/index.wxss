@@ -6,41 +6,6 @@
   padding: 20rpx;
 }
 
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 30rpx 20rpx;
-}
-
-.back-btn {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 4rpx;
-}
-
-.back-icon {
-  font-size: 40rpx;
-  color: #FFFFFF;
-  font-weight: bold;
-}
-
-.title {
-  font-size: 34rpx;
-  font-weight: bold;
-  color: #FFFFFF;
-}
-
-.placeholder {
-  width: 60rpx;
-}
-
 /* Form Container */
 .form-container {
   padding: 20rpx 0;

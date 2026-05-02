@@ -31,6 +31,14 @@ function request(options) {
 
 // GET 请求
 function get(url, data) {
+  // 过滤掉 undefined 和空字符串的参数
+  if (data) {
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined || data[key] === '') {
+        delete data[key];
+      }
+    });
+  }
   // 添加时间戳防止缓存
   const cacheBust = `_t=${Date.now()}`;
   const separator = url.includes('?') ? '&' : '?';

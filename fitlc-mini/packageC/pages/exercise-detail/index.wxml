@@ -7,44 +7,46 @@
   <!-- Error State -->
   <view wx:elif="{{error}}" class="error-container">
     <text class="error-text">{{error}}</text>
-    <button class="btn-back" bindtap="onBack">返回</button>
   </view>
 
   <!-- Exercise Detail -->
   <view wx:elif="{{exercise}}" class="exercise-detail">
-    <!-- Header -->
-    <view class="header">
-      <button class="btn-back" bindtap="onBack">返回</button>
-      <text class="title">{{exercise.name}}</text>
-      <view class="placeholder"></view>
-    </view>
-
     <!-- Basic Info Card -->
     <view class="card info-card">
-      <view class="info-row">
+      <view class="info-row" wx:if="{{getPrimaryMuscle(exercise)}}">
         <text class="info-label">主肌肉群</text>
         <text class="info-value primary">{{getPrimaryMuscle(exercise)}}</text>
       </view>
-      <view class="info-row">
+      <view class="info-row" wx:if="{{getTargetMuscles(exercise)}}">
         <text class="info-label">目标肌肉</text>
         <text class="info-value">{{getTargetMuscles(exercise)}}</text>
       </view>
       <view class="info-row" wx:if="{{exercise.category}}">
         <text class="info-label">类别</text>
-        <text class="info-value">{{exercise.category}}</text>
+        <text class="info-value">{{exercise._categoryLabel}}</text>
       </view>
       <view class="info-row" wx:if="{{exercise.equipment}}">
         <text class="info-label">器械</text>
-        <text class="info-value">{{exercise.equipment}}</text>
+        <text class="info-value">{{exercise._equipmentLabel}}</text>
       </view>
       <view class="info-row" wx:if="{{exercise.difficulty}}">
         <text class="info-label">难度</text>
-        <text class="info-value">{{exercise.difficulty}}</text>
+        <text class="info-value">{{exercise._difficultyLabel}}</text>
+      </view>
+      <view class="info-row" wx:if="{{exercise.exerciseType}}">
+        <text class="info-label">动作类型</text>
+        <text class="info-value">{{exercise._typeLabel}}</text>
       </view>
     </view>
 
+    <!-- Description Card -->
+    <view class="card" wx:if="{{exercise.description}}">
+      <text class="section-title">动作描述</text>
+      <text class="content-text">{{exercise.description}}</text>
+    </view>
+
     <!-- Steps Card -->
-    <view class="card steps-card" wx:if="{{getSteps(exercise).length > 0}}">
+    <view class="card" wx:if="{{getSteps(exercise).length > 0}}">
       <text class="section-title">动作步骤</text>
       <view class="steps-list">
         <view wx:for="{{getSteps(exercise)}}" wx:key="index" class="step-item">
@@ -54,8 +56,26 @@
       </view>
     </view>
 
+    <!-- Safety Notes Card -->
+    <view class="card" wx:if="{{exercise.safetyNotes}}">
+      <text class="section-title">注意事项</text>
+      <text class="content-text">{{exercise.safetyNotes}}</text>
+    </view>
+
+    <!-- Common Mistakes Card -->
+    <view class="card" wx:if="{{exercise.commonMistakes}}">
+      <text class="section-title">常见错误</text>
+      <text class="content-text">{{exercise.commonMistakes}}</text>
+    </view>
+
+    <!-- Adjustment Notes Card -->
+    <view class="card" wx:if="{{exercise.adjustmentNotes}}">
+      <text class="section-title">调整说明</text>
+      <text class="content-text">{{exercise.adjustmentNotes}}</text>
+    </view>
+
     <!-- Related Exercises -->
-    <view class="card related-card" wx:if="{{relatedExercises.length > 0}}">
+    <view class="card" wx:if="{{relatedExercises.length > 0}}">
       <text class="section-title">相关动作</text>
       <view class="related-list">
         <view
@@ -66,7 +86,7 @@
           bindtap="onRelatedExerciseTap"
         >
           <text class="related-name">{{item.name}}</text>
-          <text class="related-arrow">></text>
+          <text class="related-arrow">›</text>
         </view>
       </view>
     </view>
@@ -75,6 +95,5 @@
   <!-- Empty State -->
   <view wx:else class="empty-container">
     <text class="empty-text">动作不存在</text>
-    <button class="btn-back" bindtap="onBack">返回</button>
   </view>
 </view>

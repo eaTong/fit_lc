@@ -30,7 +30,8 @@ Page({
     this.unsubscribe = app.store.subscribe(state => {
       this.setData({
         messages: state.chatMessages,
-        isLoading: state.isLoading
+        isLoading: state.isLoading,
+        user: state.user
       });
       this.scrollToBottom();
     });

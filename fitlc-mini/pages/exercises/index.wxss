@@ -184,7 +184,7 @@
 /* Exercise List */
 .exercise-list {
   flex: 1;
-  height: 0;
+  min-height: 0;
   padding: 16rpx 24rpx;
 }
 

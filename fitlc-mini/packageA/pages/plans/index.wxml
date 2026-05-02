@@ -1,12 +1,4 @@
 <view class="page-container">
-  <!-- Header -->
-  <view class="header">
-    <text class="title">健身计划</text>
-    <view class="create-btn" bindtap="onCreatePlan">
-      <text class="btn-text">生成新计划</text>
-    </view>
-  </view>
-
   <!-- Tab Switcher -->
   <view class="tab-switcher">
     <view

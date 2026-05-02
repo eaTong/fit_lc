@@ -64,7 +64,7 @@
   <view class="quick-access">
     <view class="section-title">快捷入口</view>
     <view class="access-grid">
-      <view class="access-item" bindtap="goToHistory">
+      <view class="access-item" bindtap="goToCalendar">
         <text class="access-icon">📋</text>
         <text class="access-label">训练记录</text>
       </view>
@@ -76,14 +76,6 @@
         <text class="access-icon">📅</text>
         <text class="access-label">训练计划</text>
       </view>
-      <view class="access-item" bindtap="goToTrends">
-        <text class="access-icon">📈</text>
-        <text class="access-label">趋势分析</text>
-      </view>
-      <view class="access-item" bindtap="goToCalendar">
-        <text class="access-icon">🗓️</text>
-        <text class="access-label">日历</text>
-      </view>
       <view class="access-item" bindtap="goToBadges">
         <text class="access-icon">🏆</text>
         <text class="access-label">徽章墙</text>
@@ -92,11 +84,7 @@
         <text class="access-icon">📷</text>
         <text class="access-label">相册</text>
       </view>
-      <view class="access-item" bindtap="goToExercises">
-        <text class="access-icon">💪</text>
-        <text class="access-label">动作库</text>
       </view>
-    </view>
   </view>
 
   <!-- Logout Button -->
