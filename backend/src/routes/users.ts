@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { userService } from '../services/userService';
+import { getCoachConfig, updateCoachConfig } from '../services/coachConfigService';
 import { uploadAvatar } from '../lib/oss';
 import multer from 'multer';
 
@@ -20,7 +21,17 @@ const upload = multer({
   }
 });
 
-router.get('/me/profile', async (req, res) => {
+/**
+ * @swagger
+ * /users/me/profile:
+ *   get:
+ *     summary: 获取当前用户资料
+ *     tags: [用户]
+ *     responses:
+ *       200:
+ *         description: 用户资料信息
+ */
+router.get('/me/profile', async (req: Request, res: Response) => {
   try {
     const profile = await userService.getProfile(req.user.id);
     res.json(profile);
@@ -29,17 +40,47 @@ router.get('/me/profile', async (req, res) => {
   }
 });
 
-router.put('/me/profile', async (req, res) => {
+/**
+ * @swagger
+ * /users/me/profile:
+ *   put:
+ *     summary: 更新用户资料
+ *     tags: [用户]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *                 description: 昵称
+ *               height:
+ *                 type: number
+ *                 description: 身高(cm)
+ *               avatar:
+ *                 type: string
+ *                 description: 头像URL
+ *               gender:
+ *                 type: string
+ *                 enum: [male, female]
+ *                 description: 性别
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ */
+router.put('/me/profile', async (req: Request, res: Response) => {
   try {
-    const { nickname, height, avatar } = req.body;
-    const profile = await userService.updateProfile(req.user.id, { nickname, height, avatar });
+    const { nickname, height, avatar, gender } = req.body;
+    const profile = await userService.updateProfile(req.user.id, { nickname, height, avatar, gender });
     res.json(profile);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/me/password', async (req, res) => {
+router.put('/me/password', async (req: Request, res: Response) => {
   try {
     const { oldPassword, newPassword } = req.body;
     await userService.changePassword(req.user.id, oldPassword, newPassword);
@@ -49,7 +90,7 @@ router.put('/me/password', async (req, res) => {
   }
 });
 
-router.post('/me/avatar', upload.single('avatar'), async (req, res) => {
+router.post('/me/avatar', upload.single('avatar'), async (req: any, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });

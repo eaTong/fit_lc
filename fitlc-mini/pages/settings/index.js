@@ -62,6 +62,22 @@ Page({
     });
   },
 
+  editGender() {
+    wx.showModal({
+      title: '选择性别',
+      editable: false,
+      confirmText: '男',
+      cancelText: '女',
+      success: (res) => {
+        if (res.confirm) {
+          this.updateProfile({ gender: 'male' });
+        } else if (res.cancel) {
+          this.updateProfile({ gender: 'female' });
+        }
+      }
+    });
+  },
+
   editHeight() {
     wx.showModal({
       title: '修改身高',

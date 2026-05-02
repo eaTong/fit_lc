@@ -23,6 +23,8 @@ import uploadRouter from './routes/upload';
 import albumRoutes from './routes/album';
 import { authMiddleware } from './middleware/auth';
 import multer from 'multer';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,6 +137,12 @@ app.use((req, res, next) => {
 // 公开路由
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', authWechatRoutes);
+
+// Swagger API 文档
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.json(swaggerSpec);
+});
 
 // 需认证路由
 app.use('/api/auth', authMiddleware, authProtectedRoutes);

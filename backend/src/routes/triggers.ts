@@ -3,6 +3,25 @@ import { triggerService } from '../services/triggerService';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /triggers/eligible/{type}:
+ *   get:
+ *     summary: 获取符合条件的触发器
+ *     tags: [触发器]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 触发器类型
+ *     responses:
+ *       200:
+ *         description: 触发器列表
+ */
 router.get('/eligible/:type', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;

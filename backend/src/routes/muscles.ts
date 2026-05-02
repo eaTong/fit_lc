@@ -6,17 +6,19 @@ const router = Router();
 
 router.use(authMiddleware);
 
+/**
+ * @swagger
+ * /muscles:
+ *   get:
+ *     summary: 获取肌肉列表
+ *     tags: [肌肉]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 肌肉列表
+ */
 router.get('/', async (req, res) => {
-  try {
-    const muscles = await muscleRepository.findAll();
-    res.json({ muscles });
-  } catch (err) {
-    console.error('Get muscles error:', err);
-    res.status(500).json({ error: 'Failed to get muscles' });
-  }
-});
-
-router.get('/hierarchy', async (req, res) => {
   try {
     const hierarchy = await muscleRepository.getHierarchy();
     res.json({ hierarchy });

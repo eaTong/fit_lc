@@ -345,6 +345,7 @@ model UserProfile {
   nickname   String?   @db.VarChar(50)
   avatar     String?   @db.VarChar(500)
   height     Float?    @db.Float
+  gender     String?   @map("gender") @db.VarChar(10)
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
 

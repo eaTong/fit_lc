@@ -7,7 +7,10 @@
     </view>
     <view class="user-info">
       <text class="user-name">{{displayName}}</text>
-      <text class="user-email" wx:if="{{user.email}}">{{user.email}}</text>
+      <view class="user-meta">
+        <text class="user-gender" wx:if="{{gender}}">{{gender === 'male' ? '♂ 男' : '♀ 女'}}</text>
+        <text class="user-email" wx:if="{{user.email}}">{{user.email}}</text>
+      </view>
     </view>
     <view class="settings-btn" bindtap="goToSettings">
       <text>⚙️</text>
@@ -51,11 +54,11 @@
       </view>
       <view class="metric-item">
         <text class="metric-label">体脂</text>
-        <text class="metric-value">{{bodyFat ? bodyFat + ' %' : '--'}}</text>
+        <text class="metric-value {{bodyFatClass}}">{{bodyFat ? bodyFat + ' %' : '--'}}</text>
       </view>
       <view class="metric-item">
         <text class="metric-label">BMI</text>
-        <text class="metric-value">{{bmi || '--'}}</text>
+        <text class="metric-value {{bmiClass}}">{{bmi || '--'}}</text>
       </view>
     </view>
   </view>

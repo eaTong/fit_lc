@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
@@ -10,7 +10,31 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fitlc-secret';
 const WECHAT_APPID = process.env.WECHAT_APPID;
 const WECHAT_SECRET = process.env.WECHAT_SECRET;
 
-router.post('/wechat', async (req, res) => {
+/**
+ * @swagger
+ * /auth/wechat:
+ *   post:
+ *     summary: 微信登录
+ *     tags: [认证]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: 微信授权code
+ *     responses:
+ *       200:
+ *         description: 登录成功，返回token和用户信息
+ *       400:
+ *         description: code无效
+ */
+router.post('/wechat', async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     console.log('[WeChat Login] Received code:', code);
@@ -96,7 +120,8 @@ router.post('/wechat', async (req, res) => {
         id: user.id,
         email: user.email,
         nickname: user.userProfile?.nickname || user.wechatOpenid?.slice(-6),
-        avatar: user.userProfile?.avatar
+        avatar: user.userProfile?.avatar,
+        gender: user.userProfile?.gender
       }
     });
   } catch (error) {

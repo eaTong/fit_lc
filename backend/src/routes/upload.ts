@@ -20,8 +20,31 @@ const upload = multer({
 });
 
 /**
- * POST /api/upload/image
- * Upload image for chat
+ * @swagger
+ * /upload/image:
+ *   post:
+ *     summary: 上传聊天图片
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: 图片文件
+ *     responses:
+ *       200:
+ *         description: 上传成功，返回图片URL
+ *       400:
+ *         description: 未提供图片文件
+ *       401:
+ *         description: 未授权
  */
 router.post('/image', upload.single('file'), async (req, res) => {
   try {

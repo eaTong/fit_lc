@@ -4,6 +4,29 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /album/photos:
+ *   get:
+ *     summary: 获取照片列表
+ *     tags: [相册]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: 年份
+ *       - in: query
+ *         name: month
+ *         schema:
+ *           type: integer
+ *         description: 月份
+ *     responses:
+ *       200:
+ *         description: 照片列表
+ */
 router.get('/photos', authMiddleware, async (req, res) => {
   const { year, month } = req.query;
 

@@ -26,7 +26,18 @@ const exerciseSchema = z.object({
   duration: z.number().optional()
 });
 
-// Get user's all plans
+/**
+ * @swagger
+ * /plans:
+ *   get:
+ *     summary: 获取用户的训练计划
+ *     tags: [计划]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 训练计划列表
+ */
 router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -38,6 +49,27 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /plans/{id}:
+ *   get:
+ *     summary: 获取计划详情
+ *     tags: [计划]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 计划ID
+ *     responses:
+ *       200:
+ *         description: 计划详情
+ *       404:
+ *         description: 计划不存在
+ */
 // Get plan detail
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -56,6 +88,35 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /plans/generate:
+ *   post:
+ *     summary: AI 生成训练计划
+ *     tags: [计划]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userProfile
+ *             properties:
+ *               userProfile:
+ *                 type: object
+ *                 description: 用户资料
+ *               exercises:
+ *                 type: array
+ *                 description: 预选动作
+ *     responses:
+ *       200:
+ *         description: 生成成功
+ *       400:
+ *         description: 参数错误
+ */
 // AI generate plan
 router.post('/generate', async (req: Request, res: Response) => {
   try {

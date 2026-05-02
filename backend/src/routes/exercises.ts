@@ -8,13 +8,56 @@ const router = Router();
 
 router.use(authMiddleware);
 
+/**
+ * @swagger
+ * /exercises:
+ *   get:
+ *     summary: 获取动作列表
+ *     tags: [动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: 动作类别
+ *       - in: query
+ *         name: equipment
+ *         schema:
+ *           type: string
+ *         description: 器械类型
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: string
+ *         description: 难度等级
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: 状态
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: 页码
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *         description: 每页数量
+ *       - in: query
+ *         name: muscleId
+ *         schema:
+ *           type: integer
+ *         description: 肌肉ID
+ *     responses:
+ *       200:
+ *         description: 动作列表
+ */
 router.get('/', async (req, res) => {
   try {
-    // 禁用缓存
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-
     const { category, equipment, difficulty, status, page, pageSize, muscleId } = req.query;
     const result = await exerciseRepository.findAll({
       category: category as string,
@@ -32,6 +75,27 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /exercises/{id}:
+ *   get:
+ *     summary: 获取动作详情
+ *     tags: [动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     responses:
+ *       200:
+ *         description: 动作详情
+ *       404:
+ *         description: 动作不存在
+ */
 router.get('/:id', async (req, res) => {
   try {
     const exercise = await exerciseRepository.findById(parseInt(req.params.id));
@@ -43,6 +107,70 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /exercises:
+ *   post:
+ *     summary: 创建动作
+ *     tags: [动作]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - category
+ *               - equipment
+ *               - difficulty
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 动作名称
+ *               category:
+ *                 type: string
+ *                 description: 动作类别
+ *               equipment:
+ *                 type: string
+ *                 description: 器械类型
+ *               difficulty:
+ *                 type: string
+ *                 description: 难度等级
+ *               description:
+ *                 type: string
+ *                 description: 动作描述
+ *               adjustmentNotes:
+ *                 type: string
+ *                 description: 调整说明
+ *               videoUrl:
+ *                 type: string
+ *                 description: 视频URL
+ *               isVariant:
+ *                 type: boolean
+ *                 description: 是否为变体
+ *               parentId:
+ *                 type: integer
+ *                 description: 父动作ID
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: 标签
+ *               status:
+ *                 type: string
+ *                 description: 状态
+ *               muscles:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                 description: 关联肌肉
+ *     responses:
+ *       200:
+ *         description: 创建成功
+ */
 router.post('/', async (req, res) => {
   try {
     const {

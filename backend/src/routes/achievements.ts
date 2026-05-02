@@ -6,6 +6,18 @@ import { statsRepository } from '../repositories/statsRepository';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /achievements/personal-records:
+ *   get:
+ *     summary: 获取个人记录
+ *     tags: [成就]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 个人记录列表
+ */
 router.get('/personal-records', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;

@@ -4,8 +4,31 @@ import { Router } from 'express';
 const router = Router();
 
 /**
- * POST /api/voice/transcribe
- * 接收音频文件，调用 MiniMax 语音转文字
+ * @swagger
+ * /voice/transcribe:
+ *   post:
+ *     summary: 语音转文字
+ *     tags: [语音]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               audio:
+ *                 type: string
+ *                 format: binary
+ *                 description: 音频文件
+ *     responses:
+ *       200:
+ *         description: 转写成功
+ *       400:
+ *         description: 未提供音频文件
+ *       401:
+ *         description: 未授权
  */
 router.post('/transcribe', async (req, res) => {
   try {

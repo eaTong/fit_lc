@@ -39,6 +39,39 @@ const createExerciseSchema = z.object({
 
 const updateExerciseSchema = createExerciseSchema.partial();
 
+/**
+ * @swagger
+ * /admin/exercises:
+ *   get:
+ *     summary: 获取动作列表（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: 动作类别
+ *       - in: query
+ *         name: equipment
+ *         schema:
+ *           type: string
+ *         description: 器械类型
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: string
+ *         description: 难度等级
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: 状态
+ *     responses:
+ *       200:
+ *         description: 动作列表
+ */
 // GET /api/admin/exercises - 动作列表
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -55,6 +88,45 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises:
+ *   post:
+ *     summary: 创建动作（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - category
+ *               - equipment
+ *               - difficulty
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 动作名称
+ *               category:
+ *                 type: string
+ *                 description: 动作类别
+ *               equipment:
+ *                 type: string
+ *                 description: 器械类型
+ *               difficulty:
+ *                 type: string
+ *                 description: 难度等级
+ *               description:
+ *                 type: string
+ *                 description: 动作描述
+ *     responses:
+ *       200:
+ *         description: 创建成功
+ */
 // POST /api/admin/exercises - 创建动作
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -72,6 +144,31 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/{id}:
+ *   put:
+ *     summary: 更新动作（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ */
 // PUT /api/admin/exercises/:id - 更新动作
 router.put('/:id', async (req: Request, res: Response) => {
   try {
@@ -92,6 +189,25 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/{id}:
+ *   delete:
+ *     summary: 删除动作（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     responses:
+ *       200:
+ *         description: 删除成功
+ */
 // DELETE /api/admin/exercises/:id - 删除动作
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
@@ -102,6 +218,25 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/{id}/publish:
+ *   patch:
+ *     summary: 发布动作（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     responses:
+ *       200:
+ *         description: 发布成功
+ */
 // PATCH /api/admin/exercises/:id/publish - 发布动作
 router.patch('/:id/publish', async (req: Request, res: Response) => {
   try {
@@ -115,6 +250,45 @@ router.patch('/:id/publish', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/generate:
+ *   post:
+ *     summary: AI 生成动作详情（管理员）
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - category
+ *               - equipment
+ *               - difficulty
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 动作名称
+ *               category:
+ *                 type: string
+ *                 description: 动作类别
+ *               equipment:
+ *                 type: string
+ *                 description: 器械类型
+ *               difficulty:
+ *                 type: string
+ *                 description: 难度等级
+ *               targetMuscles:
+ *                 type: array
+ *                 description: 目标肌肉
+ *     responses:
+ *       200:
+ *         description: 生成成功
+ */
 // POST /api/admin/exercises/generate - AI 生成动作详情
 router.post('/generate', async (req: Request, res: Response) => {
   try {
@@ -144,6 +318,25 @@ const updateVariantSchema = z.object({
   differenceNotes: z.string().optional(),
 });
 
+/**
+ * @swagger
+ * /admin/exercises/{id}/variants:
+ *   get:
+ *     summary: 获取动作的变体列表
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     responses:
+ *       200:
+ *         description: 变体列表
+ */
 // GET /api/admin/exercises/:id/variants - 获取某动作的所有变体关系
 router.get('/:id/variants', async (req: Request, res: Response) => {
   try {
@@ -155,6 +348,38 @@ router.get('/:id/variants', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/{id}/variants:
+ *   post:
+ *     summary: 添加变体关系
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 动作ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               variantId:
+ *                 type: integer
+ *               variantType:
+ *                 type: string
+ *               differenceNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 添加成功
+ */
 // POST /api/admin/exercises/:id/variants - 添加变体关系
 router.post('/:id/variants', async (req: Request, res: Response) => {
   try {
@@ -173,6 +398,25 @@ router.post('/:id/variants', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/variants/{id}:
+ *   put:
+ *     summary: 更新变体关系
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 变体关系ID
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ */
 // PUT /api/admin/exercises/variants/:id - 编辑变体关系 (:id = ExerciseVariant.id)
 router.put('/variants/:id', async (req: Request, res: Response) => {
   try {
@@ -190,6 +434,25 @@ router.put('/variants/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/exercises/variants/{id}:
+ *   delete:
+ *     summary: 删除变体关系
+ *     tags: [管理-动作]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 变体关系ID
+ *     responses:
+ *       200:
+ *         description: 删除成功
+ */
 // DELETE /api/admin/exercises/variants/:id - 删除变体关系
 router.delete('/variants/:id', async (req: Request, res: Response) => {
   try {

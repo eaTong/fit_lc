@@ -69,9 +69,48 @@ Page({
       userActions.fetchLatestMetrics()
     ]).then(([measurements, stats, profile, metrics]) => {
       const height = profile?.height;
+      const gender = profile?.gender;
       const weight = metrics?.weight;
       const bodyFat = metrics?.bodyFat;
       const bmi = height && weight ? (weight / ((height / 100) * (height / 100))).toFixed(1) : null;
+
+      // Calculate BMI class based on value
+      let bmiClass = '';
+      if (bmi) {
+        const bmiNum = parseFloat(bmi);
+        if (bmiNum < 18.5) bmiClass = 'bmi-underweight';
+        else if (bmiNum < 24) bmiClass = 'bmi-normal';
+        else if (bmiNum < 28) bmiClass = 'bmi-overweight';
+        else bmiClass = 'bmi-obese';
+      }
+
+      // Calculate body fat class based on gender
+      // Men: essential<6, athletes 6-13, fitness 14-17, average 18-24, obese>25
+      // Women: essential<14, athletes 14-20, fitness 21-24, average 25-31, obese>32
+      let bodyFatClass = '';
+      if (bodyFat) {
+        const bf = parseFloat(bodyFat);
+        if (gender === 'male') {
+          if (bf < 6) bodyFatClass = 'bf-essential';
+          else if (bf < 14) bodyFatClass = 'bf-athletic';
+          else if (bf < 18) bodyFatClass = 'bf-fitness';
+          else if (bf < 25) bodyFatClass = 'bf-average';
+          else bodyFatClass = 'bf-obese';
+        } else if (gender === 'female') {
+          if (bf < 14) bodyFatClass = 'bf-essential';
+          else if (bf < 21) bodyFatClass = 'bf-athletic';
+          else if (bf < 25) bodyFatClass = 'bf-fitness';
+          else if (bf < 32) bodyFatClass = 'bf-average';
+          else bodyFatClass = 'bf-obese';
+        } else {
+          // No gender specified, use average ranges
+          if (bf < 10) bodyFatClass = 'bf-essential';
+          else if (bf < 17) bodyFatClass = 'bf-athletic';
+          else if (bf < 22) bodyFatClass = 'bf-fitness';
+          else if (bf < 28) bodyFatClass = 'bf-average';
+          else bodyFatClass = 'bf-obese';
+        }
+      }
 
       // Update nickname from profile if available
       const nickname = profile?.nickname || this.data.user?.nickname;
@@ -86,9 +125,12 @@ Page({
         userProfile: profile,
         latestMetrics: metrics,
         height,
+        gender,
         weight,
         bodyFat,
         bmi,
+        bmiClass,
+        bodyFatClass,
         displayName,
         avatarText,
         avatarUrl,

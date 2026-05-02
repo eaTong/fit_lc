@@ -4,6 +4,20 @@ import { authService } from '../services/authService';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: 获取当前用户信息
+ *     tags: [认证]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 用户信息
+ *       401:
+ *         description: 未授权
+ */
 router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = await authService.getCurrentUser(req.user!.id);

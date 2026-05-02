@@ -46,6 +46,17 @@
   margin-bottom: 8rpx;
 }
 
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.user-gender {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+
 .user-email {
   font-size: 24rpx;
   color: var(--color-text-secondary);
@@ -137,6 +148,44 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+/* BMI 颜色分类 */
+.metric-value.bmi-underweight {
+  color: #00CED1;
+}
+
+.metric-value.bmi-normal {
+  color: #4CAF50;
+}
+
+.metric-value.bmi-overweight {
+  color: #FF9800;
+}
+
+.metric-value.bmi-obese {
+  color: #F44336;
+}
+
+/* 体脂率颜色分类 */
+.metric-value.bf-essential {
+  color: #9C27B0;
+}
+
+.metric-value.bf-athletic {
+  color: #4CAF50;
+}
+
+.metric-value.bf-fitness {
+  color: #00BCD4;
+}
+
+.metric-value.bf-average {
+  color: #FF9800;
+}
+
+.metric-value.bf-obese {
+  color: #F44336;
 }
 
 .quick-access {

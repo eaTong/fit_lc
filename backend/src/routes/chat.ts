@@ -15,6 +15,25 @@ const chatRateLimiter = rateLimit({
   keyGenerator: (req) => req.user?.id ? String(req.user.id) : (ipKeyGenerator(req.ip || '') || 'anonymous'),
 });
 
+/**
+ * @swagger
+ * /chat/messages:
+ *   get:
+ *     summary: 获取聊天记录
+ *     tags: [聊天]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: 返回消息数量限制(最大50)
+ *     responses:
+ *       200:
+ *         description: 消息列表
+ */
 router.get('/messages', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -34,6 +53,40 @@ router.get('/messages', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /chat/message:
+ *   post:
+ *     summary: 发送聊天消息
+ *     tags: [聊天]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: 用户消息内容
+ *               imageUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: 图片URL数组
+ *               historyMessages:
+ *                 type: array
+ *                 description: 历史消息上下文
+ *     responses:
+ *       200:
+ *         description: AI回复和保存的数据
+ *       429:
+ *         description: 请求过于频繁
+ */
 router.post('/message', chatRateLimiter, async (req: Request, res: Response) => {
   try {
     const { message, imageUrls, historyMessages } = req.body;

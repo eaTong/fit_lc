@@ -12,7 +12,27 @@ function getQueryString(val: unknown): string {
   return '';
 }
 
-// 获取训练记录
+/**
+ * @swagger
+ * /records/workouts:
+ *   get:
+ *     summary: 获取训练记录
+ *     tags: [记录]
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         schema:
+ *           type: string
+ *         description: 开始日期 (YYYY-MM-DD)
+ *       - in: query
+ *         name: end
+ *         schema:
+ *           type: string
+ *         description: 结束日期 (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: 训练记录列表
+ */
 router.get('/workouts', async (req: Request, res: Response) => {
   try {
     const { start, end } = req.query;
@@ -34,7 +54,27 @@ router.get('/workouts', async (req: Request, res: Response) => {
   }
 });
 
-// 获取围度记录
+/**
+ * @swagger
+ * /records/measurements:
+ *   get:
+ *     summary: 获取围度记录
+ *     tags: [记录]
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         schema:
+ *           type: string
+ *         description: 开始日期 (YYYY-MM-DD)
+ *       - in: query
+ *         name: end
+ *         schema:
+ *           type: string
+ *         description: 结束日期 (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: 围度记录列表
+ */
 router.get('/measurements', async (req: Request, res: Response) => {
   try {
     const { start, end } = req.query;
@@ -56,7 +96,16 @@ router.get('/measurements', async (req: Request, res: Response) => {
   }
 });
 
-// 获取累计统计数据
+/**
+ * @swagger
+ * /records/stats:
+ *   get:
+ *     summary: 获取累计统计数据
+ *     tags: [记录]
+ *     responses:
+ *       200:
+ *         description: 统计数据
+ */
 router.get('/stats', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
