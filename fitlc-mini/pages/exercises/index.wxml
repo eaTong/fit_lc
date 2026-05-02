@@ -102,7 +102,7 @@
           <text class="toggle-icon {{muscleExpanded ? 'expanded' : ''}}">▼</text>
         </view>
         <!-- Always show function, expandable for more -->
-        <view class="muscle-function">{{selectedMuscleInfo.function}}</view>
+        <view class="muscle-function {{muscleExpanded ? 'expanded' : ''}}">{{selectedMuscleInfo.function}}</view>
         <!-- Expandable details -->
         <view wx:if="{{muscleExpanded}}" class="muscle-details">
           <view wx:if="{{selectedMuscleInfo.origin}}" class="detail-row">
