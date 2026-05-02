@@ -33,38 +33,13 @@
     </view>
   </view>
 
-  <!-- Metrics Section -->
+  <!-- Body Data Section -->
   <view class="section">
     <view class="section-title">身体数据</view>
-    <view class="item" bindtap="editWeight">
-      <text class="item-label">体重</text>
+    <view class="item" bindtap="goToBodyData">
+      <text class="item-label">身体数据</text>
       <view class="item-value">
-        <text>{{latestMetrics.weight ? latestMetrics.weight + ' kg' : '未记录'}}</text>
-        <text class="arrow">›</text>
-      </view>
-    </view>
-    <view class="item" bindtap="editBodyFat">
-      <text class="item-label">体脂</text>
-      <view class="item-value">
-        <text>{{latestMetrics.bodyFat ? latestMetrics.bodyFat + ' %' : '未记录'}}</text>
-        <text class="arrow">›</text>
-      </view>
-    </view>
-    <view class="item" bindtap="addMetric">
-      <text class="item-label">添加记录</text>
-      <view class="item-value">
-        <text class="hint">记录今天的体重和体脂</text>
-        <text class="arrow">›</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- History Section -->
-  <view class="section">
-    <view class="section-title">历史记录</view>
-    <view class="item" bindtap="viewMetricsHistory">
-      <text class="item-label">查看体重/体脂历史</text>
-      <view class="item-value">
+        <text class="hint">体重、体脂、围度等</text>
         <text class="arrow">›</text>
       </view>
     </view>

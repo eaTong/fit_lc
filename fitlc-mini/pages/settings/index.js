@@ -3,8 +3,7 @@ const { authActions } = require('../../store/actions');
 
 Page({
   data: {
-    profile: null,
-    latestMetrics: null
+    profile: null
   },
 
   onLoad() {
@@ -16,11 +15,8 @@ Page({
   },
 
   loadData() {
-    Promise.all([
-      userActions.fetchProfile(),
-      userActions.fetchLatestMetrics()
-    ]).then(([profile, metrics]) => {
-      this.setData({ profile, latestMetrics: metrics });
+    userActions.fetchProfile().then(profile => {
+      this.setData({ profile });
     }).catch(err => {
       console.error('load settings data failed:', err);
     });
@@ -191,5 +187,9 @@ Page({
 
   viewMetricsHistory() {
     wx.showToast({ title: '功能开发中', icon: 'none' });
+  },
+
+  goToBodyData() {
+    wx.navigateTo({ url: '/packageB/pages/measurements/index' });
   }
 });
