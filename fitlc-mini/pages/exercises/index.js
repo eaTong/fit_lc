@@ -17,7 +17,6 @@ Page({
     showMuscleTree: false,
     expandedMuscles: [],
     selectedMuscleInfo: null,
-    filteredExercises: [],
     filteredExerciseCount: 0,
     muscleExpanded: false,
     pageSize: 20,
@@ -41,19 +40,12 @@ Page({
       exerciseActions.fetchHierarchy()
     ]).then(([result, hierarchy]) => {
       console.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
-      // 初始展开所有有子肌肉的项
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
-      const filteredExercises = this.filterExercisesInternal(result.exercises, {
-        selectedMuscleId: null,
-        searchKeyword: '',
-        filters: { category: '', equipment: '', difficulty: '' },
-        expandedMuscles
-      });
       this.setData({
         exercises: result.exercises,
         muscleHierarchy: hierarchy,
         expandedMuscles,
-        filteredExercises,
+        filteredExerciseCount: result.exercises.length,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
@@ -62,27 +54,6 @@ Page({
       this.setData({ loading: false });
       console.error('load exercises failed:', err);
     });
-  },
-
-  filterExercisesInternal(exercises, stateOverride) {
-    const state = stateOverride || this.data;
-    const { searchKeyword, filters } = state;
-    let filtered = exercises;
-
-    if (searchKeyword) {
-      const kw = searchKeyword.toLowerCase();
-      filtered = filtered.filter(ex => ex.name.toLowerCase().includes(kw));
-    }
-
-    if (filters.equipment) {
-      filtered = filtered.filter(ex => ex.equipment === filters.equipment);
-    }
-
-    if (filters.difficulty) {
-      filtered = filtered.filter(ex => ex.difficulty === filters.difficulty);
-    }
-
-    return filtered;
   },
 
   onMuscleTreeToggle() {
@@ -101,27 +72,24 @@ Page({
       muscleExpanded: false,
       filteredExerciseCount: 0
     });
+    this.filterExercises();
   },
 
   onMuscleSelect(e) {
     const muscleId = e.currentTarget.dataset.id;
-    const { muscleHierarchy, selectedMuscleId, expandedMuscles } = this.data;
+    const { muscleHierarchy, expandedMuscles } = this.data;
 
-    // 判断是否为子肌肉（点击的是子肌肉）
     let isChild = false;
-    let parentMuscle = null;
     for (const group of muscleHierarchy) {
       if (group.children) {
         const child = group.children.find(c => c.id === muscleId);
         if (child) {
           isChild = true;
-          parentMuscle = group;
           break;
         }
       }
     }
 
-    // 找到选中的肌肉信息
     let muscleInfo = null;
     for (const group of muscleHierarchy) {
       if (group.id === muscleId) {
@@ -140,14 +108,12 @@ Page({
     let newExpandedMuscles = [...expandedMuscles];
 
     if (isChild) {
-      // 点击子肌肉：只选择，不改变展开状态
       this.setData({
         selectedMuscleId: muscleId,
         selectedMuscleInfo: muscleInfo,
         muscleExpanded: false
       });
     } else {
-      // 点击父肌肉：切换展开状态
       if (newExpandedMuscles.includes(muscleId)) {
         newExpandedMuscles = newExpandedMuscles.filter(id => id !== muscleId);
       } else {
@@ -199,18 +165,15 @@ Page({
   },
 
   filterExercises() {
-    // 筛选时重新从后端加载第一页，带上 muscleId 参数
     this.setData({ loading: true });
     const filters = {};
     if (this.data.selectedMuscleId) {
       filters.muscleId = this.data.selectedMuscleId;
     }
     exerciseActions.fetchExercises(1, 20, filters).then(result => {
-      const filtered = this.filterExercisesInternal(result.exercises);
       this.setData({
         exercises: result.exercises,
-        filteredExercises: filtered,
-        filteredExerciseCount: filtered.length,
+        filteredExerciseCount: result.exercises.length,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
@@ -241,7 +204,7 @@ Page({
       const newExercises = [...exercises, ...result.exercises];
       this.setData({
         exercises: newExercises,
-        filteredExercises: this.filterExercisesInternal(newExercises),
+        filteredExerciseCount: newExercises.length,
         page: nextPage,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loadingMore: false
@@ -253,7 +216,7 @@ Page({
   },
 
   getFilteredExercises() {
-    return this.data.filteredExercises;
+    return this.data.exercises;
   },
 
   onExerciseTap(e) {
