@@ -3,7 +3,7 @@
  * Creates the appropriate chat model based on AI_PROVIDER env var
  */
 
-import { getCurrentProvider } from '../lib/aiConfig.js';
+import { getCurrentProvider } from '../config/aiConfig.js';
 import { createMiniMaxModel } from './chatMiniMax.js';
 import { createZhipuChat, createZhipuVisionChat } from './chatZhipu.js';
 

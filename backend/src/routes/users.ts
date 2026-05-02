@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { userService } from '../services/userService';
 import { getCoachConfig, updateCoachConfig } from '../services/coachConfigService';
-import { uploadAvatar } from '../lib/oss';
+import { uploadAvatar } from '../config/oss';
 import multer from 'multer';
 
 const router = Router();

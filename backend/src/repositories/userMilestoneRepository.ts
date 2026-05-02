@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 
 export const userMilestoneRepository = {

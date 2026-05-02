@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 import { workoutRepository } from '../repositories/workoutRepository';
 import { measurementRepository } from '../repositories/measurementRepository';
 import { Decimal } from 'decimal.js';

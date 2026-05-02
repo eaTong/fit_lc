@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 import { userRepository } from '../repositories/userRepository';
 import { roleRepository } from '../repositories/roleRepository';
 

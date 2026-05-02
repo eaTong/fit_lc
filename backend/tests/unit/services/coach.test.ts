@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { generateWorkoutFeedback } from '../../../src/services/coachFeedbackService';
 import { getCoachConfig, updateCoachConfig } from '../../../src/services/coachConfigService';
-import prisma from '../../../src/lib/prisma';
+import prisma from '../../../src/config/prisma';
 
 describe('AI Coach Feedback', () => {
   const testUserId = 1; // 使用 seed-test-user

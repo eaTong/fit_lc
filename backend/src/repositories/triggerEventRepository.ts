@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 export const triggerEventRepository = {
   async hasTriggeredToday(userId: number, triggerType: string, triggerKey: string): Promise<boolean> {

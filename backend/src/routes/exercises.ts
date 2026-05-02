@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { exerciseRepository } from '../repositories/exerciseRepository';
 import { muscleRepository } from '../repositories/muscleRepository';
 import { authMiddleware } from '../middleware/auth';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 const router = Router();
 

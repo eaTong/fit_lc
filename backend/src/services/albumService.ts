@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 import { albumRepository } from '../repositories/albumRepository';
 
 export const albumService = {

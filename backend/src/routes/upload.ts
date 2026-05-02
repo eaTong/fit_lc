@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Router } from 'express';
-import { uploadChatImage, uploadAudio } from '../lib/oss';
+import { uploadChatImage, uploadAudio } from '../config/oss';
 import multer from 'multer';
 
 const router = Router();

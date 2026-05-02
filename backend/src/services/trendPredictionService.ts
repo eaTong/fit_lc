@@ -1,5 +1,5 @@
 import { trendPredictionRepository } from '../repositories/trendPredictionRepository';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 interface DataPoint {
   date: Date;

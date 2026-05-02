@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 export const userRepository = {
   async create(email: string, passwordHash: string) {

@@ -3,7 +3,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { runAgent } from '../agents/fitnessAgent';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 const router = Router();
 

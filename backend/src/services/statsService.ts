@@ -1,5 +1,5 @@
 import { aggregatedStatsRepository } from '../repositories/aggregatedStatsRepository';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 export const statsService = {
   async updateAggregatedStats(userId: number) {

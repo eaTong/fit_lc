@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { planRepository } from '../repositories/planRepository';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 export const planService = {
   // Create plan with exercises

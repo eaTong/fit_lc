@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 export const chatMessageRepository = {
   async create(userId: number, role: string, content: string, savedData: any = null) {

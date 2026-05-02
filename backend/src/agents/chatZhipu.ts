@@ -5,7 +5,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { getModelName, requireApiKey } from '../lib/aiConfig.js';
+import { getModelName, requireApiKey } from '../config/aiConfig.js';
 
 interface MultimodalContent {
   type: 'text' | 'image_url';

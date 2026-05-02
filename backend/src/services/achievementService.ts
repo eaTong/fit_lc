@@ -3,7 +3,7 @@ import { userBadgeRepository } from '../repositories/userBadgeRepository';
 import { milestoneRepository } from '../repositories/milestoneRepository';
 import { userMilestoneRepository } from '../repositories/userMilestoneRepository';
 import { aggregatedStatsRepository } from '../repositories/aggregatedStatsRepository';
-import prisma from '../lib/prisma';
+import prisma from '../config/prisma';
 
 interface BadgeConditionContext {
   type: 'workout' | 'measurement' | 'streak';
