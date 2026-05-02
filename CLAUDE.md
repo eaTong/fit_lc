@@ -83,6 +83,17 @@ Prisma schema 定义于 `backend/prisma/schema.prisma`：
 
 **软删除：** 使用 `deletedAt` 字段实现。
 
+## API 文档
+
+后端已集成 Swagger UI，提供完整的 API 接口文档。
+
+**访问地址：** `/api-docs`（开发环境）
+
+当接口不清晰时，可访问 Swagger UI 查看：
+- 每个接口的请求参数和返回值
+- 请求示例（Example Value）
+- 响应状态码说明
+
 ## 常用命令
 
 ```bash
