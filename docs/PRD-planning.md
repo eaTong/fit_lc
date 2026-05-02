@@ -231,6 +231,18 @@ AI回复包含数据分析、建议、历史对比。
 
 AI主动询问"要查看趋势吗？""要生成计划吗？"
 
+### 4.5 Vision Preprocessor 图片预处理 — ✅ 已实现 (F-030)
+
+用户发送图片时，通过 Zhipu AI 预处理图片分析，结果注入消息上下文供主 AI 使用。
+
+**实现位置：** `backend/src/agents/plugins/visionPreprocessor.ts`
+
+**流程：**
+1. VisionPreprocessor 插件拦截含图片消息
+2. 调用 Zhipu GLM-4V-Flash 分析图片
+3. 将分析结果注入消息前缀
+4. 主 AI (MiniMax) 处理纯文本对话
+
 ---
 
 ## 5. 激励系统（规划中）

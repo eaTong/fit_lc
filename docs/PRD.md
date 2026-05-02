@@ -160,6 +160,29 @@ AI回复内容支持Markdown格式渲染，包括：
 #### 3.1.10 文本解析兜底
 当AI未调用工具时（MiniMax模型bindTools限制），自动从AI回复文本解析围度/训练数据并保存。
 
+#### 3.1.11 图片预处理（Vision Preprocessor）
+当用户发送图片时，通过 Zhipu AI (GLM-4V-Flash) 预处理图片分析，结果注入到消息上下文中供主 AI (MiniMax) 使用。
+
+**处理流程：**
+```
+用户发送消息（含图片）
+    ↓
+VisionPreprocessor 插件拦截
+    ↓
+调用 Zhipu GLM-4V-Flash 分析图片
+    ↓
+返回分析结果（体脂率、体态评估、肌肉线条等）
+    ↓
+将结果作为前缀注入消息："【图片解析结果】\n{分析结果}\n\n用户原始消息：..."
+    ↓
+主 AI (MiniMax) 处理纯文本对话
+```
+
+**实现位置：** `backend/src/agents/plugins/visionPreprocessor.ts`
+**配置项：**
+- `AI_VISION_PROVIDER=zhipu`（固定使用 Zhipu）
+- `AI_VISION_MODEL=GLM-4V-Flash`（免费视觉模型）
+
 ---
 
 ### 3.2 训练动作库

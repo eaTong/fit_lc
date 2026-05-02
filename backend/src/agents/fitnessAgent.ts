@@ -6,7 +6,7 @@ import { queryMeasurementTool } from '../tools/queryMeasurement';
 import { generatePlanTool } from '../tools/generatePlan';
 import { adjustPlanTool } from '../tools/adjustPlan';
 import { analyzeExecutionTool } from '../tools/analyzeExecution';
-import { analyzeImageTool } from '../tools/analyzeImage';
+import { preprocessVision } from './plugins/visionPreprocessor';
 import { createChatModel } from './chatFactory';
 import { getWeekBounds, addDays, toDateStr } from '../utils/dateUtils';
 import { saveService } from '../services/saveService';
@@ -18,8 +18,7 @@ const tools = [
   queryMeasurementTool,
   generatePlanTool,
   adjustPlanTool,
-  analyzeExecutionTool,
-  analyzeImageTool
+  analyzeExecutionTool
 ];
 
 let cachedModel = null;
@@ -179,8 +178,7 @@ async function executeToolCall(toolName, toolInput, userId) {
     query_measurement: queryMeasurementTool,
     generate_plan: generatePlanTool,
     adjust_plan: adjustPlanTool,
-    analyze_execution: analyzeExecutionTool,
-    analyze_image: analyzeImageTool
+    analyze_execution: analyzeExecutionTool
   };
 
   const tool = toolMap[toolName];
@@ -201,6 +199,9 @@ async function executeToolCall(toolName, toolInput, userId) {
 
 export async function runAgent(userId, message, userContext = null, historyMessages = [], imageUrls: string[] = []) {
   const model = await getModel();
+
+  // Vision preprocessing: analyze images with Zhipu AI if present
+  const { message: processedMessage } = await preprocessVision(message, imageUrls);
 
   // 计算相对日期
   const {
@@ -311,16 +312,7 @@ ${contextSection}
         ? new HumanMessage(m.content)
         : new AIMessage(m.content)
     ),
-    // Support multimodal message with images (LangChain format)
-    imageUrls.length > 0
-      ? new HumanMessage({
-          content: [
-            { type: "text", text: message },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...imageUrls.map(url => ({ type: "image_url", image_url: { url } as any }))
-          ]
-        })
-      : new HumanMessage(message)
+    new HumanMessage(processedMessage)
   ];
 
   // First call - get tool calls if any
