@@ -66,39 +66,8 @@ Page({
 
   filterExercisesInternal(exercises, stateOverride) {
     const state = stateOverride || this.data;
-    const { selectedMuscleId, searchKeyword, filters, expandedMuscles } = state;
+    const { searchKeyword, filters } = state;
     let filtered = exercises;
-
-    if (selectedMuscleId) {
-      filtered = filtered.filter(ex =>
-        ex.muscles && ex.muscles.some(em => em.muscleId === selectedMuscleId || em.muscle?.parentId === selectedMuscleId)
-      );
-
-      // 排序：主肌肉匹配排前面，辅助肌群匹配排后面，再按器械分组
-      filtered.sort((a, b) => {
-        const aMuscles = a.muscles || [];
-        const bMuscles = b.muscles || [];
-
-        // 检查主肌肉匹配（直接匹配）
-        const aIsPrimary = aMuscles.some(em => em.muscleId === selectedMuscleId && em.role === 'primary');
-        const bIsPrimary = bMuscles.some(em => em.muscleId === selectedMuscleId && em.role === 'primary');
-
-        if (aIsPrimary && !bIsPrimary) return -1;
-        if (!aIsPrimary && bIsPrimary) return 1;
-
-        // 都在主肌肉匹配中，按器械分组
-        const equipmentOrder = ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight'];
-        const aIdx = equipmentOrder.indexOf(a.equipment);
-        const bIdx = equipmentOrder.indexOf(b.equipment);
-        const aOrder = aIdx === -1 ? 999 : aIdx;
-        const bOrder = bIdx === -1 ? 999 : bIdx;
-
-        if (aOrder !== bOrder) return aOrder - bOrder;
-
-        // 同组内按名称排序
-        return a.name.localeCompare(b.name);
-      });
-    }
 
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase();
@@ -230,9 +199,13 @@ Page({
   },
 
   filterExercises() {
-    // 筛选时重新从后端加载第一页
+    // 筛选时重新从后端加载第一页，带上 muscleId 参数
     this.setData({ loading: true });
-    exerciseActions.fetchExercises(1, 20).then(result => {
+    const filters = {};
+    if (this.data.selectedMuscleId) {
+      filters.muscleId = this.data.selectedMuscleId;
+    }
+    exerciseActions.fetchExercises(1, 20, filters).then(result => {
       const filtered = this.filterExercisesInternal(result.exercises);
       this.setData({
         exercises: result.exercises,
@@ -254,16 +227,21 @@ Page({
   },
 
   loadMore() {
-    const { page, exercises } = this.data;
+    const { page, exercises, selectedMuscleId } = this.data;
     const nextPage = page + 1;
 
     this.setData({ loadingMore: true });
 
-    exerciseActions.fetchExercises(nextPage, 20).then(result => {
+    const filters = {};
+    if (selectedMuscleId) {
+      filters.muscleId = selectedMuscleId;
+    }
+
+    exerciseActions.fetchExercises(nextPage, 20, filters).then(result => {
       const newExercises = [...exercises, ...result.exercises];
       this.setData({
         exercises: newExercises,
-        filteredExercises: newExercises,
+        filteredExercises: this.filterExercisesInternal(newExercises),
         page: nextPage,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loadingMore: false

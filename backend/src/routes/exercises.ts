@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
 
-    const { category, equipment, difficulty, status, page, pageSize } = req.query;
+    const { category, equipment, difficulty, status, page, pageSize, muscleId } = req.query;
     const result = await exerciseRepository.findAll({
       category: category as string,
       equipment: equipment as string,
@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
       status: status as string,
       page: page ? parseInt(page as string) : undefined,
       pageSize: pageSize ? parseInt(pageSize as string) : undefined,
+      muscleId: muscleId ? parseInt(muscleId as string) : undefined,
     });
     res.json(result);
   } catch (err) {

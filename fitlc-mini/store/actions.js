@@ -125,9 +125,9 @@ const planActions = {
 
 // Exercise Actions
 const exerciseActions = {
-  fetchExercises(page = 1, pageSize = 20) {
-    console.log('[ExerciseActions] fetchExercises called, page:', page);
-    return get('/exercises', { page, pageSize }).then(res => {
+  fetchExercises(page = 1, pageSize = 20, filters = {}) {
+    console.log('[ExerciseActions] fetchExercises called, page:', page, 'filters:', filters);
+    return get('/exercises', { page, pageSize, ...filters }).then(res => {
       console.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length, 'total:', res?.pagination?.total);
       return res;
     });

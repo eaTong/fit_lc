@@ -8,12 +8,23 @@ export const exerciseRepository = {
     status?: string;
     page?: number;
     pageSize?: number;
+    muscleId?: number;
   }) {
     const where: any = {};
     if (filters?.category) where.category = filters.category;
     if (filters?.equipment) where.equipment = filters.equipment;
     if (filters?.difficulty) where.difficulty = filters.difficulty;
     if (filters?.status) where.status = filters.status;
+    if (filters?.muscleId) {
+      where.muscles = {
+        some: {
+          OR: [
+            { muscleId: filters.muscleId },
+            { muscle: { parentId: filters.muscleId } }
+          ]
+        }
+      };
+    }
 
     const page = filters?.page || 1;
     const pageSize = filters?.pageSize || 20;
