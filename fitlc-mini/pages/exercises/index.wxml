@@ -97,7 +97,7 @@
         <view class="muscle-info-header" bindtap="onMuscleToggle">
           <view class="muscle-title-row">
             <text class="muscle-name">{{selectedMuscleInfo.name}}</text>
-            <text class="muscle-count">{{filteredExerciseCount}} 个动作</text>
+            <text class="muscle-count">{{exercises.length}} 个动作</text>
           </view>
           <text class="toggle-icon {{muscleExpanded ? 'expanded' : ''}}">▼</text>
         </view>
@@ -124,7 +124,7 @@
       <scroll-view class="exercise-list" scroll-y bindscrolltolower="onScrollToLower">
         <view class="exercise-grid">
           <view
-            wx:for="{{getFilteredExercises()}}"
+            wx:for="{{exercises}}"
             wx:key="id"
             class="exercise-card"
             data-id="{{item.id}}"
@@ -140,10 +140,10 @@
         </view>
         <view wx:if="{{loading}}" class="loading">加载中...</view>
         <view wx:if="{{loadingMore}}" class="loading-more">加载更多...</view>
-        <view wx:if="{{!loading && !loadingMore && getFilteredExercises().length === 0}}" class="empty">
+        <view wx:if="{{!loading && !loadingMore && exercises.length === 0}}" class="empty">
           暂无动作
         </view>
-        <view wx:if="{{!hasMore && getFilteredExercises().length > 0}}" class="no-more">
+        <view wx:if="{{!hasMore && exercises.length > 0}}" class="no-more">
           没有更多了
         </view>
       </scroll-view>

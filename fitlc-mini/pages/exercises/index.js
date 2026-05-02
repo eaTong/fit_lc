@@ -215,10 +215,6 @@ Page({
     });
   },
 
-  getFilteredExercises() {
-    return this.data.exercises;
-  },
-
   onExerciseTap(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
