@@ -122,20 +122,21 @@
 
       <!-- Exercise Grid -->
       <scroll-view class="exercise-list" scroll-y bindscrolltolower="onScrollToLower">
-        <view class="exercise-grid">
+        <view class="exercise-list">
           <view
             wx:for="{{exercises}}"
             wx:key="id"
-            class="exercise-card"
+            class="exercise-item"
             data-id="{{item.id}}"
             bindtap="onExerciseTap"
           >
-            <view class="exercise-name">{{item.name}}</view>
-            <view class="exercise-tags">
-              <text class="tag">{{item.category}}</text>
-              <text class="tag">{{item.equipment}}</text>
-              <text class="tag difficulty-{{item.difficulty}}">{{item.difficulty}}</text>
+            <view class="exercise-info">
+              <text class="exercise-name">{{item.name}}</text>
+              <view class="exercise-tags">
+                <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+              </view>
             </view>
+            <text class="arrow">›</text>
           </view>
         </view>
         <view wx:if="{{loading}}" class="loading">加载中...</view>

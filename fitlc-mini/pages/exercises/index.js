@@ -41,11 +41,12 @@ Page({
     ]).then(([result, hierarchy]) => {
       console.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
+      const exercisesWithTags = this.addExerciseTags(result.exercises);
       this.setData({
-        exercises: result.exercises,
+        exercises: exercisesWithTags,
         muscleHierarchy: hierarchy,
         expandedMuscles,
-        filteredExerciseCount: result.exercises.length,
+        filteredExerciseCount: exercisesWithTags.length,
         page: 1,
         hasMore: result.pagination.page < result.pagination.totalPages,
         loading: false
@@ -54,6 +55,28 @@ Page({
       this.setData({ loading: false });
       console.error('load exercises failed:', err);
     });
+  },
+
+  addExerciseTags(exercises) {
+    const categoryMap = {
+      chest: '胸部', back: '背部', shoulders: '肩部', arms: '手臂',
+      legs: '腿部', core: '核心', cardio: '有氧', fullbody: '全身'
+    };
+    const equipmentMap = {
+      barbell: '杠铃', dumbbell: '哑铃', cable: '绳索',
+      machine: '器械', bodyweight: '自重', other: '其他'
+    };
+    const difficultyMap = {
+      beginner: '初级', intermediate: '中级', advanced: '高级'
+    };
+    return exercises.map(ex => ({
+      ...ex,
+      tags: [
+        categoryMap[ex.category] || ex.category,
+        equipmentMap[ex.equipment] || ex.equipment,
+        difficultyMap[ex.difficulty] || ex.difficulty
+      ]
+    }));
   },
 
   onMuscleTreeToggle() {
@@ -201,7 +224,7 @@ Page({
     }
 
     exerciseActions.fetchExercises(nextPage, 20, filters).then(result => {
-      const newExercises = [...exercises, ...result.exercises];
+      const newExercises = this.addExerciseTags([...exercises, ...result.exercises]);
       this.setData({
         exercises: newExercises,
         filteredExerciseCount: newExercises.length,
@@ -218,6 +241,25 @@ Page({
   onExerciseTap(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
+  },
+
+  getExerciseTags(category, equipment, difficulty) {
+    const categoryMap = {
+      chest: '胸部', back: '背部', shoulders: '肩部', arms: '手臂',
+      legs: '腿部', core: '核心', cardio: '有氧', fullbody: '全身'
+    };
+    const equipmentMap = {
+      barbell: '杠铃', dumbbell: '哑铃', cable: '绳索',
+      machine: '器械', bodyweight: '自重', other: '其他'
+    };
+    const difficultyMap = {
+      beginner: '初级', intermediate: '中级', advanced: '高级'
+    };
+    return [
+      categoryMap[category] || category,
+      equipmentMap[equipment] || equipment,
+      difficultyMap[difficulty] || difficulty
+    ];
   },
 
   onMusclePageTap() {

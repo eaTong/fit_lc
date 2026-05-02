@@ -188,44 +188,52 @@
   padding: 16rpx 24rpx;
 }
 
-.exercise-grid {
+.exercise-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #333333;
 }
 
-.exercise-card {
-  width: calc(50% - 10rpx);
-  background-color: #1A1A1A;
-  border-radius: 10rpx;
-  padding: 24rpx;
-  border: 1px solid #333333;
+.exercise-item:last-child {
+  border-bottom: none;
+}
+
+.exercise-info {
+  flex: 1;
 }
 
 .exercise-name {
   font-size: 32rpx;
-  font-weight: 600;
   color: #FFFFFF;
-  margin-bottom: 14rpx;
+  display: block;
+  margin-bottom: 8rpx;
 }
 
 .exercise-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10rpx;
+  gap: 12rpx;
 }
 
 .tag {
   font-size: 24rpx;
-  padding: 6rpx 14rpx;
+  padding: 6rpx 16rpx;
   background-color: #252525;
   border-radius: 6px;
   color: #888888;
 }
 
-.difficulty-beginner { color: #4CAF50; }
-.difficulty-intermediate { color: #FF9800; }
-.difficulty-advanced { color: #F44336; }
+.tag.difficulty-beginner { color: #4CAF50; }
+.tag.difficulty-intermediate { color: #FF9800; }
+.tag.difficulty-advanced { color: #F44336; }
+
+.arrow {
+  font-size: 36rpx;
+  color: #555555;
+  margin-left: 16rpx;
+}
 
 .loading, .empty, .loading-more, .no-more {
   text-align: center;
