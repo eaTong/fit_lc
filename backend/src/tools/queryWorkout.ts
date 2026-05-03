@@ -22,7 +22,29 @@ export const queryWorkoutTool = new DynamicStructuredTool({
   func: async ({ userId, start_date, end_date, exercise_type }) => {
     try {
       const result = await queryService.queryWorkouts(userId, start_date, end_date, exercise_type);
-      return `__SAVED_TYPE__:query:workout:${JSON.stringify({summary:{totalWorkouts: result.workouts?.length || 0, totalVolume: 0}})}__MESSAGE__${JSON.stringify(result)}`;
+
+      const totalWorkouts = result.workouts?.length || 0;
+      const totalVolume = result.workouts?.reduce((sum, w) => {
+        return sum + (w.exercises?.reduce((es, e) => {
+          return es + (e.weight || 0) * (e.reps || 0) * (e.sets || 0);
+        }, 0) || 0);
+      }, 0) || 0;
+
+      const aiReply = `📈 训练记录查询结果\n\n共 ${totalWorkouts} 次训练，总容量 ${totalVolume}kg`;
+
+      return JSON.stringify({
+        aiReply,
+        dataType: 'workout_query',
+        result: {
+          workouts: result.workouts || [],
+          summary: {
+            totalWorkouts,
+            totalVolume,
+            startDate: start_date,
+            endDate: end_date
+          }
+        }
+      });
     } catch (error) {
       throw new Error(`查询训练记录失败: ${error.message}`);
     }

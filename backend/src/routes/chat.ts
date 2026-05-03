@@ -84,6 +84,39 @@ router.get('/messages', async (req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: AI回复和保存的数据
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reply:
+ *                   type: string
+ *                   description: AI对话回复
+ *                 savedData:
+ *                   type: object
+ *                   nullable: true
+ *                   description: 保存的数据标识
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: 数据ID
+ *                     type:
+ *                       type: string
+ *                       description: 数据类型(workout/measurement/plan等)
+ *                 toolData:
+ *                   type: object
+ *                   nullable: true
+ *                   description: Tool返回的完整数据
+ *                   properties:
+ *                     aiReply:
+ *                       type: string
+ *                       description: AI对话回复(用于展示)
+ *                     dataType:
+ *                       type: string
+ *                       description: 数据类型标识
+ *                     result:
+ *                       type: object
+ *                       description: 结构化返回数据
  *       429:
  *         description: 请求过于频繁
  */
@@ -100,7 +133,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     const userContext = await userContextService.getOrCreateContext(userId);
 
     // Call agent with context, history and optional images
-    const { reply, savedData } = await runAgent(
+    const { reply, savedData, toolData } = await runAgent(
       userId,
       message,
       userContext,
@@ -146,7 +179,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       userContextService.refreshContextWithLock(userId, dialogue);
     });
 
-    res.json({ reply, savedData });
+    res.json({ reply, savedData, toolData });
   } catch (err) {
     console.error('Chat error:', err);
     // Log error details server-side but return generic message to client

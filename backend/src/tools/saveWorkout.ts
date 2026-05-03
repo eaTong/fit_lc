@@ -79,9 +79,35 @@ export const saveWorkoutTool = new DynamicStructuredTool({
         achievementMsg += `\n\n🎯 **里程碑达成！** ${milestoneNames}`;
       }
 
-      // 将反馈信息附加到返回消息
       const feedbackMsg = feedback.personalized_comment;
-      return `__SAVED_TYPE__:workout:${result.id}:{}__MESSAGE__${result.message}\n\n${feedbackMsg}${achievementMsg}`;
+      const aiReply = `${result.message}\n\n${feedbackMsg}${achievementMsg}`;
+
+      return JSON.stringify({
+        aiReply,
+        dataType: 'workout',
+        result: {
+          id: result.id,
+          date: finalDate,
+          exercises: exercises.map(e => ({
+            name: e.name,
+            sets: e.sets,
+            reps: e.reps,
+            weight: e.weight,
+            duration: e.duration,
+            distance: e.distance
+          })),
+          feedback: {
+            personalized_comment: feedback.personalized_comment,
+            comparison_with_last: feedback.comparison_with_last
+          },
+          achievements: prResults.length > 0 || achievements.length > 0 || milestones.length > 0 ? {
+            isNewPR: prResults.length > 0,
+            prRecords: prResults,
+            badges: achievements.map(b => b.name),
+            milestones: milestones.map(m => m.name)
+          } : undefined
+        }
+      });
     } catch (error) {
       throw new Error(`保存训练记录失败: ${error.message}`);
     }

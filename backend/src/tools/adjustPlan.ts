@@ -37,14 +37,22 @@ export const adjustPlanTool = new DynamicStructuredTool({
       }
 
       // Call plan service to adjust plan
-      const result = await planService.adjustPlan(plan_id, userId, adjustmentData);
+      await planService.adjustPlan(plan_id, userId, adjustmentData);
 
       // Generate response message
       let message = `计划已调整！\n\n`;
       message += `调整内容：${adjustment}\n`;
       message += `你可以查看更新后的计划详情。`;
 
-      return `__SAVED_TYPE__:adjustment:${plan_id}:{"description":"${adjustment}"}__MESSAGE__${message}`;
+      return JSON.stringify({
+        aiReply: message,
+        dataType: 'plan_adjustment',
+        result: {
+          planId: plan_id,
+          adjustment,
+          success: true
+        }
+      });
     } catch (error) {
       throw new Error(`调整健身计划失败: ${error.message}`);
     }

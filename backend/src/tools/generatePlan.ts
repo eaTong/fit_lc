@@ -308,7 +308,28 @@ export const generatePlanTool = new DynamicStructuredTool({
 
       message += `\n你可以查看计划详情，或让我调整某些训练动作。`;
 
-      return `__SAVED_TYPE__:plan:${planId}:{"name":"${user_profile.name || '健身计划'}"}__MESSAGE__${message}`;
+      const schedule = [];
+      for (const [day, dayExercises] of Object.entries(byDay)) {
+        schedule.push({
+          dayOfWeek: parseInt(day),
+          dayName: dayNames[parseInt(day)] || day,
+          exercises: dayExercises
+        });
+      }
+
+      return JSON.stringify({
+        aiReply: message,
+        dataType: 'plan',
+        result: {
+          planId,
+          planName: user_profile.name || '健身计划',
+          durationWeeks: user_profile.duration_weeks,
+          frequency: user_profile.frequency,
+          goal: goalText,
+          experience: expText,
+          schedule
+        }
+      });
     } catch (error) {
       throw new Error(`生成健身计划失败: ${error.message}`);
     }

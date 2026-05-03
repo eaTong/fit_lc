@@ -53,7 +53,25 @@ export const saveMeasurementTool = new DynamicStructuredTool({
         achievementMsg += `\n\n🎯 **里程碑达成！** ${milestoneNames}`;
       }
 
-      return `__SAVED_TYPE__:measurement:${result.id}:{}__MESSAGE__${result.message}${achievementMsg}`;
+      const aiReply = `${result.message}${achievementMsg}`;
+      const measurementsData = measurements.map(m => ({
+        body_part: m.body_part,
+        value: m.value
+      }));
+
+      return JSON.stringify({
+        aiReply,
+        dataType: 'measurement',
+        result: {
+          id: result.id,
+          date: finalDate,
+          measurements: measurementsData,
+          achievements: achievements.length > 0 || milestones.length > 0 ? {
+            badges: achievements.map(b => b.name),
+            milestones: milestones.map(m => m.name)
+          } : undefined
+        }
+      });
     } catch (error) {
       throw new Error(`保存围度记录失败: ${error.message}`);
     }

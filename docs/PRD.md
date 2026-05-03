@@ -183,6 +183,67 @@ VisionPreprocessor 插件拦截
 - `AI_VISION_PROVIDER=zhipu`（固定使用 Zhipu）
 - `AI_VISION_MODEL=GLM-4V-Flash`（免费视觉模型）
 
+#### 3.1.12 Tool 返回格式
+AI Tools 返回统一 JSON 格式，包含三个字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| aiReply | string | AI 对话回复（用于直接展示给用户） |
+| dataType | string | 数据类型标识 |
+| result | object | 结构化返回数据（前端可解析） |
+
+**统一返回格式：**
+```typescript
+interface ToolResponse<T = any> {
+  aiReply: string;      // AI 对话回复
+  dataType: string;     // 数据类型标识
+  result: T;           // 结构化数据
+}
+```
+
+**各 Tool 返回格式：**
+
+| Tool | dataType | result 关键字段 |
+|------|----------|----------------|
+| save_workout | `workout` | id, date, exercises, feedback, achievements |
+| save_measurement | `measurement` | id, date, measurements, achievements |
+| query_workout | `workout_query` | workouts[], summary |
+| query_measurement | `measurement_query` | measurements[], summary |
+| generate_plan | `plan` | planId, schedule[], goal |
+| adjust_plan | `plan_adjustment` | planId, adjustment |
+| analyze_execution | `execution_analysis` | stats, suggestions |
+
+**示例 - save_workout：**
+```json
+{
+  "aiReply": "✅ 训练记录已保存！\n\n卧推 60kg 4×10，比上周多了2组！💪",
+  "dataType": "workout",
+  "result": {
+    "id": 123,
+    "date": "2026-05-03",
+    "exercises": [{"name": "卧推", "sets": 4, "reps": 10, "weight": 60}],
+    "feedback": {
+      "personalized_comment": "表现不错！",
+      "comparison_with_last": "比上周多了2组"
+    },
+    "achievements": {
+      "isNewPR": false,
+      "badges": [],
+      "milestones": []
+    }
+  }
+}
+```
+
+**Agent 返回结构：**
+```typescript
+{
+  reply: string,      // AI 最终对话回复
+  savedData: { id: number, type: string } | null,  // 保存的数据标识
+  toolData: ToolResponse | null  // 完整的 tool 返回数据
+}
+```
+
 ---
 
 ### 3.2 训练动作库

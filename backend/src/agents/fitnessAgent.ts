@@ -369,18 +369,31 @@ ${contextSection}
   // If no tool calls, return the text response with whatever savedData we have
   if (toolCalls.length === 0) {
     const reply = extractText(response.content);
-    return { reply, savedData };
+    return { reply, savedData, toolData: null };
   }
 
   // Execute tool calls and get results
   const toolMessages = [];
+  let toolResultData = null;
   for (const toolCall of toolCalls) {
     try {
       const result = await executeToolCall(toolCall.name, toolCall.input, userId);
 
-      // Extract savedData from the tool result
-      if (!savedData) {
-        savedData = extractSavedDataFromToolResult(result);
+      // Parse JSON tool result
+      try {
+        const parsedResult = JSON.parse(result);
+        if (parsedResult.dataType && parsedResult.result) {
+          toolResultData = parsedResult;
+          // Extract savedData from the tool result
+          if (!savedData && parsedResult.result.id) {
+            savedData = { id: parsedResult.result.id, type: parsedResult.dataType };
+          }
+        }
+      } catch {
+        // Not JSON, use legacy parsing
+        if (!savedData) {
+          savedData = extractSavedDataFromToolResult(result);
+        }
       }
 
       // Create ToolMessage with proper format
@@ -413,7 +426,7 @@ ${contextSection}
   // Extract reply text
   const reply = extractText(finalResponse.content);
 
-  return { reply, savedData };
+  return { reply, savedData, toolData: toolResultData };
 }
 
 function extractText(content) {

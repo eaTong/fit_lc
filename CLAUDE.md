@@ -163,3 +163,102 @@ React 18 + Vite + TypeScript + TailwindCSS + Zustand + Axios + React Router v6 +
 | `/admin/muscles` | 肌肉库维护 | admin |
 
 前端源码位于 `frontend/src/`，使用 `ErrorBoundary` 处理未捕获异常。
+
+## Agent 架构
+
+### 目录结构
+```
+backend/src/
+├── agents/
+│   ├── fitnessAgent.ts      # 主 Agent (LangChain Agent)
+│   ├── chatFactory.ts       # Chat 模型工厂
+│   ├── chatMiniMax.ts       # MiniMax Chat 实现
+│   ├── chatZhipu.ts         # 智谱 Chat 实现
+│   └── plugins/
+│       └── visionPreprocessor.ts  # 图片预处理插件
+└── tools/
+    ├── saveWorkout.ts       # 保存训练记录
+    ├── saveMeasurement.ts   # 保存围度记录
+    ├── queryWorkout.ts      # 查询训练历史
+    ├── queryMeasurement.ts  # 查询围度历史
+    ├── generatePlan.ts       # AI 生成健身计划
+    ├── adjustPlan.ts         # 调整健身计划
+    └── analyzeExecution.ts  # 分析计划执行
+```
+
+### Tools 定义
+
+所有 Tool 返回统一格式：
+```typescript
+interface ToolResponse<T = any> {
+  aiReply: string;   // AI 对话回复
+  dataType: string; // 数据类型标识
+  result: T;        // 结构化数据
+}
+```
+
+| Tool | dataType | 功能 | result 关键字段 |
+|------|----------|------|----------------|
+| saveWorkout | `workout` | 保存训练记录 | id, date, exercises, feedback, achievements |
+| saveMeasurement | `measurement` | 保存围度记录 | id, date, measurements, achievements |
+| queryWorkout | `workout_query` | 查询训练历史 | workouts[], summary |
+| queryMeasurement | `measurement_query` | 查询围度历史 | measurements[], summary |
+| generatePlan | `plan` | AI 生成计划 | planId, schedule[], goal |
+| adjustPlan | `plan_adjustment` | 调整计划 | planId, adjustment |
+| analyzeExecution | `execution_analysis` | 分析执行情况 | stats, suggestions |
+
+### Plugins
+
+**VisionPreprocessor** (`agents/plugins/visionPreprocessor.ts`)
+- 拦截含图片的消息，调用智谱 GLM-4V-Flash 分析
+- 将分析结果注入到消息上下文中供主 AI 使用
+- 返回格式：`{ message: string, imageAnalysis: string | null }`
+
+### Agent 返回结构
+
+`runAgent()` 返回：
+```typescript
+{
+  reply: string,      // AI 最终对话回复
+  savedData: { id: number, type: string } | null,  // 保存的数据标识
+  toolData: ToolResponse | null  // 完整的 tool 返回数据
+}
+```
+
+## 小程序 (fitlc-mini)
+
+### 项目位置
+`../fitlc-mini/` - 微信小程序原生项目
+
+### 技术栈
+- 框架：微信小程序原生框架
+- 样式：WXSS (CSS 超集)
+- 状态管理：本地 Storage + globalData
+- 网络：wx.request
+
+### 分包策略
+采用**独立分包**机制，减少主包体积：
+
+| 分包 | 页面 | 说明 |
+|------|------|------|
+| 主包 | chat, login, exercises, profile, settings | TabBar 页面 + 登录 |
+| 分包A | plans, plan-generate, plan-detail, plan-execute | 健身计划 |
+| 分包B | measurements, calendar | 围度记录 + 日历 |
+| 分包C | badges, exercise-detail, gallery | 徽章 + 动作详情 + 相册 |
+
+### 核心功能
+- **AI 对话**：文字/语音输入，支持图片
+- **动作库**：左侧肌肉侧边栏 + 右侧动作列表
+- **个人中心**：统计、快捷入口、身体数据
+- **健身计划**：AI 生成、可视化编辑、执行打卡
+- **围度记录**：折线图、左右对称部位
+- **日历**：月历视图、记录详情
+
+### 与 Web 共用
+与 Web 版共享后端 API：
+- 认证：`/api/auth/*`
+- 对话：`/api/chat/*`
+- 记录：`/api/records/*`
+- 计划：`/api/plans/*`
+
+详细文档见 [docs/PRD-mini.md](docs/PRD-mini.md)

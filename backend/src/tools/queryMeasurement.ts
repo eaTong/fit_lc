@@ -21,7 +21,22 @@ export const queryMeasurementTool = new DynamicStructuredTool({
   func: async ({ userId, start_date, end_date, body_part }) => {
     try {
       const result = await queryService.queryMeasurements(userId, start_date, end_date, body_part);
-      return `__SAVED_TYPE__:query:measurement:${JSON.stringify({summary:{}})}__MESSAGE__${JSON.stringify(result)}`;
+
+      const aiReply = `📊 围度记录查询结果\n\n共 ${result.measurements?.length || 0} 条记录`;
+
+      return JSON.stringify({
+        aiReply,
+        dataType: 'measurement_query',
+        result: {
+          measurements: result.measurements || [],
+          summary: {
+            totalRecords: result.measurements?.length || 0,
+            startDate: start_date,
+            endDate: end_date,
+            bodyPart: body_part || 'all'
+          }
+        }
+      });
     } catch (error) {
       throw new Error(`查询围度记录失败: ${error.message}`);
     }
