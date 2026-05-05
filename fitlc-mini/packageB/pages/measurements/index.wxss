@@ -102,6 +102,11 @@
 /* Measurements Grid */
 .measurements-grid {
   display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
   flex-wrap: wrap;
   gap: 16rpx;
 }
@@ -334,6 +339,8 @@
   display: flex;
   gap: 16rpx;
   margin-bottom: 16rpx;
+  padding-right: 8rpx;
+  box-sizing: border-box;
 }
 
 .grid-row.symmetric {
@@ -343,7 +350,7 @@
 /* Measurement Cell */
 .measurement-cell {
   flex: 1;
-  min-height: 120rpx;
+  min-height: 160rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -352,10 +359,12 @@
   background-color: var(--color-bg-tertiary, #252525);
   border: 2px solid var(--color-border, #333333);
   border-radius: 4rpx;
+  box-sizing: border-box;
 }
 
 .measurement-cell.half {
   flex: 0 0 calc(50% - 8rpx);
+  min-width: 0;
 }
 
 .measurement-cell.empty {
