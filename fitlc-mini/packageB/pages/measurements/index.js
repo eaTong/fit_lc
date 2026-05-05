@@ -1,6 +1,21 @@
 // Measurements Page - 围度记录页
 const { recordActions, authActions } = require('../../../store/actions');
 
+// 部位映射
+const PART_MAP = {
+  weight: { name: '体重', unit: 'kg' },
+  chest: { name: '胸围', unit: 'cm' },
+  waist: { name: '腰围', unit: 'cm' },
+  hips: { name: '臀围', unit: 'cm' },
+  biceps_l: { name: '左臂围', unit: 'cm' },
+  biceps_r: { name: '右臂围', unit: 'cm' },
+  thigh_l: { name: '左大腿', unit: 'cm' },
+  thigh_r: { name: '右大腿', unit: 'cm' },
+  calf_l: { name: '左小腿', unit: 'cm' },
+  calf_r: { name: '右小腿', unit: 'cm' },
+  bodyFat: { name: '体脂率', unit: '%' }
+};
+
 Component({
   data: {
     activeTab: 'list', // 'list' | 'trend'
@@ -9,6 +24,13 @@ Component({
     measurements: [],
     loading: false,
     isEmpty: false,
+
+    // Input modal state
+    showInputModal: false,
+    inputTargetPart: '',      // body_part 标识
+    inputTargetPartName: '',  // 中文名，如"左臂围"
+    inputTargetUnit: '',      // 单位
+    inputValue: '',           // 输入值
 
     // Trend data
     workoutTrendData: { categories: [], series: [] },
@@ -267,7 +289,49 @@ Component({
     getMeasurementParts(measurement) {
       if (!measurement.items || measurement.items.length === 0) return '-';
       return measurement.items.map(item => item.body_part).join('、');
-    }
+    },
+
+    onCellTap(e) {
+      const part = e.currentTarget.dataset.part;
+      const partInfo = PART_MAP[part] || {};
+      const currentValue = this.data.latestMeasurement?.[part] || null;
+
+      this.setData({
+        showInputModal: true,
+        inputTargetPart: part,
+        inputTargetPartName: partInfo.name || part,
+        inputTargetUnit: partInfo.unit || 'cm',
+        inputValue: currentValue ? String(currentValue) : ''
+      });
+    },
+
+    onInputChange(e) {
+      this.setData({ inputValue: e.detail.value });
+    },
+
+    onInputConfirm() {
+      const { inputTargetPart, inputValue } = this.data;
+      if (!inputValue) return;
+
+      recordActions.saveMeasurementPart(null, inputTargetPart, inputValue)
+        .then(() => {
+          this.setData({ showInputModal: false });
+          this.loadData();
+        })
+        .catch(err => {
+          wx.showToast({ title: '保存失败', icon: 'none' });
+        });
+    },
+
+    onInputCancel() {
+      this.setData({ showInputModal: false });
+    },
+
+    onModalTap() {
+      this.setData({ showInputModal: false });
+    },
+
+    noop() {}  // 空方法，用于 catchtap
   },
 
   detached() {
