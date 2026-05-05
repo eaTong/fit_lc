@@ -39,12 +39,12 @@
     upper-threshold="50"
   >
     <!-- Latest Measurement Card -->
-    <view wx:if="{{latestMeasurement}}" class="latest-card">
+    <view class="latest-card">
       <view class="latest-header">
         <text class="latest-label">最新记录</text>
-        <text class="latest-date">{{formatDate(latestMeasurement.date)}}</text>
+        <text class="latest-date">{{latestMeasurement ? formatDate(latestMeasurement.date) : '暂无记录'}}</text>
       </view>
-      <view class="latest-detail-date">{{formatDetailDate(latestMeasurement.date)}}</view>
+      <view class="latest-detail-date">{{latestMeasurement ? formatDetailDate(latestMeasurement.date) : ''}}</view>
 
       <view class="measurements-grid">
         <!-- 第一行：独立部位 -->
