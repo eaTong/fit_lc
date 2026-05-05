@@ -64,6 +64,8 @@
 .content-container {
   flex: 1;
   padding: 16rpx 24rpx;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Latest Card */
@@ -73,6 +75,8 @@
   border-radius: 4rpx;
   padding: 24rpx;
   margin-bottom: 32rpx;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .latest-header {
@@ -338,10 +342,23 @@
   margin-bottom: 16rpx;
   padding-right: 8rpx;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .grid-row.symmetric {
   flex-wrap: wrap;
+}
+
+/* First row: 4 independent items - equal width */
+.grid-row:not(.symmetrical) .measurement-cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Symmetrical row: 2 per row */
+.grid-row.symmetric .measurement-cell {
+  flex: 0 0 calc(50% - 8rpx);
+  min-width: 0;
 }
 
 /* Measurement Cell */
@@ -357,10 +374,6 @@
   border: 2px solid var(--color-border, #333333);
   border-radius: 4rpx;
   box-sizing: border-box;
-}
-
-.measurement-cell.half {
-  flex: 0 0 calc(50% - 8rpx);
   min-width: 0;
 }
 
