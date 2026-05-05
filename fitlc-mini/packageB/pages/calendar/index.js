@@ -259,7 +259,8 @@ Component({
       } else {
         month--;
       }
-      this.setData({ year, month, showDetail: false, selectedDate: null }, () => {
+      this.setData({ year, month, showDetail: false, selectedDate: null, calendarExpanded: true }, () => {
+        this.fetchRecordsForMonth();
         this.generateCalendar();
       });
     },
@@ -272,8 +273,25 @@ Component({
       } else {
         month++;
       }
-      this.setData({ year, month, showDetail: false, selectedDate: null }, () => {
+      this.setData({ year, month, showDetail: false, selectedDate: null, calendarExpanded: true }, () => {
+        this.fetchRecordsForMonth();
         this.generateCalendar();
+      });
+    },
+
+    fetchRecordsForMonth() {
+      const { year, month } = this.data;
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+
+      Promise.all([
+        recordActions.fetchWorkouts(startDate, endDate),
+        recordActions.fetchMeasurements(startDate, endDate)
+      ]).then(([workouts, measurements]) => {
+        this.buildAllRecords(workouts, measurements);
+      }).catch(err => {
+        console.error('fetch records failed:', err);
       });
     },
 
@@ -307,10 +325,8 @@ Component({
         selectedDateRecords: records,
         showDetail: false
       }, () => {
-        // Re-render calendar to show the week containing selected date
-        if (!this.data.calendarExpanded) {
-          this.generateCalendar();
-        }
+        // Always re-render calendar to update selected state
+        this.generateCalendar();
       });
     },
 
