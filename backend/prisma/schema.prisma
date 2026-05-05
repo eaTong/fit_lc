@@ -321,16 +321,19 @@ model ExerciseMuscle {
 }
 
 model UserProfile {
-  id         Int       @id @default(autoincrement())
-  userId     Int       @unique @map("user_id")
-  nickname   String?   @db.VarChar(50)
-  avatar     String?   @db.VarChar(500)
-  height     Float?    @db.Float
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique @map("user_id")
+  nickname     String?   @db.VarChar(50)
+  avatar       String?   @db.VarChar(500)
+  height       Float?    @db.Float          // 身高(cm)
+  weight       Float?    @db.Float          // 体重(kg)
+  bodyFat      Float?    @db.Float          // 体脂率(%)
+  experience   String?   @map("experience") // beginner/intermediate/advanced
+  goal         String?   @map("goal")        // bulk/cut/maintain
+  hasOnboarded Boolean   @default(false)    @map("has_onboarded")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@map("user_profiles")
 }
 
