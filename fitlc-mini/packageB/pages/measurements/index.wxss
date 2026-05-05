@@ -107,9 +107,6 @@
   box-sizing: border-box;
   overflow: hidden;
 }
-  flex-wrap: wrap;
-  gap: 16rpx;
-}
 
 .measurement-item {
   display: flex;
