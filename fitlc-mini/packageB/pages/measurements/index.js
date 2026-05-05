@@ -60,9 +60,24 @@ Component({
       this.store = app.store;
 
       this.unsubscribe = this.store.subscribe(state => {
+        const latest = state.latestMeasurement || this.getLatestFromList(state.measurements);
+        // Ensure all body parts have default values for grid display
+        const defaultMeasurement = {
+          weight: null,
+          chest: null,
+          waist: null,
+          hips: null,
+          biceps_l: null,
+          biceps_r: null,
+          thigh_l: null,
+          thigh_r: null,
+          calf_l: null,
+          calf_r: null,
+          ...latest
+        };
         this.setData({
           measurements: state.measurements || [],
-          latestMeasurement: state.latestMeasurement || this.getLatestFromList(state.measurements)
+          latestMeasurement: defaultMeasurement
         });
         this.updateEmptyState();
       });
