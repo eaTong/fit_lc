@@ -22,13 +22,6 @@
     <text class="loading-text">加载中...</text>
   </view>
 
-  <!-- Empty State -->
-  <view wx:elif="{{isEmpty}}" class="empty-container">
-    <text class="empty-icon">📏</text>
-    <text class="empty-text">暂无围度记录</text>
-    <text class="empty-hint">去聊天页记录你的第一条围度吧</text>
-  </view>
-
   <!-- List Tab Content -->
   <scroll-view
     wx:if="{{activeTab === 'list'}}"
