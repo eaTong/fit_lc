@@ -157,13 +157,36 @@
 /* Legend */
 .legend {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 48rpx;
   padding: 24rpx 32rpx;
   background-color: var(--color-bg-secondary, #1A1A1A);
   border-top: 1px solid var(--color-border, #333333);
   flex-shrink: 0;
+}
+
+.legend-left {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.legend-right {
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+}
+
+.toggle-btn, .today-btn {
+  padding: 8rpx 16rpx;
+  background-color: var(--color-bg-tertiary, #252525);
+  border-radius: 4rpx;
+  font-size: 24rpx;
+  color: var(--color-text-primary, #FFFFFF);
+}
+
+.toggle-btn:active, .today-btn:active {
+  background-color: var(--color-accent, #FF4500);
 }
 
 .legend-item {
@@ -304,6 +327,20 @@
   white-space: nowrap;
 }
 
+.workout-detail {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-primary, #FFFFFF);
+  line-height: 1.4;
+}
+
+.measurement-detail {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-primary, #FFFFFF);
+  line-height: 1.4;
+}
+
 .record-arrow {
   width: 40rpx;
   display: flex;
@@ -339,6 +376,25 @@
 .record-count {
   font-size: 24rpx;
   color: var(--color-text-secondary, #888888);
+}
+
+.back-btn {
+  padding: 8rpx 16rpx;
+  background-color: var(--color-bg-tertiary, #252525);
+  border-radius: 4rpx;
+  font-size: 24rpx;
+  color: var(--color-text-primary, #FFFFFF);
+}
+
+.back-btn:active {
+  background-color: var(--color-accent, #FF4500);
+}
+
+.records-empty {
+  padding: 48rpx;
+  text-align: center;
+  color: var(--color-text-secondary, #888888);
+  font-size: 28rpx;
 }
 
 .records-list {

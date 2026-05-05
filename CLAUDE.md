@@ -220,8 +220,14 @@ interface ToolResponse<T = any> {
 ```typescript
 {
   reply: string,      // AI 最终对话回复
-  savedData: { id: number, type: string } | null,  // 保存的数据标识
   toolData: ToolResponse | null  // 完整的 tool 返回数据
+}
+
+// ToolResponse 格式：
+{
+  aiReply: string,    // AI 回复文本（用于展示）
+  dataType: string,   // 数据类型：workout | measurement | workout_query | measurement_query | plan | adjustment | analysis
+  result: object      // 具体数据（根据 dataType 不同结构不同）
 }
 ```
 

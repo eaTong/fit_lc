@@ -26,7 +26,10 @@ Component({
     loading: false,
 
     // Detail panel visibility
-    showDetail: false
+    showDetail: false,
+
+    // Calendar expand/collapse (default collapsed)
+    calendarExpanded: false
   },
 
   lifetimes: {
@@ -114,7 +117,7 @@ Component({
     },
 
     generateCalendar() {
-      const { year, month } = this.data;
+      const { year, month, calendarExpanded, selectedDate } = this.data;
 
       // Get first day of month and total days
       const firstDay = new Date(year, month - 1, 1);
@@ -126,6 +129,20 @@ Component({
       const today = new Date();
       const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
       const todayDate = today.getDate();
+      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      // Target date for week calculation (selected date or today)
+      const targetDate = selectedDate || todayDateStr;
+      const targetDateObj = new Date(targetDate);
+
+      // Calculate week boundaries (Sunday to Saturday)
+      const targetDayOfWeek = targetDateObj.getDay();
+      const weekStartDate = new Date(targetDateObj);
+      weekStartDate.setDate(targetDateObj.getDate() - targetDayOfWeek);
+      const weekStartStr = this.formatDateStr(weekStartDate.getFullYear(), weekStartDate.getMonth() + 1, weekStartDate.getDate());
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+      const weekEndStr = this.formatDateStr(weekEndDate.getFullYear(), weekEndDate.getMonth() + 1, weekEndDate.getDate());
 
       const days = [];
 
@@ -140,13 +157,19 @@ Component({
         const hasWorkout = this.hasRecord(this.data.workoutDates, dateStr);
         const hasMeasurement = this.hasRecord(this.data.measurementDates, dateStr);
 
+        // In collapsed mode, only show days within the target week
+        const isInWeek = dateStr >= weekStartStr && dateStr <= weekEndStr;
+        const isSelected = dateStr === selectedDate;
+
         days.push({
           day,
           dateStr,
           isToday: isCurrentMonth && day === todayDate,
           hasWorkout,
           hasMeasurement,
-          hasRecord: hasWorkout || hasMeasurement
+          hasRecord: hasWorkout || hasMeasurement,
+          hidden: !calendarExpanded && !isInWeek,
+          selected: isSelected
         });
       }
 
@@ -174,6 +197,7 @@ Component({
         .map(w => ({
           id: w.id,
           type: 'workout',
+          date: w.date,
           summary: `${w.exercises?.length || 0}个动作`,
           detail: `共${this.calculateTotalSets(w)}组`,
           data: w
@@ -184,6 +208,7 @@ Component({
         .map(m => ({
           id: m.id,
           type: 'measurement',
+          date: m.date,
           summary: `${m.items?.length || 0}个部位`,
           detail: this.getMeasurementParts(m),
           data: m
@@ -200,6 +225,12 @@ Component({
     getMeasurementParts(measurement) {
       if (!measurement.items || measurement.items.length === 0) return '-';
       return measurement.items.map(item => item.body_part).join('、');
+    },
+
+    formatMeasurementItems(items) {
+      if (!items || items.length === 0) return '-';
+      const partNames = { chest: '胸', waist: '腰', hips: '臀', biceps_l: '左臂', biceps_r: '右臂', thigh_l: '左腿', thigh_r: '右腿', calf_l: '左小腿', calf_r: '右小腿', weight: '体重' };
+      return items.map(item => `${partNames[item.body_part] || item.body_part}: ${item.value}`).join(' | ');
     },
 
     formatDate(dateStr) {
@@ -246,6 +277,26 @@ Component({
       });
     },
 
+    onToggleCalendar() {
+      const expanded = !this.data.calendarExpanded;
+      this.setData({ calendarExpanded: expanded }, () => {
+        this.generateCalendar();
+      });
+    },
+
+    onGoToToday() {
+      const today = new Date();
+      this.setData({
+        year: today.getFullYear(),
+        month: today.getMonth() + 1,
+        showDetail: false,
+        selectedDate: null,
+        calendarExpanded: false
+      }, () => {
+        this.generateCalendar();
+      });
+    },
+
     onDayTap(e) {
       const dateStr = e.currentTarget.dataset.date;
       if (!dateStr) return;
@@ -254,16 +305,26 @@ Component({
       this.setData({
         selectedDate: dateStr,
         selectedDateRecords: records,
-        showDetail: true
+        showDetail: false
+      }, () => {
+        // Re-render calendar to show the week containing selected date
+        if (!this.data.calendarExpanded) {
+          this.generateCalendar();
+        }
+      });
+    },
+
+    onClearSelection() {
+      this.setData({
+        selectedDate: null,
+        selectedDateRecords: []
+      }, () => {
+        this.generateCalendar();
       });
     },
 
     onCloseDetail() {
-      this.setData({
-        showDetail: false,
-        selectedDate: null,
-        selectedDateRecords: []
-      });
+      this.onClearSelection();
     },
 
     onRecordTap(e) {
@@ -288,6 +349,14 @@ Component({
       if (!dateStr) return '';
       const parts = dateStr.split('-');
       return `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+    },
+
+    formatTime(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
     },
 
     detached() {

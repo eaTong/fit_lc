@@ -42,8 +42,16 @@ fit_lc/
 │       ├── pages/        # 页面组件
 │       ├── store/        # Zustand Store
 │       └── api/          # API 客户端
+├── fitlc-mini/           # 微信小程序
+│   ├── pages/            # 页面（chat/login/exercises/profile/settings）
+│   ├── packageA/         # 分包A（健身计划）
+│   ├── packageB/         # 分包B（围度/日历）
+│   ├── packageC/         # 分包C（徽章/动作详情/相册）
+│   ├── api/              # API 客户端
+│   └── store/            # 状态管理
 ├── docs/                 # 文档
-│   ├── PRD.md           # 正式版产品需求文档
+│   ├── PRD.md           # Web版产品需求文档
+│   ├── PRD-mini.md      # 小程序产品需求文档
 │   └── PRD-planning.md  # 规划版需求文档
 └── scripts/              # 工具脚本
 ```

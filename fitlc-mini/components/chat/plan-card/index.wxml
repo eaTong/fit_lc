@@ -1,0 +1,28 @@
+<view class="plan-card">
+  <!-- 标题栏 -->
+  <view class="card-header">
+    <text class="card-title">🏋️ 健身计划已生成</text>
+  </view>
+
+  <!-- 计划概览 -->
+  <view class="plan-overview">
+    <text class="overview-text">
+      {{data.durationWeeks}}周 · 每周{{data.frequency}}次 · {{getGoalText(data.goal)}}
+    </text>
+    <text class="exp-text">{{getExpText(data.experience)}}</text>
+  </view>
+
+  <!-- 每周安排预览 -->
+  <view class="schedule-preview">
+    <view class="schedule-item" wx:for="{{schedulePreview}}" wx:key="dayOfWeek">
+      <text class="day-name">{{item.dayName}}</text>
+      <text class="muscle">💪 {{item.muscle}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="btn btn-secondary" bindtap="onViewDetail">查看详情</button>
+    <button class="btn btn-primary" bindtap="onStartExecute">开始执行</button>
+  </view>
+</view>

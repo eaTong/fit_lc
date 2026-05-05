@@ -2,7 +2,7 @@
   <!-- Month Selector -->
   <view class="month-selector">
     <view class="month-nav" bindtap="onPreMonth">
-      <text class="nav-btn">&lt;</text>
+      <text class="nav-btn">‹</text>
     </view>
     <picker
       mode="selector"
@@ -15,7 +15,7 @@
       <text class="month-label">{{getCurrentMonthLabel()}}</text>
     </picker>
     <view class="month-nav" bindtap="onNextMonth">
-      <text class="nav-btn">&gt;</text>
+      <text class="nav-btn">›</text>
     </view>
   </view>
 

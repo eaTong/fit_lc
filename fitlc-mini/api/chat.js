@@ -14,7 +14,7 @@ const chatActions = {
   sendMessage(content, imageUrls = []) {
     const timestamp = Date.now();
     return post('/chat/message', { message: content, imageUrls }).then(res => {
-      // 后端返回 { reply, savedData }
+      // 后端返回 { reply, toolData }
       // 返回用户消息和AI回复，构造完整的消息对象
       const userMessage = {
         id: `temp-${timestamp}-user`,
@@ -27,7 +27,9 @@ const chatActions = {
         id: `temp-${timestamp}-assistant`,
         role: 'assistant',
         content: res.reply,
-        savedData: res.savedData,
+        // 从 toolData 提取 savedData 用于撤销判断
+        savedData: res.toolData?.result?.id ? { id: res.toolData.result.id, type: res.toolData.dataType } : null,
+        toolData: res.toolData || null,
         createdAt: new Date().toISOString()
       };
       return [userMessage, assistantMessage];

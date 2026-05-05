@@ -56,14 +56,16 @@ const authActions = {
 // Record Actions
 const recordActions = {
   fetchWorkouts(start, end) {
-    return get('/records/workouts', { start, end }).then(workouts => {
+    return get('/records/workouts', { start, end }).then(res => {
+      const workouts = res.workouts || [];
       getStore().setState({ workouts });
       return workouts;
     });
   },
 
   fetchMeasurements(start, end) {
-    return get('/records/measurements', { start, end }).then(measurements => {
+    return get('/records/measurements', { start, end }).then(res => {
+      const measurements = res.measurements || [];
       getStore().setState({ measurements });
       return measurements;
     });

@@ -2,11 +2,11 @@
   <!-- Month Navigator -->
   <view class="month-navigator">
     <view class="nav-btn" bindtap="onPrevMonth">
-      <text class="nav-arrow">&lt;</text>
+      <text class="nav-arrow">‹</text>
     </view>
-    <text class="month-label">{{getMonthLabel()}}</text>
+    <text class="month-label">{{year}}年{{month}}月</text>
     <view class="nav-btn" bindtap="onNextMonth">
-      <text class="nav-arrow">&gt;</text>
+      <text class="nav-arrow">›</text>
     </view>
   </view>
 
@@ -22,7 +22,8 @@
     <view
       wx:for="{{days}}"
       wx:key="index"
-      class="day-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.selected ? 'selected' : ''}}"
+      wx:if="{{!item.empty && !item.hidden}}"
+      class="day-cell {{item.isToday ? 'today' : ''}} {{item.selected ? 'selected' : ''}}"
       data-date="{{item.dateStr}}"
       bindtap="onDayTap"
     >
@@ -36,67 +37,46 @@
 
   <!-- Legend -->
   <view class="legend">
-    <view class="legend-item">
-      <view class="dot dot-workout"></view>
-      <text class="legend-text">训练</text>
+    <view class="legend-left">
+      <view class="toggle-btn" bindtap="onToggleCalendar">
+        <text>{{calendarExpanded ? '收起' : '展开'}}</text>
+      </view>
     </view>
-    <view class="legend-item">
-      <view class="dot dot-measurement"></view>
-      <text class="legend-text">围度</text>
+    <view class="legend-right">
+      <view class="today-btn" bindtap="onGoToToday">
+        <text>回到今天</text>
+      </view>
+      <view class="legend-item">
+        <view class="dot dot-workout"></view>
+        <text class="legend-text">训练</text>
+      </view>
+      <view class="legend-item">
+        <view class="dot dot-measurement"></view>
+        <text class="legend-text">围度</text>
+      </view>
     </view>
   </view>
 
-  <!-- All Records List (when no date selected) -->
-  <view wx:if="{{!showDetail}}" class="records-section">
+  <!-- All Records List -->
+  <view class="records-section">
     <view class="section-header">
-      <text class="section-title">全部记录</text>
-      <text class="record-count">{{allRecords.length}}条</text>
+      <block wx:if="{{selectedDate}}">
+        <text class="section-title">{{formatDisplayDate(selectedDate)}}的记录</text>
+        <view class="back-btn" bindtap="onClearSelection">
+          <text>返回全部</text>
+        </view>
+      </block>
+      <block wx:else>
+        <text class="section-title">全部记录</text>
+        <text class="record-count">{{allRecords.length}}条</text>
+      </block>
     </view>
     <scroll-view class="records-list" scroll-y>
-      <view
-        wx:for="{{allRecords}}"
-        wx:key="id"
-        class="record-item"
-        data-record="{{item}}"
-        bindtap="onRecordTap"
-      >
-        <view class="record-icon">
-          <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
-        </view>
-        <view class="record-info">
-          <view class="record-header">
-            <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
-            <text class="record-date">{{formatDate(item.date)}}</text>
-          </view>
-          <text class="record-summary">{{item.summary}}</text>
-          <text class="record-detail">{{item.detail}}</text>
-        </view>
-        <view class="record-arrow">
-          <text>></text>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- Detail Panel -->
-  <view wx:if="{{showDetail}}" class="detail-overlay" bindtap="onCloseDetail">
-    <view class="detail-panel" catchtap="noop">
-      <view class="detail-header">
-        <text class="detail-date">{{formatDisplayDate(selectedDate)}}</text>
-        <view class="detail-close" bindtap="onCloseDetail">
-          <text>X</text>
-        </view>
-      </view>
-
-      <view wx:if="{{selectedDateRecords.length === 0}}" class="detail-empty">
-        <text class="detail-empty-text">暂无记录</text>
-      </view>
-
-      <scroll-view wx:else class="detail-records" scroll-y>
+      <block wx:if="{{selectedDate}}">
         <view
           wx:for="{{selectedDateRecords}}"
           wx:key="id"
-          class="detail-record"
+          class="record-item"
           data-record="{{item}}"
           bindtap="onRecordTap"
         >
@@ -104,15 +84,54 @@
             <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
           </view>
           <view class="record-info">
-            <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
-            <text class="record-summary">{{item.summary}}</text>
-            <text class="record-detail">{{item.detail}}</text>
-          </view>
-          <view class="record-arrow">
-            <text>&gt;</text>
+            <view class="record-header">
+              <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
+              <text class="record-time">{{formatTime(item.date)}}</text>
+            </view>
+            <block wx:if="{{item.type === 'workout'}}">
+              <text class="workout-detail" wx:for="{{item.data.exercises}}" wx:for-item="ex" wx:key="id">
+                {{ex.exerciseName}} {{ex.sets}}×{{ex.reps}} {{ex.weight ? ex.weight+'kg' : ''}}
+              </text>
+            </block>
+            <block wx:else>
+              <text class="measurement-detail">{{formatMeasurementItems(item.data.items)}}</text>
+            </block>
           </view>
         </view>
-      </scroll-view>
-    </view>
+        <view wx:if="{{selectedDateRecords.length === 0}}" class="records-empty">
+          <text>暂无记录</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view
+          wx:for="{{allRecords}}"
+          wx:key="id"
+          class="record-item"
+          data-record="{{item}}"
+          bindtap="onRecordTap"
+        >
+          <view class="record-icon">
+            <text>{{item.type === 'workout' ? '💪' : '📏'}}</text>
+          </view>
+          <view class="record-info">
+            <view class="record-header">
+              <text class="record-type">{{item.type === 'workout' ? '训练记录' : '围度记录'}}</text>
+              <text class="record-date">{{formatDate(item.date)}}</text>
+            </view>
+            <block wx:if="{{item.type === 'workout'}}">
+              <text class="workout-detail" wx:for="{{item.data.exercises}}" wx:for-item="ex" wx:key="id">
+                {{ex.exerciseName}} {{ex.sets}}×{{ex.reps}} {{ex.weight ? ex.weight+'kg' : ''}}
+              </text>
+            </block>
+            <block wx:else>
+              <text class="measurement-detail">{{formatMeasurementItems(item.data.items)}}</text>
+            </block>
+          </view>
+          <view class="record-arrow">
+            <text>›</text>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
   </view>
 </view>

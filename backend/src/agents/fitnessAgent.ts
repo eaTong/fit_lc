@@ -21,6 +21,35 @@ const tools = [
   analyzeExecutionTool
 ];
 
+// 缓存动作名称列表，用于 fallback 解析
+let cachedExerciseNames: string[] = [];
+let exerciseCachePromise: Promise<string[]> | null = null;
+
+async function getExerciseNames(): Promise<string[]> {
+  if (cachedExerciseNames.length > 0) {
+    return cachedExerciseNames;
+  }
+  if (exerciseCachePromise) {
+    return exerciseCachePromise;
+  }
+  exerciseCachePromise = (async () => {
+    try {
+      const prisma = (await import('../config/prisma.js')).default;
+      const exercises = await prisma.exercise.findMany({
+        select: { name: true },
+        orderBy: { id: 'asc' }
+      });
+      cachedExerciseNames = exercises.map(e => e.name);
+      console.log(`Loaded ${cachedExerciseNames.length} exercise names for fallback parsing`);
+      return cachedExerciseNames;
+    } catch (err) {
+      console.error('Failed to load exercise names:', err);
+      return [];
+    }
+  })();
+  return exerciseCachePromise;
+}
+
 let cachedModel = null;
 let modelPromise = null;
 
@@ -146,9 +175,69 @@ function parseMeasurementFromText(text: string, userId: number) {
   return results;
 }
 
-// 解析文本中的训练数据作为后备
-function parseWorkoutFromText(text: string, userId: number) {
-  const exercises: Array<{ name: string; sets?: number; reps?: number; duration?: number }> = [];
+// 解析文本中的训练数据作为后备（异步版本，使用动作库）
+async function parseWorkoutFromTextAsync(text: string, _userId: number) {
+  const exerciseNames = await getExerciseNames();
+  if (exerciseNames.length === 0) {
+    // Fallback to simple patterns if no exercise list available
+    return parseWorkoutFromText(text);
+  }
+
+  const exercises: Array<{ name: string; sets?: number; reps?: number; duration?: number; weight?: number }> = [];
+
+  // 构建动作名称正则：优先匹配长名称（如"杠铃卧推"优先于"卧推"）
+  // 按长度降序排列，确保先匹配更具体的动作名
+  const sortedNames = [...exerciseNames].sort((a, b) => b.length - a.length);
+  const namePattern = sortedNames.join('|');
+
+  // 匹配训练记录：重量+组数+次数，如"卧推80公斤5组5次"
+  // 模式：动作名 + 重量 + (组数|组) + 次数
+  const fullPattern = new RegExp(`(${namePattern})\\s*(\\d+(?:\\.\\d+)?)\\s*(?:公斤|kg)?\\s*(\\d+)\\s*(?:组|个)?\\s*[每x]?\\s*(\\d+)\\s*(?:次|个)?`, 'i');
+
+  // 简单匹配：动作名 + 数字（次数或组数）
+  const simplePattern = new RegExp(`(${namePattern})\\s*(\\d+)\\s*(?:组|个|次)`, 'i');
+
+  let match = text.match(fullPattern);
+  if (match) {
+    exercises.push({
+      name: match[1],
+      weight: parseFloat(match[2]),
+      sets: parseInt(match[3]),
+      reps: parseInt(match[4])
+    });
+  } else {
+    match = text.match(simplePattern);
+    if (match) {
+      exercises.push({
+        name: match[1],
+        reps: parseInt(match[2])
+      });
+    }
+  }
+
+  // 解析只有次数的动作（如"做了100个俯卧撑"）
+  if (exercises.length === 0) {
+    const countOnlyPattern = /(\d+)\s*个?(俯卧撑|深蹲|引体向上|双杠臂屈伸)/i;
+    const countMatch = text.match(countOnlyPattern);
+    if (countMatch) {
+      exercises.push({
+        name: countMatch[2],
+        reps: parseInt(countMatch[1])
+      });
+    }
+  }
+
+  if (exercises.length === 0) return null;
+
+  return {
+    date: new Date().toISOString().split('T')[0],
+    exercises
+  };
+}
+
+// 解析文本中的训练数据（同步简单版本，无动作库时使用）
+function parseWorkoutFromText(text: string) {
+  const exercises: Array<{ name: string; sets?: number; reps?: number; duration?: number; weight?: number }> = [];
 
   // 俯卧撑
   const pushupMatch = text.match(/(\d+)\s*个?俯卧撑/i);
@@ -317,7 +406,7 @@ ${contextSection}
 
   // First call - get tool calls if any
   const response = await model.invoke(messages);
-  let savedData = null;
+  let toolResultData = null;
 
   // Extract tool calls - check both response.tool_calls (from bindTools) and content array
   let toolCalls = extractToolCallsFromContent(response.content);
@@ -338,7 +427,7 @@ ${contextSection}
     console.log('Extracted text:', text);
     const parsedMeasurements = parseMeasurementFromText(text, userId);
     console.log('Parsed measurements:', parsedMeasurements);
-    const parsedWorkout = parseWorkoutFromText(text, userId);
+    const parsedWorkout = await parseWorkoutFromTextAsync(text, userId);
     console.log('Parsed workout:', parsedWorkout);
 
     if (parsedMeasurements.length > 0) {
@@ -347,7 +436,11 @@ ${contextSection}
         try {
           const result = await saveService.saveMeasurement(userId, m.date, m.measurements);
           console.log('Saved measurement via fallback:', result);
-          savedData = { id: result.id, type: 'measurement' };
+          toolResultData = {
+            aiReply: '围度记录已保存',
+            dataType: 'measurement',
+            result: { id: result.id, date: m.date, measurements: m.measurements }
+          };
         } catch (err) {
           console.error('Failed to save parsed measurement:', err);
         }
@@ -357,7 +450,11 @@ ${contextSection}
       try {
         const result = await saveService.saveWorkout(userId, parsedWorkout.date, parsedWorkout.exercises);
         console.log('Saved workout via fallback:', result);
-        savedData = { id: result.id, type: 'workout' };
+        toolResultData = {
+          aiReply: '训练记录已保存',
+          dataType: 'workout',
+          result: { id: result.id, date: parsedWorkout.date, exercises: parsedWorkout.exercises }
+        };
       } catch (err) {
         console.error('Failed to save parsed workout:', err);
       }
@@ -366,15 +463,14 @@ ${contextSection}
 
   console.log('Response tool_calls:', JSON.stringify(toolCalls));
 
-  // If no tool calls, return the text response with whatever savedData we have
+  // If no tool calls, return the text response
   if (toolCalls.length === 0) {
     const reply = extractText(response.content);
-    return { reply, savedData, toolData: null };
+    return { reply, toolData: toolResultData };
   }
 
   // Execute tool calls and get results
   const toolMessages = [];
-  let toolResultData = null;
   for (const toolCall of toolCalls) {
     try {
       const result = await executeToolCall(toolCall.name, toolCall.input, userId);
@@ -384,16 +480,9 @@ ${contextSection}
         const parsedResult = JSON.parse(result);
         if (parsedResult.dataType && parsedResult.result) {
           toolResultData = parsedResult;
-          // Extract savedData from the tool result
-          if (!savedData && parsedResult.result.id) {
-            savedData = { id: parsedResult.result.id, type: parsedResult.dataType };
-          }
         }
       } catch {
-        // Not JSON, use legacy parsing
-        if (!savedData) {
-          savedData = extractSavedDataFromToolResult(result);
-        }
+        // Not JSON, ignore legacy format
       }
 
       // Create ToolMessage with proper format
@@ -426,7 +515,7 @@ ${contextSection}
   // Extract reply text
   const reply = extractText(finalResponse.content);
 
-  return { reply, savedData, toolData: toolResultData };
+  return { reply, toolData: toolResultData };
 }
 
 function extractText(content) {

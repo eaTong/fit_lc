@@ -1,0 +1,31 @@
+/* 调整确认卡片 - 力量感设计 */
+.adjustment-card {
+  background: #1A1A1A;
+  border: 2px solid #333333;
+  border-radius: 4px;
+  padding: 16px;
+  margin: 8px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333333;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.adjustment-content {
+  padding: 16px;
+  background: #252525;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #FFFFFF;
+  border-left: 3px solid #FF4500;
+}

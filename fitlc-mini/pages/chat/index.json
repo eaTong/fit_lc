@@ -1,5 +1,13 @@
 {
   "navigationBarTitleText": "首页",
   "navigationBarBackgroundColor": "#0A0A0A",
-  "usingComponents": {}
+  "usingComponents": {
+    "workout-card": "/components/chat/workout-card/index",
+    "measurement-card": "/components/chat/measurement-card/index",
+    "workout-query-card": "/components/chat/workout-query-card/index",
+    "measurement-query-card": "/components/chat/measurement-query-card/index",
+    "plan-card": "/components/chat/plan-card/index",
+    "adjustment-card": "/components/chat/adjustment-card/index",
+    "analysis-card": "/components/chat/analysis-card/index"
+  }
 }

@@ -1,0 +1,20 @@
+<view class="measurement-query-card">
+  <!-- 标题栏 -->
+  <view class="card-header">
+    <text class="card-title">📊 围度变化趋势</text>
+  </view>
+
+  <!-- 围度列表 -->
+  <view class="measurement-list">
+    <view class="measurement-item" wx:for="{{formattedMeasurements}}" wx:key="index">
+      <view class="measurement-left">
+        <text class="body-part">{{item.bodyPart}}</text>
+        <text class="date">{{item.dateStr}}</text>
+      </view>
+      <view class="measurement-right">
+        <text class="value">{{item.value}}</text>
+        <text class="unit">{{item.unit}}</text>
+      </view>
+    </view>
+  </view>
+</view>

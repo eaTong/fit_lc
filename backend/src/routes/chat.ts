@@ -133,13 +133,16 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     const userContext = await userContextService.getOrCreateContext(userId);
 
     // Call agent with context, history and optional images
-    const { reply, savedData, toolData } = await runAgent(
+    const { reply, toolData } = await runAgent(
       userId,
       message,
       userContext,
       historyMessages || [],
       imageUrls || []
     );
+
+    // Extract savedData from toolData for DB storage and context
+    const savedData = toolData?.result?.id ? { id: toolData.result.id, type: toolData.dataType } : null;
 
     // Save user message and assistant reply to database
     try {
@@ -179,11 +182,68 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       userContextService.refreshContextWithLock(userId, dialogue);
     });
 
-    res.json({ reply, savedData, toolData });
+    res.json({ reply, toolData });
   } catch (err) {
     console.error('Chat error:', err);
     // Log error details server-side but return generic message to client
     res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+/**
+ * @swagger
+ * /chat/revoke/{messageId}:
+ *   post:
+ *     summary: 撤销消息
+ *     tags: [聊天]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 消息ID
+ *     responses:
+ *       200:
+ *         description: 撤销成功
+ *       404:
+ *         description: 消息不存在
+ */
+router.post('/revoke/:messageId', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const messageIdParam = req.params.messageId;
+    const messageId = Array.isArray(messageIdParam) ? messageIdParam[0] : messageIdParam;
+
+    // 支持临时ID格式（temp-{timestamp}-{role}）和真实数据库ID
+    if (messageId.startsWith('temp-')) {
+      // 临时ID无法在数据库中查找，直接返回成功（前端已显示但后端未存储）
+      return res.json({ success: true, message: '临时消息已忽略' });
+    }
+
+    // 查询真实消息
+    const message = await prisma.chatMessage.findFirst({
+      where: {
+        id: parseInt(messageId),
+        userId,
+      },
+    });
+
+    if (!message) {
+      return res.status(404).json({ error: '消息不存在' });
+    }
+
+    // 删除消息
+    await prisma.chatMessage.delete({
+      where: { id: message.id },
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Revoke message error:', err);
+    res.status(500).json({ error: 'Failed to revoke message' });
   }
 });
 

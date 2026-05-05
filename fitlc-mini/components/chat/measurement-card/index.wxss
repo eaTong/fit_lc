@@ -1,0 +1,76 @@
+/* 围度记录卡片 - 力量感设计 */
+.measurement-card {
+  background: #1A1A1A;
+  border: 2px solid #333333;
+  border-radius: 4px;
+  padding: 16px;
+  margin: 8px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333333;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.card-time {
+  font-size: 12px;
+  color: #888888;
+}
+
+.measurement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.measurement-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.measurement-part {
+  font-size: 14px;
+  color: #888888;
+}
+
+.measurement-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.unit {
+  font-size: 12px;
+  color: #888888;
+}
+
+.achievement-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #333333;
+  font-size: 12px;
+  color: #FF4500;
+}

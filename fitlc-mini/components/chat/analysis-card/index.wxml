@@ -1,0 +1,30 @@
+<view class="analysis-card">
+  <!-- 标题栏 -->
+  <view class="card-header">
+    <text class="card-title">📊 计划执行分析</text>
+  </view>
+
+  <!-- 完成率圆环 -->
+  <view class="completion-ring">
+    <view class="ring-container">
+      <text class="ring-value">{{getCompletionText()}}</text>
+      <text class="ring-label">完成率</text>
+    </view>
+  </view>
+
+  <!-- 统计数字 -->
+  <view class="stats-row">
+    <view class="stat-item" wx:for="{{getStatItems()}}" wx:key="label">
+      <text class="stat-icon" style="color: {{item.color}}">{{item.icon}}</text>
+      <text class="stat-count">{{item.count}}</text>
+      <text class="stat-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- AI 建议 -->
+  <view class="suggestions" wx:if="{{getSuggestions().length > 0}}">
+    <view class="suggestion-item" wx:for="{{getSuggestions()}}" wx:key="index">
+      <text>💡 {{item}}</text>
+    </view>
+  </view>
+</view>

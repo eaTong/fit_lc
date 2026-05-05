@@ -28,6 +28,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /muscles/hierarchy:
+ *   get:
+ *     summary: 获取肌肉层级树
+ *     tags: [肌肉]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 肌肉层级树结构
+ */
+router.get('/hierarchy', async (req, res) => {
+  try {
+    const hierarchy = await muscleRepository.getHierarchy();
+    res.json({ hierarchy });
+  } catch (err) {
+    console.error('Get muscle hierarchy error:', err);
+    res.status(500).json({ error: 'Failed to get muscle hierarchy' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id);

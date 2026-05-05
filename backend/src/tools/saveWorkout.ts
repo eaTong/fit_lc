@@ -41,7 +41,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 检查 PR 突破
       const prResults = [];
       for (const exercise of exercises) {
-        const prResult = await personalRecordService.checkAndUpdatePR(
+        const prResultList = await personalRecordService.checkAndUpdatePR(
           userId,
           exercise.name,
           result.id,
@@ -52,9 +52,8 @@ export const saveWorkoutTool = new DynamicStructuredTool({
             distance: exercise.distance
           }
         );
-        if (prResult.isNewPR) {
-          prResults.push(prResult);
-        }
+        // 将所有新 PR 加入结果
+        prResults.push(...prResultList);
       }
 
       // 更新累计统计
@@ -67,7 +66,23 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 构建成就反馈消息
       let achievementMsg = '';
       if (prResults.length > 0) {
-        const prList = prResults.map(pr => `🏆 ${pr.exerciseName} ${pr.recordType}: ${pr.oldValue || 0}kg → ${pr.newValue}kg`).join('\n');
+        const prList = prResults.map(pr => {
+          const typeLabel = {
+            'max_weight': '重量',
+            'max_volume': '容量',
+            'max_distance': '距离',
+            'max_duration': '时长',
+            'max_speed': '速度'
+          }[pr.recordType] || pr.recordType;
+          const unit = {
+            'max_weight': 'kg',
+            'max_volume': 'kg',
+            'max_distance': 'km',
+            'max_duration': 'min',
+            'max_speed': 'km/h'
+          }[pr.recordType] || '';
+          return `🏆 ${pr.exerciseName} ${typeLabel}: ${pr.oldValue || 0}${unit} → ${pr.newValue}${unit}`;
+        }).join('\n');
         achievementMsg += `\n\n🔥 **个人纪录突破！**\n${prList}`;
       }
       if (achievements.length > 0) {

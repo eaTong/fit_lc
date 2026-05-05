@@ -26,7 +26,22 @@
             class="message-image"
           />
         </view>
-        <text class="message-text">{{item.content}}</text>
+
+        <!-- AI 消息 - 带工具数据，显示卡片 -->
+        <view wx:if="{{item.role === 'assistant' && item.toolData}}" class="tool-card-wrapper">
+          <workout-card wx:if="{{item.toolData.dataType === 'workout'}}" data="{{item.toolData.result}}" />
+          <measurement-card wx:if="{{item.toolData.dataType === 'measurement'}}" data="{{item.toolData.result}}" />
+          <workout-query-card wx:if="{{item.toolData.dataType === 'workout_query'}}" data="{{item.toolData.result}}" />
+          <measurement-query-card wx:if="{{item.toolData.dataType === 'measurement_query'}}" data="{{item.toolData.result}}" />
+          <plan-card wx:if="{{item.toolData.dataType === 'plan'}}" data="{{item.toolData.result}}" />
+          <adjustment-card wx:if="{{item.toolData.dataType === 'plan_adjustment'}}" data="{{item.toolData.result}}" />
+          <analysis-card wx:if="{{item.toolData.dataType === 'execution_analysis'}}" data="{{item.toolData.result}}" />
+        </view>
+
+        <!-- AI 回复文字 -->
+        <text class="message-text" wx:if="{{item.role === 'assistant'}}">{{item.toolData ? item.toolData.aiReply : item.content}}</text>
+        <text class="message-text" wx:else>{{item.content}}</text>
+
         <view wx:if="{{item.savedData}}" class="saved-indicator">
           <text>✓ 已保存</text>
           <text class="revoke-btn" data-id="{{item.id}}" bindtap="onMessageTap">撤销</text>

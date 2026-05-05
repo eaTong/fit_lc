@@ -1,0 +1,30 @@
+<view class="workout-card">
+  <!-- 标题栏 -->
+  <view class="card-header">
+    <text class="card-title">💪 训练记录已保存</text>
+    <text class="card-time">{{formatDate(data.date)}}</text>
+  </view>
+
+  <!-- 动作列表 -->
+  <view class="exercise-list">
+    <view class="exercise-item" wx:for="{{formattedExercises}}" wx:key="index">
+      <view class="exercise-main">
+        <text class="exercise-name">{{item.name}}</text>
+        <text class="exercise-weight" wx:if="{{item.weight}}">{{item.weight}}kg</text>
+      </view>
+      <view class="exercise-detail">
+        <text>{{item.detail}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成就栏 -->
+  <view class="achievement-bar" wx:if="{{getAchievements().length > 0}}">
+    <text wx:for="{{getAchievements()}}" wx:key="index">{{item}}</text>
+  </view>
+
+  <!-- AI 反馈 -->
+  <view class="ai-feedback" wx:if="{{data.feedback && data.feedback.comparison_with_last}}">
+    <text>{{data.feedback.comparison_with_last}} 💪</text>
+  </view>
+</view>
