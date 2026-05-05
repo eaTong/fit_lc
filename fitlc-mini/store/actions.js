@@ -80,6 +80,18 @@ const recordActions = {
     });
   },
 
+  saveMeasurementPart(date, bodyPart, value) {
+    return post('/records/measurement', {
+      date,
+      measurements: [{ body_part: bodyPart, value: parseFloat(value) }]
+    }).then(res => {
+      if (res.measurement) {
+        getStore().setState({ latestMeasurement: res.measurement });
+      }
+      return res.measurement;
+    });
+  },
+
   deleteWorkout(id) {
     return post(`/records/workout/${id}/delete`).then(res => {
       if (res.success) {
