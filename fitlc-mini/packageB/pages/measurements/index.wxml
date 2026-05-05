@@ -47,46 +47,62 @@
       <view class="latest-detail-date">{{formatDetailDate(latestMeasurement.date)}}</view>
 
       <view class="measurements-grid">
-        <!-- Weight -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.weight}}">
-          <text class="item-label">体重</text>
-          <text class="item-value">{{latestMeasurement.weight}}</text>
-          <text class="item-unit">kg</text>
+        <!-- 第一行：独立部位 -->
+        <view class="grid-row">
+          <view class="measurement-cell {{latestMeasurement.weight ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="weight">
+            <text class="cell-label">体重</text>
+            <text class="cell-value">{{latestMeasurement.weight || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.weight ? 'kg' : ''}}</text>
+          </view>
+          <view class="measurement-cell {{latestMeasurement.chest ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="chest">
+            <text class="cell-label">胸围</text>
+            <text class="cell-value">{{latestMeasurement.chest || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.chest ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell {{latestMeasurement.waist ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="waist">
+            <text class="cell-label">腰围</text>
+            <text class="cell-value">{{latestMeasurement.waist || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.waist ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell {{latestMeasurement.hips ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="hips">
+            <text class="cell-label">臀围</text>
+            <text class="cell-value">{{latestMeasurement.hips || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.hips ? 'cm' : ''}}</text>
+          </view>
         </view>
 
-        <!-- Chest -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.chest}}">
-          <text class="item-label">胸围</text>
-          <text class="item-value">{{latestMeasurement.chest}}</text>
-          <text class="item-unit">cm</text>
-        </view>
-
-        <!-- Waist -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.waist}}">
-          <text class="item-label">腰围</text>
-          <text class="item-value">{{latestMeasurement.waist}}</text>
-          <text class="item-unit">cm</text>
-        </view>
-
-        <!-- Hips -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.hips}}">
-          <text class="item-label">臀围</text>
-          <text class="item-value">{{latestMeasurement.hips}}</text>
-          <text class="item-unit">cm</text>
-        </view>
-
-        <!-- Arm -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.arm}}">
-          <text class="item-label">臂围</text>
-          <text class="item-value">{{latestMeasurement.arm}}</text>
-          <text class="item-unit">cm</text>
-        </view>
-
-        <!-- Thigh -->
-        <view class="measurement-item" wx:if="{{latestMeasurement.thigh}}">
-          <text class="item-label">腿围</text>
-          <text class="item-value">{{latestMeasurement.thigh}}</text>
-          <text class="item-unit">cm</text>
+        <!-- 第二行：对称部位 -->
+        <view class="grid-row symmetrical">
+          <view class="measurement-cell half {{latestMeasurement.biceps_l ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="biceps_l">
+            <text class="cell-label">左臂围</text>
+            <text class="cell-value">{{latestMeasurement.biceps_l || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.biceps_l ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell half {{latestMeasurement.biceps_r ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="biceps_r">
+            <text class="cell-label">右臂围</text>
+            <text class="cell-value">{{latestMeasurement.biceps_r || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.biceps_r ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell half {{latestMeasurement.thigh_l ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="thigh_l">
+            <text class="cell-label">左腿围</text>
+            <text class="cell-value">{{latestMeasurement.thigh_l || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.thigh_l ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell half {{latestMeasurement.thigh_r ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="thigh_r">
+            <text class="cell-label">右腿围</text>
+            <text class="cell-value">{{latestMeasurement.thigh_r || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.thigh_r ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell half {{latestMeasurement.calf_l ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="calf_l">
+            <text class="cell-label">左小腿</text>
+            <text class="cell-value">{{latestMeasurement.calf_l || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.calf_l ? 'cm' : ''}}</text>
+          </view>
+          <view class="measurement-cell half {{latestMeasurement.calf_r ? 'filled' : 'empty'}}" bindtap="onCellTap" data-part="calf_r">
+            <text class="cell-label">右小腿</text>
+            <text class="cell-value">{{latestMeasurement.calf_r || ''}}</text>
+            <text class="cell-unit">{{latestMeasurement.calf_r ? 'cm' : ''}}</text>
+          </view>
         </view>
       </view>
 
@@ -189,4 +205,17 @@
       </view>
     </view>
   </scroll-view>
+
+  <!-- 输入弹窗 -->
+  <view class="input-modal {{showInputModal ? 'show' : ''}}" bindtap="onModalTap">
+    <view class="input-panel" catchtap="noop">
+      <text class="input-title">{{inputTargetPartName}}</text>
+      <input class="input-field" type="digit" value="{{inputValue}}" bindinput="onInputChange" placeholder="请输入数值" />
+      <text class="input-unit">{{inputTargetUnit}}</text>
+      <view class="input-actions">
+        <button class="btn-cancel" bindtap="onInputCancel">取消</button>
+        <button class="btn-confirm" bindtap="onInputConfirm">确认</button>
+      </view>
+    </view>
+  </view>
 </view>
