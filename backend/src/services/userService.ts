@@ -6,7 +6,7 @@ export const userService = {
     return prisma.userProfile.findUnique({ where: { userId } });
   },
 
-  async updateProfile(userId: number, data: { nickname?: string; height?: number; avatar?: string }) {
+  async updateProfile(userId: number, data: { nickname?: string; height?: number; weight?: number; bodyFat?: number; experience?: string; goal?: string; avatar?: string; hasOnboarded?: boolean }) {
     return prisma.userProfile.upsert({
       where: { userId },
       create: { userId, ...data },

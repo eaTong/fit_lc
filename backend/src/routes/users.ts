@@ -18,8 +18,20 @@ router.get('/me/profile', async (req, res) => {
 
 router.put('/me/profile', async (req, res) => {
   try {
-    const { nickname, height, avatar } = req.body;
-    const profile = await userService.updateProfile(req.user.id, { nickname, height, avatar });
+    const { nickname, height, weight, bodyFat, experience, goal, avatar } = req.body;
+    const profile = await userService.updateProfile(req.user.id, {
+      nickname, height, weight, bodyFat, experience, goal, avatar
+    });
+    res.json(profile);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/me/profile/onboarded', async (req, res) => {
+  try {
+    const { hasOnboarded } = req.body;
+    const profile = await userService.updateProfile(req.user.id, { hasOnboarded });
     res.json(profile);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
