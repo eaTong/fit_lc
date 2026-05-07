@@ -4,11 +4,14 @@ import express from 'express';
 import plansRouter from '../../../src/routes/plans';
 import { cleanDatabase } from '../../fixtures/factories';
 
-// Mock auth middleware to inject user
-jest.mock('../../../src/middleware/auth', () => ({
-  authMiddleware: (req: any, res: any, next: any) => {
-    req.user = { id: 1, email: 'test@test.com', roles: [] };
-    next();
+// Mock planRepository first (before planService which imports it)
+jest.mock('../../../src/repositories/planRepository', () => ({
+  planRepository: {
+    findAll: jest.fn().mockResolvedValue([]),
+    findById: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({ id: 1 }),
+    update: jest.fn().mockResolvedValue(undefined),
+    delete: jest.fn().mockResolvedValue(undefined)
   }
 }));
 
@@ -25,6 +28,14 @@ jest.mock('../../../src/services/planService', () => ({
     recordExecution: jest.fn().mockResolvedValue(1),
     getPlanAnalysis: jest.fn().mockResolvedValue({}),
     updatePlanExercise: jest.fn().mockResolvedValue(undefined)
+  }
+}));
+
+// Mock auth middleware to inject user
+jest.mock('../../../src/middleware/auth', () => ({
+  authMiddleware: (req: any, res: any, next: any) => {
+    req.user = { id: 1, email: 'test@test.com', roles: [] };
+    next();
   }
 }));
 

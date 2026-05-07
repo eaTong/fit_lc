@@ -10,17 +10,37 @@ jest.mock('../../../src/config/prisma', () => ({
   __esModule: true,
   default: {
     user: {
-      create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com' }),
+      create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com', passwordHash: 'hash' }),
       findUnique: jest.fn().mockResolvedValue(null),
       findFirst: jest.fn().mockResolvedValue(null),
     },
+    role: {
+      findUnique: jest.fn().mockResolvedValue({ id: 1, name: 'normal' }),
+    },
+    userRole: {
+      create: jest.fn().mockResolvedValue({ id: 1 }),
+    },
     $transaction: jest.fn((fn) => fn({
       user: {
-        create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com' }),
+        create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com', passwordHash: 'hash' }),
         findUnique: jest.fn().mockResolvedValue(null),
+      },
+      role: {
+        findUnique: jest.fn().mockResolvedValue({ id: 1, name: 'normal' }),
+      },
+      userRole: {
+        create: jest.fn().mockResolvedValue({ id: 1 }),
       }
     })),
     $disconnect: jest.fn()
+  }
+}));
+
+// Mock userRepository
+jest.mock('../../../src/repositories/userRepository', () => ({
+  userRepository: {
+    findByEmail: jest.fn().mockResolvedValue(null),
+    findById: jest.fn().mockResolvedValue(null),
   }
 }));
 

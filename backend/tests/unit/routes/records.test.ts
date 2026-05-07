@@ -4,6 +4,30 @@ import express from 'express';
 import recordsRouter from '../../../src/routes/records';
 import { cleanDatabase } from '../../fixtures/factories';
 
+// Mock repositories first (before recordService)
+jest.mock('../../../src/repositories/workoutRepository', () => ({
+  workoutRepository: {
+    findByUserAndDateRange: jest.fn().mockResolvedValue([]),
+    findById: jest.fn().mockResolvedValue(null),
+    delete: jest.fn().mockResolvedValue(undefined),
+  }
+}));
+
+jest.mock('../../../src/repositories/measurementRepository', () => ({
+  measurementRepository: {
+    findByUserAndDateRange: jest.fn().mockResolvedValue([]),
+    findById: jest.fn().mockResolvedValue(null),
+    findByDate: jest.fn().mockResolvedValue(null),
+    delete: jest.fn().mockResolvedValue(undefined),
+  }
+}));
+
+jest.mock('../../../src/repositories/statsRepository', () => ({
+  statsRepository: {
+    getUserStats: jest.fn().mockResolvedValue({ totalWorkouts: 0, totalMeasurements: 0 }),
+  }
+}));
+
 // Mock auth middleware to inject user
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: (req: any, res: any, next: any) => {
