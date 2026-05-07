@@ -1,83 +1,221 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { workoutRepository } from '../../../src/repositories/workoutRepository';
-import { measurementRepository } from '../../../src/repositories/measurementRepository';
+
+// Mock the prisma module before importing repository
+jest.mock('../../../src/config/prisma', () => ({
+  __esModule: true,
+  default: {
+    $transaction: jest.fn(async (callback) => {
+      const mockTx = {
+        workout: {
+          create: jest.fn(),
+        },
+        workoutExercise: {
+          create: jest.fn(),
+        },
+      };
+      return callback(mockTx);
+    }),
+    workout: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    workoutExercise: {
+      create: jest.fn(),
+    },
+  },
+}));
+
+// Import after mock
+import { default as prisma } from '../../../src/config/prisma';
 
 describe('WorkoutRepository', () => {
-  it('should be importable', () => {
-    expect(workoutRepository).toBeDefined();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should have create method', () => {
-    expect(typeof workoutRepository.create).toBe('function');
+  describe('create', () => {
+    it('should create a workout', async () => {
+      const mockWorkout = {
+        id: 1,
+        userId: 1,
+        date: new Date('2024-01-15'),
+        deletedAt: null,
+      };
+
+      (prisma.workout.create as jest.Mock).mockResolvedValue(mockWorkout);
+
+      const result = await workoutRepository.create(1, '2024-01-15');
+
+      expect(prisma.workout.create).toHaveBeenCalledWith({
+        data: {
+          userId: 1,
+          date: expect.any(Date),
+        },
+      });
+      expect(result).toEqual(mockWorkout);
+    });
   });
 
-  it('should have createWithExercises method', () => {
-    expect(typeof workoutRepository.createWithExercises).toBe('function');
+  describe('createWithExercises', () => {
+    it('should create workout with exercises in transaction', async () => {
+      const mockWorkout = {
+        id: 1,
+        userId: 1,
+        date: new Date(),
+        deletedAt: null,
+      };
+
+      // Mock $transaction to execute callback with mock tx
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+        const mockTx = {
+          workout: {
+            create: jest.fn().mockResolvedValue(mockWorkout),
+          },
+          workoutExercise: {
+            create: jest.fn().mockResolvedValue({ id: 1, workoutId: 1 }),
+          },
+        };
+        return callback(mockTx);
+      });
+
+      const exercises = [
+        { name: 'Bench Press', sets: 3, reps: 10, weight: 80 },
+      ];
+
+      const result = await workoutRepository.createWithExercises(1, '2024-01-16', exercises);
+
+      expect(result).toBeDefined();
+      expect(result.userId).toBe(1);
+    });
   });
 
-  it('should have findById method', () => {
-    expect(typeof workoutRepository.findById).toBe('function');
+  describe('findById', () => {
+    it('should find workout by id', async () => {
+      const mockWorkout = {
+        id: 1,
+        userId: 1,
+        date: new Date(),
+        deletedAt: null,
+      };
+
+      (prisma.workout.findFirst as jest.Mock).mockResolvedValue(mockWorkout);
+
+      const result = await workoutRepository.findById(1, 1);
+
+      expect(prisma.workout.findFirst).toHaveBeenCalledWith({
+        where: { id: 1, userId: 1, deletedAt: null },
+      });
+      expect(result).toEqual(mockWorkout);
+    });
+
+    it('should return null for non-existent workout', async () => {
+      (prisma.workout.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const result = await workoutRepository.findById(999999, 1);
+
+      expect(result).toBeNull();
+    });
   });
 
-  it('should have findByUserAndDateRange method', () => {
-    expect(typeof workoutRepository.findByUserAndDateRange).toBe('function');
+  describe('findByUserAndDateRange', () => {
+    it('should find workouts within date range', async () => {
+      const mockWorkouts = [
+        { id: 1, userId: 1, date: new Date('2024-01-10'), exercises: [] },
+        { id: 2, userId: 1, date: new Date('2024-01-15'), exercises: [] },
+      ];
+
+      (prisma.workout.findMany as jest.Mock).mockResolvedValue(mockWorkouts);
+
+      const result = await workoutRepository.findByUserAndDateRange(1, '2024-01-01', '2024-01-31');
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should return empty array when no workouts in range', async () => {
+      (prisma.workout.findMany as jest.Mock).mockResolvedValue([]);
+
+      const result = await workoutRepository.findByUserAndDateRange(1, '2025-01-01', '2025-01-31');
+
+      expect(result).toEqual([]);
+    });
   });
 
-  it('should have softDelete method', () => {
-    expect(typeof workoutRepository.softDelete).toBe('function');
+  describe('softDelete', () => {
+    it('should soft delete a workout by setting deletedAt', async () => {
+      const mockDeletedWorkout = {
+        id: 1,
+        deletedAt: new Date(),
+      };
+
+      (prisma.workout.update as jest.Mock).mockResolvedValue(mockDeletedWorkout);
+
+      const result = await workoutRepository.softDelete(1);
+
+      expect(prisma.workout.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { deletedAt: expect.any(Date) },
+      });
+      expect(result.deletedAt).toBeDefined();
+    });
   });
 
-  it('should have restore method', () => {
-    expect(typeof workoutRepository.restore).toBe('function');
+  describe('restore', () => {
+    it('should restore a soft-deleted workout', async () => {
+      const mockRestoredWorkout = {
+        id: 1,
+        deletedAt: null,
+      };
+
+      (prisma.workout.update as jest.Mock).mockResolvedValue(mockRestoredWorkout);
+
+      const result = await workoutRepository.restore(1);
+
+      expect(prisma.workout.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { deletedAt: null },
+      });
+      expect(result.deletedAt).toBeNull();
+    });
   });
 
-  it('should have addExercise method', () => {
-    expect(typeof workoutRepository.addExercise).toBe('function');
-  });
-});
+  describe('addExercise', () => {
+    it('should add an exercise to a workout', async () => {
+      const mockWorkout = { id: 1, userId: 1, deletedAt: null };
+      const mockExercise = {
+        id: 1,
+        workoutId: 1,
+        exerciseName: 'Deadlift',
+        sets: 5,
+        reps: 5,
+      };
 
-describe('MeasurementRepository', () => {
-  it('should be importable', () => {
-    expect(measurementRepository).toBeDefined();
-  });
+      (prisma.workout.findFirst as jest.Mock).mockResolvedValue(mockWorkout);
+      (prisma.workoutExercise.create as jest.Mock).mockResolvedValue(mockExercise);
 
-  it('should have create method', () => {
-    expect(typeof measurementRepository.create).toBe('function');
-  });
+      const result = await workoutRepository.addExercise(1, 1, {
+        name: 'Deadlift',
+        sets: 5,
+        reps: 5,
+        weight: 120,
+      });
 
-  it('should have createWithItems method', () => {
-    expect(typeof measurementRepository.createWithItems).toBe('function');
-  });
+      expect(result).toBeDefined();
+      expect(result.exerciseName).toBe('Deadlift');
+    });
 
-  it('should have findById method', () => {
-    expect(typeof measurementRepository.findById).toBe('function');
-  });
+    it('should throw error for non-existent workout', async () => {
+      (prisma.workout.findFirst as jest.Mock).mockResolvedValue(null);
 
-  it('should have findByDate method', () => {
-    expect(typeof measurementRepository.findByDate).toBe('function');
-  });
-
-  it('should have findByUserAndDateRange method', () => {
-    expect(typeof measurementRepository.findByUserAndDateRange).toBe('function');
-  });
-
-  it('should have softDelete method', () => {
-    expect(typeof measurementRepository.softDelete).toBe('function');
-  });
-
-  it('should have restore method', () => {
-    expect(typeof measurementRepository.restore).toBe('function');
-  });
-
-  it('should have upsertItem method', () => {
-    expect(typeof measurementRepository.upsertItem).toBe('function');
-  });
-
-  it('should have upsertItems method', () => {
-    expect(typeof measurementRepository.upsertItems).toBe('function');
-  });
-
-  it('should have addItem method', () => {
-    expect(typeof measurementRepository.addItem).toBe('function');
+      await expect(
+        workoutRepository.addExercise(999999, 1, {
+          name: 'Test',
+          sets: 3,
+          reps: 10,
+        })
+      ).rejects.toThrow('训练记录不存在或已删除');
+    });
   });
 });
