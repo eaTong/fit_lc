@@ -2,9 +2,40 @@
 // @ts-ignore
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
-// 使用默认 Prisma Client（从环境变量读取 DATABASE_URL）
-const prisma = new PrismaClient();
+// 懒加载 Prisma Client，确保环境变量已设置
+let _prisma: PrismaClient | null = null;
+
+function getPrisma(): PrismaClient {
+  if (!_prisma) {
+    // 加载 .env.test 配置
+    const envTestPath = path.join(__dirname, '../.env.test');
+    if (fs.existsSync(envTestPath)) {
+      const envContent = fs.readFileSync(envTestPath, 'utf-8');
+      envContent.split('\n').forEach(line => {
+        const [key, ...valueParts] = line.split('=');
+        if (key && valueParts.length > 0 && !line.startsWith('#')) {
+          process.env[key.trim()] = valueParts.join('=').trim();
+        }
+      });
+    }
+
+    // 设置默认值
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = 'mysql://eaTong:eaTong%40123@localhost:3306/fitlc_test';
+    }
+    if (!process.env.NODE_ENV) {
+      process.env.NODE_ENV = 'test';
+    }
+
+    _prisma = new PrismaClient();
+  }
+  return _prisma;
+}
+
+const prisma = getPrisma();
 
 export const createTestUser = async (overrides = {}) => {
   const email = `test-${Date.now()}@example.com`;
