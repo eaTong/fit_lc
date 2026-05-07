@@ -22,7 +22,7 @@ describe('dateUtils', () => {
     });
 
     it('should throw for invalid date', () => {
-      expect(() => toDateStr('invalid' as any)).toThrow('Invalid date');
+      expect(() => toDateStr('invalid' as any)).toThrow('无效的日期参数');
     });
   });
 
