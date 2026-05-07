@@ -20,7 +20,7 @@
   <!-- Empty State -->
   <view wx:elif="{{filteredPlans.length === 0}}" class="empty-state">
     <text class="empty-icon">📋</text>
-    <text class="empty-title">暂无{{activeTab === 'all' ? '' : statusTabs[activeTab]?.label || ''}}计划</text>
+    <text class="empty-title">暂无{{activeTab === 'all' ? '' : statusTabs[activeTab].label}}计划</text>
     <text class="empty-desc">开始创建你的第一个健身计划吧</text>
     <view class="empty-btn" bindtap="onCreatePlan">
       <text class="btn-text">生成新计划</text>

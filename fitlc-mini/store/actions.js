@@ -73,10 +73,22 @@ const recordActions = {
 
   fetchLatestMeasurement() {
     return get('/users/me/measurements/latest').then(res => {
-      if (res.measurement) {
-        getStore().setState({ latestMeasurement: res.measurement });
+      // userService.getMeasurementsLatest 返回 { measurements: { weight: {value, date}, chest: {...}, ... } }
+      // 需要扁平化为 { weight: value, chest: value, date: 'YYYY-MM-DD', ... }
+      const measurementsObj = res.measurements || {};
+      const flatMeasurement = { date: new Date().toISOString().split('T')[0] };
+
+      // 遍历所有部位，提取 value
+      for (const [key, val] of Object.entries(measurementsObj)) {
+        if (val && typeof val === 'object' && 'value' in val) {
+          flatMeasurement[key] = val.value;
+        }
       }
-      return res.measurement || null;
+
+      if (Object.keys(flatMeasurement).length > 1) {
+        getStore().setState({ latestMeasurement: flatMeasurement });
+      }
+      return flatMeasurement;
     });
   },
 

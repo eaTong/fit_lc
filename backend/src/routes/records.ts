@@ -12,6 +12,20 @@ function getQueryString(val: unknown): string {
   return '';
 }
 
+// 将 measurement 的 items 数组扁平化为一级属性
+function flattenMeasurement(measurement: any) {
+  if (!measurement) return null;
+  const { id, date, items, ...rest } = measurement;
+  const result: any = { id, date, ...rest };
+  if (items && Array.isArray(items)) {
+    for (const item of items) {
+      // 将 bodyPart 转为 snake_case（如 biceps_l）
+      result[item.bodyPart] = Number(item.value);
+    }
+  }
+  return result;
+}
+
 /**
  * @swagger
  * /records/workouts:
@@ -92,6 +106,89 @@ router.get('/measurements', async (req: Request, res: Response) => {
     res.json({ measurements });
   } catch (err) {
     console.error('Get measurements error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /records/measurement:
+ *   post:
+ *     summary: 创建或更新围度记录（单个部位）
+ *     tags: [记录]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 description: 日期 (YYYY-MM-DD)，不提供则使用今天
+ *               body_part:
+ *                 type: string
+ *                 description: 部位名称 (如 weight, chest, biceps_l)
+ *               value:
+ *                 type: number
+ *                 description: 测量值
+ *               measurements:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     body_part:
+ *                       type: string
+ *                     value:
+ *                       type: number
+ *                 description: 部位列表（与 body_part/value 二选一）
+ *     responses:
+ *       200:
+ *         description: 保存成功
+ *       400:
+ *         description: 参数错误
+ */
+router.post('/measurement', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { date, body_part, value, measurements } = req.body;
+
+    const measurementDate = date || new Date().toISOString().split('T')[0];
+
+    // 支持两种格式：单独 body_part/value 或 measurements 数组
+    let items: { bodyPart: string; value: number }[] = [];
+
+    if (measurements && Array.isArray(measurements)) {
+      items = measurements.map((m: any) => ({
+        bodyPart: m.body_part,
+        value: m.value
+      }));
+    } else if (body_part && value !== undefined) {
+      items = [{ bodyPart: body_part, value }];
+    } else {
+      return res.status(400).json({ error: 'body_part/value or measurements array is required' });
+    }
+
+    // 查找当天是否已有记录
+    let measurement = await measurementRepository.findByDate(userId, measurementDate);
+
+    if (measurement) {
+      // 更新或添加每个部位
+      for (const item of items) {
+        await measurementRepository.upsertItem(measurement.id, item.bodyPart, item.value);
+      }
+      // 重新获取完整记录
+      measurement = await measurementRepository.findById(measurement.id, userId);
+    } else {
+      // 创建新记录
+      measurement = await measurementRepository.createWithItems(userId, measurementDate, items);
+    }
+
+    // 扁平化返回格式，将 items 数组转为一级属性
+    const flatMeasurement = flattenMeasurement(measurement);
+    res.json({ measurement: flatMeasurement });
+  } catch (err) {
+    console.error('Create measurement error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

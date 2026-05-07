@@ -340,23 +340,26 @@
   display: flex;
   gap: 16rpx;
   margin-bottom: 16rpx;
-  padding-right: 8rpx;
   box-sizing: border-box;
   width: 100%;
 }
 
-.grid-row.symmetric {
+/* Half row: 2 items per row */
+.grid-row.half {
   flex-wrap: wrap;
 }
 
-/* First row: 4 independent items - equal width */
-.grid-row:not(.symmetrical) .measurement-cell {
-  flex: 1 1 0;
-  min-width: 0;
+/* Non-half row: 1 item per row (full width) */
+.grid-row:not(.half) {
+  flex-direction: column;
 }
 
-/* Symmetrical row: 2 per row */
-.grid-row.symmetric .measurement-cell {
+.grid-row:not(.half) .measurement-cell {
+  width: 100%;
+}
+
+/* Half row: 2 cells at 50% each */
+.grid-row.half .measurement-cell {
   flex: 0 0 calc(50% - 8rpx);
   min-width: 0;
 }
@@ -364,12 +367,12 @@
 /* Measurement Cell */
 .measurement-cell {
   flex: 1;
-  min-height: 160rpx;
+  min-height: 120rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16rpx;
+  padding: 12rpx;
   background-color: var(--color-bg-tertiary, #252525);
   border: 2px solid var(--color-border, #333333);
   border-radius: 4rpx;

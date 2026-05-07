@@ -10,6 +10,66 @@ export const measurementRepository = {
     });
   },
 
+  async createWithItems(userId: number, date: string, items: { bodyPart: string; value: number }[]) {
+    return prisma.bodyMeasurement.create({
+      data: {
+        userId,
+        date: new Date(date),
+        items: {
+          create: items.map(item => ({
+            bodyPart: item.bodyPart,
+            value: item.value
+          }))
+        }
+      },
+      include: {
+        items: true
+      }
+    });
+  },
+
+  async findByDate(userId: number, date: string) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return prisma.bodyMeasurement.findFirst({
+      where: {
+        userId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay
+        },
+        deletedAt: null
+      },
+      include: {
+        items: true
+      }
+    });
+  },
+
+  async upsertItem(measurementId: number, bodyPart: string, value: number) {
+    const existing = await prisma.measurementItem.findFirst({
+      where: { measurementId, bodyPart }
+    });
+
+    if (existing) {
+      return prisma.measurementItem.update({
+        where: { id: existing.id },
+        data: { value }
+      });
+    }
+
+    return prisma.measurementItem.create({
+      data: {
+        measurementId,
+        bodyPart,
+        value
+      }
+    });
+  },
+
   async addItem(measurementId: number, bodyPart: string, value: number) {
     if (bodyPart === undefined || value === undefined) {
       return null;
@@ -64,7 +124,10 @@ export const measurementRepository = {
 
   async findById(id: number, userId: number) {
     return prisma.bodyMeasurement.findFirst({
-      where: { id, userId, deletedAt: null }
+      where: { id, userId, deletedAt: null },
+      include: {
+        items: true
+      }
     });
   },
 
