@@ -1,11 +1,23 @@
-// @ts-nocheck
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 
-// TODO: 补充必填字段说明，当信息不完整时让 AI 先追问用户
+// Types for the tool
+type BodyPart = "chest" | "waist" | "hips" | "biceps" | "thighs" | "calves" | "other" | "weight" | "bodyFat";
+
+interface MeasurementInput {
+  body_part: BodyPart;
+  value: number;
+}
+
+interface ToolInput {
+  userId: number;
+  date?: string;
+  measurements: MeasurementInput[];
+}
+
 export const saveMeasurementTool = new DynamicStructuredTool({
   name: "save_measurement",
   description: `当用户要记录身体围度时使用。不要在记录训练时使用。
@@ -30,7 +42,7 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       value: z.number().describe("数值(cm)或(kg/%)")
     }))
   }),
-  func: async ({ userId, date, measurements }) => {
+  func: async ({ userId, date, measurements }: ToolInput) => {
     try {
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];

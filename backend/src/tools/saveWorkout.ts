@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
@@ -7,8 +6,24 @@ import { personalRecordService } from '../services/personalRecordService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 
+// Types for the tool
+interface ExerciseInput {
+  name: string;
+  sets?: number;
+  reps?: number;
+  weight?: number;
+  duration?: number;
+  distance?: number;
+}
+
+interface ToolInput {
+  userId: number;
+  date?: string;
+  exercises: ExerciseInput[];
+}
+
 // 验证单个动作是否包含足够信息
-function validateExercise(exercise: { name: string; weight?: number; sets?: number; reps?: number; duration?: number; distance?: number }): { valid: boolean; missingFields: { field: string; label: string }[] } {
+function validateExercise(exercise: ExerciseInput): { valid: boolean; missingFields: { field: string; label: string }[] } {
   const missingFields: { field: string; label: string }[] = [];
 
   if (!exercise.name) {
@@ -55,7 +70,7 @@ function validateExercise(exercise: { name: string; weight?: number; sets?: numb
 }
 
 // 验证所有动作
-function validateExercises(exercises: any[]): { valid: boolean; missingFields: { field: string; label: string }[]; exerciseName?: string } {
+function validateExercises(exercises: ExerciseInput[]): { valid: boolean; missingFields: { field: string; label: string }[]; exerciseName?: string } {
   for (const exercise of exercises) {
     const result = validateExercise(exercise);
     if (!result.valid) {
@@ -103,7 +118,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       distance: z.number().optional().describe("距离(公里)")
     }))
   }),
-  func: async ({ userId, date, exercises }) => {
+  func: async ({ userId, date, exercises }: ToolInput) => {
     try {
       // 验证动作信息完整性
       const validation = validateExercises(exercises);
@@ -201,8 +216,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
             distance: e.distance
           })),
           feedback: {
-            personalized_comment: feedback.personalized_comment,
-            comparison_with_last: feedback.comparison_with_last
+            personalized_comment: feedback.personalized_comment
           },
           achievements: prResults.length > 0 || achievements.length > 0 || milestones.length > 0 ? {
             isNewPR: prResults.length > 0,

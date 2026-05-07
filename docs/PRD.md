@@ -2,8 +2,8 @@
 
 > **注意：** 本文档为正式版 PRD，记录已实现的功能。全部需求（包括未实现的）请参见 [PRD-planning.md](./PRD-planning.md)。
 
-**版本：** 1.9
-**日期：** 2026-05-01
+**版本：** 2.1
+**日期：** 2026-05-07
 **状态：** 已上线
 
 ---
@@ -183,7 +183,23 @@ VisionPreprocessor 插件拦截
 - `AI_VISION_PROVIDER=zhipu`（固定使用 Zhipu）
 - `AI_VISION_MODEL=GLM-4V-Flash`（免费视觉模型）
 
-#### 3.1.12 Tool 返回格式
+#### 3.1.12 saveWorkout 必填字段验证
+Tool 在调用前会验证动作信息完整性：
+
+**验证规则：**
+| 训练类型 | 必填字段 | 说明 |
+|---------|---------|------|
+| 力量训练 | weight + (sets 或 reps) | 如"卧推80kg 5组每组8个" |
+| 有氧训练 | duration 或 distance | 如"跑步30分钟"、"跑了5公里" |
+| 徒手训练 | sets + reps | 如"俯卧撑20个分4组" |
+
+**信息不完整时：** Tool 返回 `status: 'needs_more_info'`，AI 追问用户补充信息后再调用。
+
+**示例：**
+- 用户说"卧推80公斤" → AI 追问："卧推80公斤，几组每组几次呢？"
+- 用户说"做了俯卧撑" → AI 追问："做了多少组，每组几次？"
+
+#### 3.1.13 Tool 返回格式
 AI Tools 返回统一 JSON 格式，包含三个字段：
 
 | 字段 | 类型 | 说明 |
@@ -752,10 +768,21 @@ Router → Service → Repository
 | 层级 | 职责 |
 |------|------|
 | Router | HTTP路由、参数校验、权限校验 |
-| Service | 业务逻辑、事务管理 |
-| Repository | 数据库访问、ORM操作 |
+| Service | 业务逻辑编排（无事务） |
+| Repository | 数据库访问、ORM操作、事务边界 |
 
-### 5.3 LangChain Agent Tools
+### 5.3 事务边界规范
+**事务必须在 Repository 层管理**，Service 层不直接使用 `prisma.$transaction`。
+
+| 操作 | 事务位置 | 说明 |
+|------|---------|------|
+| saveWorkout | workoutRepository.createWithExercises() | 训练+动作一次性创建 |
+| saveMeasurement | measurementRepository.createWithItems() | 围度记录+项目一次性创建 |
+| updateMeasurementPart | measurementRepository.upsertItems() | 批量 upsert 围度项目 |
+| createPlan | planRepository.createWithExercises() | 计划+动作一次性创建 |
+| planExecution | planRepository.recordExecution() | 单条执行记录 |
+
+### 5.4 LangChain Agent Tools
 | Tool | 功能 |
 |------|------|
 | save_workout | 记录训练数据 |
@@ -1070,3 +1097,4 @@ GROUP BY m.group
 | 1.8 | 2026-05-01 | "知识"页面改名为"动作"；整合肌肉库和动作库到同一页面；肌肉列表紧凑显示，点击展开详情并展示关联动作；增加动作筛选（难度、器械类型、类别）；新增动作详情页/exercises/:id，显示全部字段（视频、步骤、安全注意事项、常见错误、调整说明、转换指南）；exerciseType和variantType显示中文标签 |
 | 1.9 | 2026-05-01 | 围度记录date字段从DATE改为DATETIME，支持同一天多次记录（体重/体脂早晚记录）；支持bodyPart为weight和bodyFat；修复日期范围查询bug |
 | 2.0 | 2026-05-01 | 支持左右对称部位单独记录（左/右臂围、左/右大腿围、左/右小腿围）；聊天消息保存imageUrls字段；OSS改为公开URL；AI文本解析兜底保存围度/训练数据；头像上传改为FormData方式 |
+| 2.1 | 2026-05-07 | 架构重构：事务边界统一到Repository层；saveWorkout Tool增加必填字段验证（力量/有氧/徒手训练分类）；新增recordService统一记录查询；measurementRepository.upsertItems使用事务 |

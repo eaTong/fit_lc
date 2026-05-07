@@ -1,17 +1,49 @@
-// @ts-nocheck
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
 import { exerciseRepository } from '../repositories/exerciseRepository';
 
+// Types matching the Zod schema
+type Goal = 'bulk' | 'cut' | 'maintain';
+type Experience = 'beginner' | 'intermediate' | 'advanced';
+
+interface UserProfile {
+  name?: string;
+  goal: Goal;
+  frequency: number;
+  experience: Experience;
+  equipment: string;
+  targetMuscles?: string[];
+  conditions?: string;
+  body_weight: number;
+  body_fat?: number;
+  height: number;
+  duration_weeks: number;
+}
+
+interface GeneratedExercise {
+  exerciseId: number | null;
+  exerciseName: string;
+  dayOfWeek: number;
+  targetMuscles: string | null;
+  sets: number;
+  reps: string;
+  weight: number | null;
+  duration: number | null;
+  restSeconds: number;
+  orderIndex: number;
+}
+
+interface ToolInput {
+  userId: number;
+  user_profile: UserProfile;
+}
+
 /**
  * Generate exercises for workout plan based on user profile
  * Queries from Exercise table based on equipment, difficulty, and muscle groups
- *
- * @param {Object} userProfile - User profile with goal, frequency, experience, equipment
- * @returns {Array} Array of exercise objects with exerciseId and targetMuscles
  */
-export async function generateExercisesForProfile(userProfile) {
+export async function generateExercisesForProfile(userProfile: UserProfile): Promise<GeneratedExercise[]> {
   const { goal, frequency, experience, equipment, targetMuscles } = userProfile;
 
   // 解析器械列表
@@ -186,7 +218,7 @@ export async function generateExercisesForProfile(userProfile) {
 /**
  * 备用动作生成（当动作库为空时使用）
  */
-function generateFallbackExercises(userProfile) {
+function generateFallbackExercises(userProfile: UserProfile): GeneratedExercise[] {
   const { goal, frequency, experience } = userProfile;
 
   const exerciseSets = goal === 'bulk' ? 4 : 3;
@@ -276,7 +308,7 @@ export const generatePlanTool = new DynamicStructuredTool({
       duration_weeks: z.number().describe("计划周期(周)")
     })
   }),
-  func: async ({ userId, user_profile }) => {
+  func: async ({ userId, user_profile }: ToolInput) => {
     try {
       // Generate exercises based on user profile
       const exercises = await generateExercisesForProfile(user_profile);

@@ -1,11 +1,27 @@
-// @ts-nocheck
 import prisma from '../config/prisma';
+import { Workout, WorkoutExercise } from '@prisma/client';
 
 interface WorkoutFeedback {
   pr_detected: boolean;
   volume_change: 'up' | 'same' | 'down';
   consistency_streak: number;
   personalized_comment: string;
+}
+
+interface WorkoutWithExercises extends Workout {
+  exercises: WorkoutExercise[];
+}
+
+interface PRCheckResult {
+  detected: boolean;
+  exercise?: string;
+  oldWeight?: number;
+  newWeight?: number;
+}
+
+interface VolumeChangeResult {
+  direction: 'up' | 'same' | 'down';
+  percentage?: number;
 }
 
 export async function generateWorkoutFeedback(
@@ -94,7 +110,7 @@ async function calculateStreak(userId: number): Promise<number> {
   return streak;
 }
 
-async function checkPR(userId: number, exercises: any[]): Promise<{ detected: boolean; exercise?: string; oldWeight?: number; newWeight?: number }> {
+async function checkPR(userId: number, exercises: WorkoutExercise[]): Promise<PRCheckResult> {
   // Collect exercise names with weights
   const exercisesWithWeight = exercises.filter(ex => ex.weight);
   if (exercisesWithWeight.length === 0) {
@@ -131,7 +147,7 @@ async function checkPR(userId: number, exercises: any[]): Promise<{ detected: bo
   return { detected: false };
 }
 
-async function calculateVolumeChange(userId: number, workout: any): Promise<{ direction: 'up' | 'same' | 'down'; percentage?: number }> {
+async function calculateVolumeChange(userId: number, workout: WorkoutWithExercises): Promise<VolumeChangeResult> {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -164,7 +180,7 @@ async function calculateVolumeChange(userId: number, workout: any): Promise<{ di
   return { direction: 'same' };
 }
 
-function generateComment(prResult: any, volumeChange: any, streak: number, workout: any): string {
+function generateComment(prResult: PRCheckResult, volumeChange: VolumeChangeResult, streak: number, workout: WorkoutWithExercises): string {
   const parts: string[] = [];
 
   if (prResult.detected) {

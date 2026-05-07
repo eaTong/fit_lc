@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Router } from 'express';
 import { uploadChatImage, uploadAudio } from '../config/oss';
 import multer from 'multer';
@@ -9,7 +8,7 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
@@ -96,7 +95,7 @@ router.post('/image', upload.single('file'), async (req, res) => {
 const audioUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('audio/')) {
       cb(null, true);
     } else {

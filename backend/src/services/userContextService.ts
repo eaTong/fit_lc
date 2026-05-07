@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { userContextRepository } from '../repositories/userContextRepository';
 import { workoutRepository } from '../repositories/workoutRepository';
 import { measurementRepository } from '../repositories/measurementRepository';
@@ -6,13 +5,22 @@ import { planRepository } from '../repositories/planRepository';
 import { userRepository } from '../repositories/userRepository';
 import { createModel } from '../agents/chatMiniMax';
 
-const locks = new Map();
+interface AIMessageContent {
+  type: 'text';
+  text: string;
+}
 
-function sleep(ms) {
+interface AIMessage {
+  content: string | AIMessageContent[];
+}
+
+const locks = new Map<number, boolean>();
+
+function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function extractText(response) {
+function extractText(response: AIMessage): string {
   if (typeof response.content === 'string') return response.content;
   if (Array.isArray(response.content)) {
     return response.content.find(p => p.type === 'text')?.text || '';
@@ -21,7 +29,7 @@ function extractText(response) {
 }
 
 export const userContextService = {
-  async getOrCreateContext(userId) {
+  async getOrCreateContext(userId: number) {
     let ctx = await userContextRepository.getByUserId(userId);
     if (!ctx) {
       await userContextRepository.create(userId);
@@ -31,7 +39,7 @@ export const userContextService = {
     return ctx;
   },
 
-  async refreshContextWithLock(userId, latestDialogue) {
+  async refreshContextWithLock(userId: number, latestDialogue: string) {
     while (locks.get(userId)) {
       await sleep(100);
     }
@@ -43,7 +51,7 @@ export const userContextService = {
     }
   },
 
-  async refreshContext(userId, latestDialogue) {
+  async refreshContext(userId: number, latestDialogue: string) {
     const current = await userContextRepository.getByUserId(userId);
     if (!current) return;
 

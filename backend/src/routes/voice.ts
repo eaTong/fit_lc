@@ -1,5 +1,5 @@
-// @ts-nocheck
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
+import { UploadedFile } from 'express-fileupload';
 
 const router = Router();
 
@@ -30,9 +30,10 @@ const router = Router();
  *       401:
  *         description: 未授权
  */
-router.post('/transcribe', async (req, res) => {
+router.post('/transcribe', async (req: Request, res: Response) => {
   try {
-    if (!req.files || !req.files.audio) {
+    const files = req.files;
+    if (!files || !files.audio) {
       return res.status(400).json({ error: 'No audio file provided', success: false });
     }
 
@@ -40,7 +41,7 @@ router.post('/transcribe', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized', success: false });
     }
 
-    const audioFile = req.files.audio;
+    const audioFile = files.audio as UploadedFile;
     const apiKey = process.env.MINIMAX_API_KEY;
 
     if (!apiKey) {

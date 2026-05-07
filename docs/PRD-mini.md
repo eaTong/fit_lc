@@ -2,8 +2,8 @@
 
 > **注意：** 本文档为微信小程序版 PRD，记录已实现的功能。
 
-**版本：** 1.0
-**日期：** 2026-05-02
+**版本：** 1.1
+**日期：** 2026-05-07
 **状态：** 已上线
 
 ---
@@ -337,14 +337,31 @@ fitlc-mini/
 |------|------|------|
 | GET | /api/records/workouts | 训练历史 |
 | GET | /api/records/measurements | 围度历史 |
+| DELETE | /api/records/workout/:id | 软删除训练 |
+| DELETE | /api/records/measurement/:id | 软删除围度 |
+| POST | /api/records/workout/:id/restore | 恢复训练 |
+| POST | /api/records/measurement/:id/restore | 恢复围度 |
 
-### 7.4 动作库
+### 7.4 围度记录（Inline Edit）
+
+#### 7.4.1 网格布局
+- 3列网格展示所有身体部位
+- 左右对称部位（臂围/大腿围/小腿围）并排显示
+- 最新记录值直接显示在网格中
+
+#### 7.4.2 Inline Edit
+- 点击网格单元 → 弹出输入框
+- 输入框显示部位名称 placeholder
+- 确认后调用 API 更新：`POST /api/records/measurement/:id/items`
+- 支持同时修改多个部位后批量保存
+
+### 7.5 动作库
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/exercises | 动作列表 |
 | GET | /api/exercises/:id | 动作详情 |
 
-### 7.5 健身计划
+### 7.6 健身计划
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | /api/plans/generate | AI 生成计划 |
@@ -352,13 +369,13 @@ fitlc-mini/
 | GET | /api/plans/:id | 计划详情 |
 | POST | /api/plans/:id/executions | 执行打卡 |
 
-### 7.6 成就系统
+### 7.7 成就系统
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/achievements/badges | 用户徽章 |
 | GET | /api/achievements/stats | 累计统计 |
 
-### 7.7 相册
+### 7.8 相册
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/album/photos | 获取照片 |
@@ -371,6 +388,7 @@ fitlc-mini/
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | 1.0 | 2026-05-02 | 初始版本，微信小程序 PRD |
+| 1.1 | 2026-05-07 | 新增围度记录Inline Edit功能；修复API端点（delete改用DELETE方法）；更新围度模块API |
 
 ### B. 相关文档
 | 文档 | 路径 |
