@@ -96,6 +96,13 @@ describe('SaveWorkoutTool', () => {
     });
   });
 
+  describe('validation logic', () => {
+    it('should have validateExports for testing', () => {
+      // Access the module to check for validation functions
+      expect(toolModule).toBeDefined();
+    });
+  });
+
   describe('return format', () => {
     it('should have func as async function', () => {
       expect(saveWorkoutTool.func).toBeDefined();

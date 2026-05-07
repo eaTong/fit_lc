@@ -173,10 +173,8 @@ router.post('/measurement', async (req: Request, res: Response) => {
     let measurement = await measurementRepository.findByDate(userId, measurementDate);
 
     if (measurement) {
-      // 更新或添加每个部位
-      for (const item of items) {
-        await measurementRepository.upsertItem(measurement.id, item.bodyPart, item.value);
-      }
+      // 原子性更新所有部位
+      await measurementRepository.upsertItems(measurement.id, items);
       // 重新获取完整记录
       measurement = await measurementRepository.findById(measurement.id, userId);
     } else {

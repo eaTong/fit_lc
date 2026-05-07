@@ -70,6 +70,31 @@ export const measurementRepository = {
     });
   },
 
+  async upsertItems(measurementId: number, items: { bodyPart: string; value: number }[]) {
+    return prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        const existing = await tx.measurementItem.findFirst({
+          where: { measurementId, bodyPart: item.bodyPart }
+        });
+
+        if (existing) {
+          await tx.measurementItem.update({
+            where: { id: existing.id },
+            data: { value: item.value }
+          });
+        } else {
+          await tx.measurementItem.create({
+            data: {
+              measurementId,
+              bodyPart: item.bodyPart,
+              value: item.value
+            }
+          });
+        }
+      }
+    });
+  },
+
   async addItem(measurementId: number, bodyPart: string, value: number) {
     if (bodyPart === undefined || value === undefined) {
       return null;

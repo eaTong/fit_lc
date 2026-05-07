@@ -1,7 +1,7 @@
 // Actions for Mini Program
 const Store = require('./index');
 const config = require('../config');
-const { get, post, put, upload } = require('../api/client');
+const { get, post, put, upload, del } = require('../api/client');
 const albumActions = require('../api/album');
 const chatActions = require('../api/chat');
 
@@ -105,7 +105,7 @@ const recordActions = {
   },
 
   deleteWorkout(id) {
-    return post(`/records/workout/${id}/delete`).then(res => {
+    return del(`/records/workout/${id}`).then(res => {
       if (res.success) {
         const workouts = getStore().getState().workouts.filter(w => w.id !== id);
         getStore().setState({ workouts });
@@ -115,7 +115,7 @@ const recordActions = {
   },
 
   deleteMeasurement(id) {
-    return post(`/records/measurement/${id}/delete`).then(res => {
+    return del(`/records/measurement/${id}`).then(res => {
       if (res.success) {
         const measurements = getStore().getState().measurements.filter(m => m.id !== id);
         getStore().setState({ measurements });
