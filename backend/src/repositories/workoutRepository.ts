@@ -1,6 +1,41 @@
 import prisma from '../config/prisma';
+import { Decimal } from '@prisma/client/runtime/client';
 
 export const workoutRepository = {
+  async createWithExercises(userId: number, date: string, exercises: {
+    name: string;
+    sets?: number;
+    reps?: number;
+    weight?: number;
+    duration?: number;
+    distance?: number;
+  }[]) {
+    return prisma.$transaction(async (tx) => {
+      const newWorkout = await tx.workout.create({
+        data: {
+          userId,
+          date: new Date(date)
+        }
+      });
+
+      for (const exercise of exercises) {
+        await tx.workoutExercise.create({
+          data: {
+            workoutId: newWorkout.id,
+            exerciseName: exercise.name,
+            sets: exercise.sets ?? null,
+            reps: exercise.reps ?? null,
+            weight: exercise.weight ? new Decimal(exercise.weight.toString()) : null,
+            duration: exercise.duration ?? null,
+            distance: exercise.distance ? new Decimal(exercise.distance.toString()) : null
+          }
+        });
+      }
+
+      return newWorkout;
+    });
+  },
+
   async create(userId: number, date: string) {
     return prisma.workout.create({
       data: {

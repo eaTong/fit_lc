@@ -1,7 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { workoutRepository } from '../repositories/workoutRepository';
-import { measurementRepository } from '../repositories/measurementRepository';
-import { statsRepository } from '../repositories/statsRepository';
+import { recordService } from '../services/recordService';
 
 const router = Router();
 
@@ -19,7 +17,6 @@ function flattenMeasurement(measurement: any) {
   const result: any = { id, date, ...rest };
   if (items && Array.isArray(items)) {
     for (const item of items) {
-      // 将 bodyPart 转为 snake_case（如 biceps_l）
       result[item.bodyPart] = Number(item.value);
     }
   }
@@ -55,12 +52,7 @@ router.get('/workouts', async (req: Request, res: Response) => {
     const startStr = getQueryString(start);
     const endStr = getQueryString(end);
 
-    const workouts = await workoutRepository.findByUserAndDateRange(
-      userId,
-      startStr || undefined,
-      endStr || undefined
-    );
-
+    const workouts = await recordService.getWorkouts(userId, startStr || undefined, endStr || undefined);
     res.json({ workouts });
   } catch (err) {
     console.error('Get workouts error:', err);
@@ -97,12 +89,7 @@ router.get('/measurements', async (req: Request, res: Response) => {
     const startStr = getQueryString(start);
     const endStr = getQueryString(end);
 
-    const measurements = await measurementRepository.findByUserAndDateRange(
-      userId,
-      startStr || undefined,
-      endStr || undefined
-    );
-
+    const measurements = await recordService.getMeasurements(userId, startStr || undefined, endStr || undefined);
     res.json({ measurements });
   } catch (err) {
     console.error('Get measurements error:', err);
@@ -155,7 +142,6 @@ router.post('/measurement', async (req: Request, res: Response) => {
 
     const measurementDate = date || new Date().toISOString().split('T')[0];
 
-    // 支持两种格式：单独 body_part/value 或 measurements 数组
     let items: { bodyPart: string; value: number }[] = [];
 
     if (measurements && Array.isArray(measurements)) {
@@ -169,20 +155,15 @@ router.post('/measurement', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'body_part/value or measurements array is required' });
     }
 
-    // 查找当天是否已有记录
-    let measurement = await measurementRepository.findByDate(userId, measurementDate);
+    let measurement = await recordService.getMeasurementByDate(userId, measurementDate);
 
     if (measurement) {
-      // 原子性更新所有部位
-      await measurementRepository.upsertItems(measurement.id, items);
-      // 重新获取完整记录
-      measurement = await measurementRepository.findById(measurement.id, userId);
+      await recordService.upsertMeasurementItems(measurement.id, items);
+      measurement = await recordService.getMeasurement(measurement.id, userId);
     } else {
-      // 创建新记录
-      measurement = await measurementRepository.createWithItems(userId, measurementDate, items);
+      measurement = await recordService.createMeasurementWithItems(userId, measurementDate, items);
     }
 
-    // 扁平化返回格式，将 items 数组转为一级属性
     const flatMeasurement = flattenMeasurement(measurement);
     res.json({ measurement: flatMeasurement });
   } catch (err) {
@@ -204,7 +185,7 @@ router.post('/measurement', async (req: Request, res: Response) => {
 router.get('/stats', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const stats = await statsRepository.getStats(userId);
+    const stats = await recordService.getStats(userId);
     res.json(stats);
   } catch (err) {
     console.error('Get stats error:', err);
@@ -218,16 +199,15 @@ router.delete('/workout/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    const workout = await workoutRepository.findById(Number(id), userId);
-    if (!workout) {
-      return res.status(404).json({ error: 'Record not found' });
-    }
-
-    await workoutRepository.softDelete(Number(id));
+    await recordService.deleteWorkout(Number(id), userId);
     res.json({ success: true });
-  } catch (err) {
+  } catch (err as any) {
     console.error('Delete workout error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    if (err.message === '训练记录不存在') {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
@@ -237,16 +217,15 @@ router.delete('/measurement/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    const measurement = await measurementRepository.findById(Number(id), userId);
-    if (!measurement) {
-      return res.status(404).json({ error: 'Record not found' });
-    }
-
-    await measurementRepository.softDelete(Number(id));
+    await recordService.deleteMeasurement(Number(id), userId);
     res.json({ success: true });
-  } catch (err) {
+  } catch (err as any) {
     console.error('Delete measurement error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    if (err.message === '围度记录不存在') {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
@@ -256,16 +235,15 @@ router.post('/workout/:id/restore', async (req: Request, res: Response) => {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    const workout = await workoutRepository.findById(Number(id), userId);
-    if (!workout) {
-      return res.status(404).json({ error: 'Record not found' });
-    }
-
-    await workoutRepository.restore(Number(id));
+    await recordService.restoreWorkout(Number(id), userId);
     res.json({ success: true });
-  } catch (err) {
+  } catch (err as any) {
     console.error('Restore workout error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    if (err.message === '训练记录不存在') {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
@@ -275,16 +253,15 @@ router.post('/measurement/:id/restore', async (req: Request, res: Response) => {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    const measurement = await measurementRepository.findById(Number(id), userId);
-    if (!measurement) {
-      return res.status(404).json({ error: 'Record not found' });
-    }
-
-    await measurementRepository.restore(Number(id));
+    await recordService.restoreMeasurement(Number(id), userId);
     res.json({ success: true });
-  } catch (err) {
+  } catch (err as any) {
     console.error('Restore measurement error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    if (err.message === '围度记录不存在') {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 

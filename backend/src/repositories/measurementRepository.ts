@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { Decimal } from '@prisma/client/runtime/client';
 
 export const measurementRepository = {
   async create(userId: number, date: string) {
@@ -18,7 +19,7 @@ export const measurementRepository = {
         items: {
           create: items.map(item => ({
             bodyPart: item.bodyPart,
-            value: item.value
+            value: new Decimal(item.value.toString())
           }))
         }
       },

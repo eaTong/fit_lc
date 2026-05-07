@@ -2,6 +2,71 @@ import prisma from '../config/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 
 export const planRepository = {
+  async createWithExercises(userId: number, userProfile: {
+    name?: string;
+    goal: string;
+    frequency: number;
+    experience: string;
+    equipment: string;
+    conditions?: string;
+    body_weight?: number;
+    body_fat?: number;
+    height?: number;
+    duration_weeks: number;
+  }, exercises: {
+    dayOfWeek: number;
+    exerciseId?: number | null;
+    exerciseName: string;
+    targetMuscles?: string | null;
+    sets?: number;
+    reps?: string;
+    weight?: number;
+    duration?: number;
+    restSeconds?: number;
+    orderIndex?: number;
+  }[]) {
+    return prisma.$transaction(async (tx) => {
+      const plan = await tx.workoutPlan.create({
+        data: {
+          userId,
+          name: userProfile.name,
+          goal: userProfile.goal,
+          frequency: userProfile.frequency,
+          experience: userProfile.experience,
+          equipment: userProfile.equipment,
+          conditions: userProfile.conditions ?? null,
+          bodyWeight: userProfile.body_weight ? new Decimal(userProfile.body_weight.toString()) : null,
+          bodyFat: userProfile.body_fat ? new Decimal(userProfile.body_fat.toString()) : null,
+          height: userProfile.height ? new Decimal(userProfile.height.toString()) : null,
+          durationWeeks: userProfile.duration_weeks,
+          status: 'draft'
+        }
+      });
+
+      if (exercises && exercises.length > 0) {
+        for (const exercise of exercises) {
+          await tx.planExercise.create({
+            data: {
+              planId: plan.id,
+              dayOfWeek: exercise.dayOfWeek,
+              exerciseId: exercise.exerciseId ?? null,
+              exerciseName: exercise.exerciseName,
+              targetMuscles: exercise.targetMuscles ?? null,
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? '8-12',
+              weight: exercise.weight ? new Decimal(exercise.weight.toString()) : null,
+              duration: exercise.duration ?? null,
+              restSeconds: exercise.restSeconds ?? 60,
+              orderIndex: exercise.orderIndex ?? 0
+            }
+          });
+        }
+      }
+
+      return plan;
+    });
+  },
+
   async create(userId: number, data: {
     name: string;
     goal: string;

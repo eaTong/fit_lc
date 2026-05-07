@@ -1,141 +1,105 @@
-// @ts-nocheck
 import { planRepository } from '../repositories/planRepository';
-import prisma from '../config/prisma';
+import { Decimal } from '@prisma/client/runtime/client';
+
+interface UserProfile {
+  name?: string;
+  goal: string;
+  frequency: number;
+  experience: string;
+  equipment: string;
+  conditions?: string;
+  body_weight?: number;
+  body_fat?: number;
+  height?: number;
+  duration_weeks: number;
+}
+
+interface PlanExercise {
+  dayOfWeek: number;
+  exerciseId?: number | null;
+  exerciseName: string;
+  targetMuscles?: string | null;
+  sets?: number;
+  reps?: string;
+  weight?: number;
+  duration?: number;
+  restSeconds?: number;
+  orderIndex?: number;
+}
+
+interface ExecutionData {
+  userId?: number;
+  user_id?: number;
+  plan_exercise_id?: number;
+  planExerciseId?: number;
+  scheduled_date?: string;
+  scheduledDate?: string;
+  status?: string;
+  completed_reps?: number;
+  completedReps?: number;
+  completed_weight?: number;
+  completedWeight?: number;
+  notes?: string;
+}
 
 export const planService = {
-  // Create plan with exercises
-  async createPlan(userId, userProfile, exercises) {
-    const planData = {
-      name: userProfile.name,
-      goal: userProfile.goal,
-      frequency: userProfile.frequency,
-      experience: userProfile.experience,
-      equipment: userProfile.equipment,
-      conditions: userProfile.conditions,
-      body_weight: userProfile.body_weight,
-      body_fat: userProfile.body_fat,
-      height: userProfile.height,
-      duration_weeks: userProfile.duration_weeks,
-      status: 'draft'
-    };
-
-    // Use transaction to ensure atomicity: create plan + add exercises
-    const planId = await prisma.$transaction(async (tx) => {
-      const plan = await tx.workoutPlan.create({
-        data: {
-          userId,
-          name: planData.name,
-          goal: planData.goal,
-          frequency: planData.frequency,
-          experience: planData.experience,
-          equipment: planData.equipment,
-          conditions: planData.conditions ?? null,
-          bodyWeight: planData.body_weight ? new (require('@prisma/client/runtime/client').Decimal)(planData.body_weight.toString()) : null,
-          bodyFat: planData.body_fat ? new (require('@prisma/client/runtime/client').Decimal)(planData.body_fat.toString()) : null,
-          height: planData.height ? new (require('@prisma/client/runtime/client').Decimal)(planData.height.toString()) : null,
-          durationWeeks: planData.duration_weeks,
-          status: 'draft'
-        }
-      });
-
-      if (exercises && exercises.length > 0) {
-        for (const exercise of exercises) {
-          await tx.planExercise.create({
-            data: {
-              planId: plan.id,
-              dayOfWeek: exercise.dayOfWeek,
-              exerciseId: exercise.exerciseId ?? null,
-              exerciseName: exercise.exerciseName,
-              targetMuscles: exercise.targetMuscles ?? null,
-              sets: exercise.sets ?? 3,
-              reps: exercise.reps ?? '8-12',
-              weight: exercise.weight ? new (require('@prisma/client/runtime/client').Decimal)(exercise.weight.toString()) : null,
-              duration: exercise.duration ?? null,
-              restSeconds: exercise.restSeconds ?? 60,
-              orderIndex: exercise.orderIndex ?? 0
-            }
-          });
-        }
-      }
-
-      return plan.id;
-    });
-
-    return planId;
+  async createPlan(userId: number, userProfile: UserProfile, exercises: PlanExercise[]) {
+    const plan = await planRepository.createWithExercises(userId, userProfile, exercises);
+    return plan.id;
   },
 
-  // Get plan with exercises
-  async getPlan(planId, userId) {
+  async getPlan(planId: number, userId: number) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
       return null;
     }
-
-    // findById already includes exercises with exercise relation
     return plan;
   },
 
-  // Get all user plans
-  async getUserPlans(userId) {
+  async getUserPlans(userId: number) {
     const plans = await planRepository.findByUserId(userId);
     return plans;
   },
 
-  // Update plan
-  async updatePlan(planId, userId, updates) {
+  async updatePlan(planId: number, userId: number, updates: Record<string, any>) {
+    const plan = await planRepository.findById(planId, userId);
+    if (!plan) {
+      throw new Error('计划不存在');
+    }
+    return planRepository.update(planId, userId, updates);
+  },
+
+  async updatePlanExercise(exerciseId: number, planId: number, updates: Record<string, any>) {
+    return planRepository.updateExercise(exerciseId, planId, updates);
+  },
+
+  async deletePlan(planId: number, userId: number) {
+    const plan = await planRepository.findById(planId, userId);
+    if (!plan) {
+      throw new Error('计划不存在');
+    }
+    return planRepository.delete(planId, userId);
+  },
+
+  async activatePlan(planId: number, userId: number) {
+    const plan = await planRepository.findById(planId, userId);
+    if (!plan) {
+      throw new Error('计划不存在');
+    }
+    return planRepository.update(planId, userId, { status: 'active' });
+  },
+
+  async adjustPlan(planId: number, userId: number, adjustment: Record<string, any>) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
       throw new Error('计划不存在');
     }
 
-    const success = await planRepository.update(planId, userId, updates);
-    return success;
-  },
-
-  // Update plan exercise
-  async updatePlanExercise(exerciseId, planId, updates) {
-    const success = await planRepository.updateExercise(exerciseId, planId, updates);
-    return success;
-  },
-
-  // Delete plan
-  async deletePlan(planId, userId) {
-    const plan = await planRepository.findById(planId, userId);
-    if (!plan) {
-      throw new Error('计划不存在');
-    }
-
-    const success = await planRepository.delete(planId, userId);
-    return success;
-  },
-
-  // Activate plan (set status to 'active')
-  async activatePlan(planId, userId) {
-    const plan = await planRepository.findById(planId, userId);
-    if (!plan) {
-      throw new Error('计划不存在');
-    }
-
-    const success = await planRepository.update(planId, userId, { status: 'active' });
-    return success;
-  },
-
-  // Adjust plan (MVP: basic adjustments)
-  async adjustPlan(planId, userId, adjustment) {
-    const plan = await planRepository.findById(planId, userId);
-    if (!plan) {
-      throw new Error('计划不存在');
-    }
-
-    // MVP implementation: just update the plan with the adjustment
-    // Future: AI-powered adjustment logic
-    const updates = {};
+    const updates: Record<string, any> = {};
 
     if (adjustment.exercises) {
-      // For MVP, we just update existing exercises
-      // In a full implementation, this would involve AI analysis
       for (const [exerciseId, newValues] of Object.entries(adjustment.exercises)) {
-        await planRepository.updateExercise(parseInt(exerciseId), planId, newValues);
+        await planRepository.updateExercise(parseInt(exerciseId), planId, newValues as Record<string, any>);
       }
     }
 
@@ -154,16 +118,15 @@ export const planService = {
     return true;
   },
 
-  // Record execution
-  async recordExecution(planId, executionData) {
-    const plan = await planRepository.findById(planId, executionData.userId || executionData.user_id);
+  async recordExecution(planId: number, executionData: ExecutionData) {
+    const plan = await planRepository.findById(planId, executionData.userId || executionData.user_id || 0);
     if (!plan) {
       throw new Error('计划不存在');
     }
 
     const execution = {
       planId: planId,
-      planExerciseId: executionData.plan_exercise_id || executionData.planExerciseId,
+      planExerciseId: executionData.plan_exercise_id || executionData.planExerciseId || 0,
       scheduledDate: executionData.scheduled_date || executionData.scheduledDate || new Date().toISOString().split('T')[0],
       status: executionData.status || 'completed',
       completedReps: executionData.completed_reps || executionData.completedReps,
@@ -175,8 +138,7 @@ export const planService = {
     return result.id;
   },
 
-  // Get plan analysis with stats and suggestions
-  async getPlanAnalysis(planId, userId) {
+  async getPlanAnalysis(planId: number, userId: number) {
     const plan = await planRepository.findById(planId, userId);
     if (!plan) {
       throw new Error('计划不存在');
@@ -184,13 +146,11 @@ export const planService = {
 
     const stats = await planRepository.getExecutionStats(planId);
 
-    // Calculate completion rate
     const completionRate = stats.total > 0
       ? Math.round((stats.completed / stats.total) * 100)
       : 0;
 
-    // Generate basic suggestions based on completion rate
-    let suggestions = [];
+    let suggestions: string[] = [];
     if (completionRate < 50) {
       suggestions.push('Consider reducing workout frequency or intensity');
     } else if (completionRate >= 80) {
