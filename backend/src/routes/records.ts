@@ -201,9 +201,9 @@ router.delete('/workout/:id', async (req: Request, res: Response) => {
 
     await recordService.deleteWorkout(Number(id), userId);
     res.json({ success: true });
-  } catch (err as any) {
+  } catch (err) {
     console.error('Delete workout error:', err);
-    if (err.message === '训练记录不存在') {
+    if ((err as any).message === '训练记录不存在') {
       res.status(404).json({ error: 'Record not found' });
     } else {
       res.status(500).json({ error: 'Internal server error' });
@@ -219,9 +219,9 @@ router.delete('/measurement/:id', async (req: Request, res: Response) => {
 
     await recordService.deleteMeasurement(Number(id), userId);
     res.json({ success: true });
-  } catch (err as any) {
+  } catch (err) {
     console.error('Delete measurement error:', err);
-    if (err.message === '围度记录不存在') {
+    if ((err as any).message === '围度记录不存在') {
       res.status(404).json({ error: 'Record not found' });
     } else {
       res.status(500).json({ error: 'Internal server error' });
@@ -237,9 +237,9 @@ router.post('/workout/:id/restore', async (req: Request, res: Response) => {
 
     await recordService.restoreWorkout(Number(id), userId);
     res.json({ success: true });
-  } catch (err as any) {
+  } catch (err) {
     console.error('Restore workout error:', err);
-    if (err.message === '训练记录不存在') {
+    if ((err as any).message === '训练记录不存在') {
       res.status(404).json({ error: 'Record not found' });
     } else {
       res.status(500).json({ error: 'Internal server error' });
@@ -255,9 +255,9 @@ router.post('/measurement/:id/restore', async (req: Request, res: Response) => {
 
     await recordService.restoreMeasurement(Number(id), userId);
     res.json({ success: true });
-  } catch (err as any) {
+  } catch (err) {
     console.error('Restore measurement error:', err);
-    if (err.message === '围度记录不存在') {
+    if ((err as any).message === '围度记录不存在') {
       res.status(404).json({ error: 'Record not found' });
     } else {
       res.status(500).json({ error: 'Internal server error' });

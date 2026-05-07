@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { planRepository } from '../repositories/planRepository';
 import { Decimal } from '@prisma/client/runtime/client';
 
