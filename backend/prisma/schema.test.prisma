@@ -231,3 +231,15 @@ model ExerciseMuscle {
 
   @@unique([exerciseId, muscleId, role])
 }
+
+model PersonalRecord {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  exerciseName String
+  recordType   String
+  bestValue    Float
+  achievedAt   DateTime @default(now())
+  workoutExerciseId Int?
+
+  @@unique([userId, exerciseName, recordType])
+}
