@@ -1,8 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-
-// Direct import of the tool
-const toolModule = require('../../../src/tools/saveWorkout');
-const { saveWorkoutTool } = toolModule;
+import { saveWorkoutTool } from '../../../src/tools/saveWorkout';
 
 describe('SaveWorkoutTool', () => {
   describe('tool structure', () => {
@@ -90,16 +87,6 @@ describe('SaveWorkoutTool', () => {
     it('should have exercise name field marked as required', () => {
       const exercisesArray = saveWorkoutTool.schema.shape.exercises;
       expect(exercisesArray).toBeDefined();
-      // Zod array's element schema is accessible via _def
-      const exerciseSchema = exercisesArray;
-      expect(exerciseSchema).toBeDefined();
-    });
-  });
-
-  describe('validation logic', () => {
-    it('should have validateExports for testing', () => {
-      // Access the module to check for validation functions
-      expect(toolModule).toBeDefined();
     });
   });
 

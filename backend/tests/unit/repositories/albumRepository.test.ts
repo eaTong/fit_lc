@@ -7,7 +7,7 @@ const mockFindMany = jest.fn();
 const mockUpdateMany = jest.fn();
 
 // Mock the entire prisma module with __esModule flag
-jest.mock('../../../src/lib/prisma', () => ({
+jest.mock('../../../src/config/prisma', () => ({
   __esModule: true,
   default: {
     albumPhoto: {
