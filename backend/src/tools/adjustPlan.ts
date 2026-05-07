@@ -8,6 +8,7 @@ import { planService } from '../services/planService';
  * @param {string} adjustment - Adjustment description (e.g., "把周三换成练胸", "重量太重了降低一点")
  * @returns {string} Result message
  */
+// TODO: 补充信息完整性校验逻辑
 export const adjustPlanTool = new DynamicStructuredTool({
   name: "adjust_plan",
   description: `当用户请求调整现有健身计划时使用此工具。

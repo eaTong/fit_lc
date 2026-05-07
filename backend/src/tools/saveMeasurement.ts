@@ -5,6 +5,7 @@ import { saveService } from '../services/saveService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 
+// TODO: 补充必填字段说明，当信息不完整时让 AI 先追问用户
 export const saveMeasurementTool = new DynamicStructuredTool({
   name: "save_measurement",
   description: `当用户要记录身体围度时使用。不要在记录训练时使用。
@@ -18,7 +19,7 @@ export const saveMeasurementTool = new DynamicStructuredTool({
 
   支持部位：chest(胸), waist(腰), hips(臀), biceps(臂), thighs(腿), calves(小腿), weight(体重kg), bodyFat(体脂率%)
 
-  输入：date (YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss), measurements数组。
+  输入：date (YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss，不提供默认今天), measurements数组。
   注意：userId 会由系统自动注入。
   体重和体脂率可以一天记录多次（使用不同时间戳）。`,
   schema: z.object({

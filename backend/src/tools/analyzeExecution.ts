@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
 
+// TODO: 补充信息完整性校验逻辑
 export const analyzeExecutionTool = new DynamicStructuredTool({
   name: "analyze_execution",
   description: `当用户询问计划执行情况、进度、或请求优化建议时使用。

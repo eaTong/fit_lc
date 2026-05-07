@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { queryService } from '../services/queryService';
 
+// TODO: 补充信息完整性校验逻辑
 export const queryMeasurementTool = new DynamicStructuredTool({
   name: "query_measurement",
   description: `当用户询问身体围度、围度变化、对比时使用。

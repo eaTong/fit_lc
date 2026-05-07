@@ -248,6 +248,7 @@ function generateFallbackExercises(userProfile) {
   return exercises;
 }
 
+// TODO: 补充信息完整性校验逻辑
 export const generatePlanTool = new DynamicStructuredTool({
   name: "generate_plan",
   description: `当用户请求生成健身计划时使用此工具。

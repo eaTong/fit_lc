@@ -11,11 +11,27 @@ export const saveWorkoutTool = new DynamicStructuredTool({
   name: "save_workout",
   description: `当用户要记录健身训练时使用。不要在询问围度时使用。
 
+  【必填字段】
+  - date: 日期，格式 YYYY-MM-DD，不提供则默认今天
+  - exercises: 至少包含一个动作，每个动作必须包含：
+    * name: 动作名称（必填）
+    * 以下三选一（至少提供一项）：
+      - weight + sets 或 reps: 力量训练（如"卧推80kg 5组每组8个"）
+      - duration: 有氧训练（如"跑步30分钟"）
+      - distance: 有氧训练（如"跑了5公里"）
+    * 如果是徒手训练（俯卧撑、引体向上等），至少需要 sets + reps
+
+  【信息不完整时】
+  如果用户输入缺少上述必填字段，请先追问用户补充完整信息再调用此 Tool。
+  例如：
+  - 用户说"卧推80公斤" → 追问："卧推80公斤，几组每组几次呢？"
+  - 用户说"做了俯卧撑" → 追问："做了多少组，每组几次？"
+
   触发示例：
-  - "今天跑了5公里"
-  - "深蹲100kg 5组每组8个"
-  - "练了30分钟hiit"
-  - "做了100个俯卧撑分5组"
+  - "今天跑了5公里" → 调用 Tool (distance: 5)
+  - "深蹲100kg 5组每组8个" → 调用 Tool (weight: 100, sets: 5, reps: 8)
+  - "练了30分钟hiit" → 调用 Tool (duration: 30)
+  - "做了100个俯卧撑分5组" → 追问用户每组几次
 
   输入：date (YYYY-MM-DD), exercises数组。注意：userId 会由系统自动注入。`,
   schema: z.object({

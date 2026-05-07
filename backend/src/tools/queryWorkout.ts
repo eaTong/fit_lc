@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { queryService } from '../services/queryService';
 
+// TODO: 补充信息完整性校验逻辑
 export const queryWorkoutTool = new DynamicStructuredTool({
   name: "query_workout",
   description: `当用户询问训练记录、训练历史、统计数据时使用。
