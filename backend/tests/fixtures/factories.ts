@@ -1,12 +1,10 @@
 // backend/tests/fixtures/factories.ts
-import { PrismaClient } from '@prisma/client';
+// @ts-ignore
 import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: { url: 'file:./test.db?mode=memory' }
-  }
-});
+// 使用默认 Prisma Client（从环境变量读取 DATABASE_URL）
+const prisma = new PrismaClient();
 
 export const createTestUser = async (overrides = {}) => {
   const email = `test-${Date.now()}@example.com`;
@@ -54,13 +52,45 @@ export const createTestMeasurement = async (userId: number, overrides = {}) => {
 };
 
 export const cleanDatabase = async () => {
-  const tables = ['workoutExercise', 'workout', 'measurementItem', 'bodyMeasurement',
-    'chatMessage', 'albumPhoto', 'userRole', 'user'];
+  // 清理顺序：先清理有外键关联的表
+  const tables = [
+    'planExecution',
+    'planExercise',
+    'workoutPlan',
+    'measurementItem',
+    'bodyMeasurement',
+    'workoutExercise',
+    'workout',
+    'chatMessage',
+    'albumPhoto',
+    'userBadge',
+    'userMilestone',
+    'triggerEvent',
+    'trendPrediction',
+    'aggregatedStats',
+    'personalRecord',
+    'bodyMetric',
+    'coachConfig',
+    'userContext',
+    'userProfile',
+    'userRole',
+    'user',
+    'role',
+    'badge',
+    'milestone',
+    'exerciseMuscle',
+    'exerciseVariant',
+    'exercise',
+    'muscle'
+  ];
+
   for (const table of tables) {
     try {
-      await (prisma as any)[table.charAt(0).toLowerCase() + table.slice(1).replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')].deleteMany({});
+      // 将 CamelCase 转换为 snake_case
+      const snakeName = table.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+      await prisma.$executeRawUnsafe(`DELETE FROM \`${snakeName}\``);
     } catch (e) {
-      // table might not exist, skip
+      // 表可能不存在或为视图，跳过
     }
   }
 };

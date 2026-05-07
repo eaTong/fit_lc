@@ -13,6 +13,8 @@
     "test:chat": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/chat",
     "test:chat:single": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/chat/single-round",
     "test:chat:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/chat/end-to-end",
+    "test:setup": "node scripts/setup-test-db.js",
+    "test:cleanup": "node scripts/cleanup-test-db.js",
     "init-db": "node scripts/init-db.js"
   },
   "dependencies": {
