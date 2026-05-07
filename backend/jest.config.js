@@ -2,6 +2,7 @@ export default {
   testEnvironment: 'node',
   testTimeout: 60000,
   rootDir: '.',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.ts',
     '<rootDir>/tests/integration/**/*.int.test.ts',
