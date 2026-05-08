@@ -22,64 +22,6 @@ interface ToolInput {
   exercises: ExerciseInput[];
 }
 
-// 验证单个动作是否包含足够信息
-function validateExercise(exercise: ExerciseInput): { valid: boolean; missingFields: { field: string; label: string }[] } {
-  const missingFields: { field: string; label: string }[] = [];
-
-  if (!exercise.name) {
-    missingFields.push({ field: 'name', label: '动作名称' });
-  }
-
-  const hasWeight = exercise.weight !== undefined && exercise.weight !== null;
-  const hasSets = exercise.sets !== undefined && exercise.sets !== null;
-  const hasReps = exercise.reps !== undefined && exercise.reps !== null;
-  const hasDuration = exercise.duration !== undefined && exercise.duration !== null;
-  const hasDistance = exercise.distance !== undefined && exercise.distance !== null;
-
-  // 有氧训练：需要 duration 或 distance
-  // 力量训练：需要 weight + (sets 或 reps)
-  // 徒手训练：需要 sets + reps
-  const isStrengthTraining = hasWeight;
-  const isCardio = hasDuration || hasDistance;
-  const isBodyweight = !hasWeight && !hasDuration && !hasDistance;
-
-  if (isStrengthTraining) {
-    if (!hasSets && !hasReps) {
-      missingFields.push({ field: 'sets 或 reps', label: '组数或次数' });
-    }
-  } else if (isCardio) {
-    // 有氧只需 duration 或 distance之一，已有则通过
-  } else if (isBodyweight) {
-    if (!hasSets) {
-      missingFields.push({ field: 'sets', label: '组数' });
-    }
-    if (!hasReps) {
-      missingFields.push({ field: 'reps', label: '次数' });
-    }
-  } else {
-    // 无法判断类型，缺少必要信息
-    if (!hasWeight && !hasDuration && !hasDistance) {
-      missingFields.push({ field: 'weight 或 duration/distance', label: '重量或时长/距离' });
-    }
-    if (!hasSets && !hasReps) {
-      missingFields.push({ field: 'sets 或 reps', label: '组数或次数' });
-    }
-  }
-
-  return { valid: missingFields.length === 0, missingFields };
-}
-
-// 验证所有动作
-function validateExercises(exercises: ExerciseInput[]): { valid: boolean; missingFields: { field: string; label: string }[]; exerciseName?: string } {
-  for (const exercise of exercises) {
-    const result = validateExercise(exercise);
-    if (!result.valid) {
-      return { valid: false, missingFields: result.missingFields, exerciseName: exercise.name };
-    }
-  }
-  return { valid: true, missingFields: [] };
-}
-
 export const saveWorkoutTool = new DynamicStructuredTool({
   name: "save_workout",
   description: `当用户要记录健身训练时使用。不要在询问围度时使用。
@@ -120,20 +62,6 @@ export const saveWorkoutTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, date, exercises }: ToolInput) => {
     try {
-      // 验证动作信息完整性
-      const validation = validateExercises(exercises);
-      if (!validation.valid) {
-        const missingFieldLabels = validation.missingFields.map(f => f.label).join('或');
-        const exerciseHint = validation.exerciseName ? `【${validation.exerciseName}】` : '';
-        return JSON.stringify({
-          aiReply: `${exerciseHint}信息不完整，需要补充：${missingFieldLabels}`,
-          dataType: 'workout',
-          result: null,
-          status: 'needs_more_info',
-          missingFields: validation.missingFields
-        });
-      }
-
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveWorkout(userId, finalDate, exercises);

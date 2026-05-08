@@ -1,3 +1,12 @@
+/**
+ * @deprecated 使用 fitnessAgentV2 替代
+ * fitnessAgentV2 特性：
+ * - 批量工具并行执行
+ * - 统一输入校验
+ * - 自动重试机制
+ * - 独立 fallback 处理
+ * - 统一 prompt 构建
+ */
 import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { saveWorkoutTool } from '../tools/saveWorkout';
 import { saveMeasurementTool } from '../tools/saveMeasurement';

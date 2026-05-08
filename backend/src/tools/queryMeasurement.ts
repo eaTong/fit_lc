@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { queryService } from '../services/queryService';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
-// TODO: 补充信息完整性校验逻辑
 export const queryMeasurementTool = new DynamicStructuredTool({
   name: "query_measurement",
   description: `当用户询问身体围度、围度变化、对比时使用。
@@ -21,6 +21,17 @@ export const queryMeasurementTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, start_date, end_date, body_part }) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('query_measurement', { userId, start_date, end_date, body_part });
+      if (!validation.valid) {
+        return JSON.stringify({
+          aiReply: `查询参数不完整：${formatValidationError(validation)}`,
+          dataType: 'measurement_query',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       const result = await queryService.queryMeasurements(userId, start_date, end_date, body_part);
 
       const aiReply = `📊 围度记录查询结果\n\n共 ${result.measurements?.length || 0} 条记录`;

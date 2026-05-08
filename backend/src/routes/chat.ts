@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { runAgent } from '../agents/fitnessAgent';
+import { runAgentV2 as runAgent } from '../agents/fitnessAgentV2';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
 import prisma from '../config/prisma';

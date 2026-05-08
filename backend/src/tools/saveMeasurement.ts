@@ -1,10 +1,16 @@
+/**
+ * 保存围度测量记录工具
+ * 验证输入完整性和数值有效性
+ */
+
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { saveService } from '../services/saveService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
-// Types for the tool
+// 类型定义
 type BodyPart = "chest" | "waist" | "hips" | "biceps" | "thighs" | "calves" | "other" | "weight" | "bodyFat";
 
 interface MeasurementInput {
@@ -17,6 +23,9 @@ interface ToolInput {
   date?: string;
   measurements: MeasurementInput[];
 }
+
+// 有效的身体部位
+const VALID_BODY_PARTS = ['chest', 'waist', 'hips', 'biceps', 'biceps_l', 'biceps_r', 'thighs', 'thigh_l', 'thigh_r', 'calves', 'calf_l', 'calf_r', 'weight', 'bodyFat'];
 
 export const saveMeasurementTool = new DynamicStructuredTool({
   name: "save_measurement",
@@ -37,13 +46,25 @@ export const saveMeasurementTool = new DynamicStructuredTool({
   schema: z.object({
     date: z.string().describe("测量日期时间 YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss，支持同一天多次记录"),
     measurements: z.array(z.object({
-      body_part: z.enum(["chest", "waist", "hips", "biceps", "thighs", "calves", "other", "weight", "bodyFat"])
-        .describe("身体部位"),
+      body_part: z.enum(["chest", "waist", "hips", "biceps", "biceps_l", "biceps_r", "thighs", "thigh_l", "thigh_r", "calves", "calf_l", "calf_r", "weight", "bodyFat"])
+        .describe("身体部位：chest/waist/hips/biceps/biceps_l/biceps_r/thighs/thigh_l/thigh_r/calves/calf_l/calf_r/weight/bodyFat"),
       value: z.number().describe("数值(cm)或(kg/%)")
     }))
   }),
   func: async ({ userId, date, measurements }: ToolInput) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('save_measurement', { userId, date, measurements });
+      if (!validation.valid) {
+        const missingLabels = validation.missingFields.map(f => f.label).join('、');
+        return JSON.stringify({
+          aiReply: `信息不完整，需要补充：${missingLabels}`,
+          dataType: 'measurement',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
       const result = await saveService.saveMeasurement(userId, finalDate, measurements);

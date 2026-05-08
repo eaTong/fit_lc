@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
 import { exerciseRepository } from '../repositories/exerciseRepository';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
 // Types matching the Zod schema
 type Goal = 'bulk' | 'cut' | 'maintain';
@@ -38,6 +38,17 @@ interface GeneratedExercise {
 interface ToolInput {
   userId: number;
   user_profile: UserProfile;
+}
+
+// Muscle group exercise mapping
+interface MuscleExercise {
+  exerciseId: number;
+  exerciseName: string;
+  muscleGroup: string;
+  role: string;
+  sets: number;
+  reps: string;
+  restSeconds: number;
 }
 
 /**
@@ -123,17 +134,18 @@ export async function generateExercisesForProfile(userProfile: UserProfile): Pro
   }
 
   // 查询动作库
-  const exercises = await exerciseRepository.findAll({
-    equipment: equipmentFilter,
+  const exercisesResult = await exerciseRepository.findAll({
+    equipment: equipmentFilter as any,
     difficulty: experience,
     status: 'published'
-  });
+  }) as any;
 
   // 按肌肉群分组动作
-  const exercisesByMuscle = {};
+  const exercisesByMuscle: Record<string, MuscleExercise[]> = {};
+  const exercises = exercisesResult.exercises || exercisesResult;
   for (const ex of exercises) {
     for (const em of ex.muscles) {
-      const muscleGroup = em.muscle.group;
+      const muscleGroup = (em.muscle as any).group;
       if (!exercisesByMuscle[muscleGroup]) {
         exercisesByMuscle[muscleGroup] = [];
       }
@@ -311,6 +323,17 @@ export const generatePlanTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, user_profile }: ToolInput) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('generate_plan', { userId, user_profile });
+      if (!validation.valid) {
+        return JSON.stringify({
+          aiReply: `生成计划参数不完整：${formatValidationError(validation)}`,
+          dataType: 'plan',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       // Generate exercises based on user profile
       const exercises = await generateExercisesForProfile(user_profile);
 
@@ -328,7 +351,7 @@ export const generatePlanTool = new DynamicStructuredTool({
       message += `经验水平：${expText}\n\n`;
 
       // 按训练日分组展示
-      const byDay = {};
+      const byDay: Record<string, string[]> = {};
       for (const ex of exercises) {
         if (!byDay[ex.dayOfWeek]) byDay[ex.dayOfWeek] = [];
         byDay[ex.dayOfWeek].push(ex.exerciseName);

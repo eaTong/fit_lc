@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
 /**
  * Adjust an existing workout plan
@@ -8,7 +9,6 @@ import { planService } from '../services/planService';
  * @param {string} adjustment - Adjustment description (e.g., "把周三换成练胸", "重量太重了降低一点")
  * @returns {string} Result message
  */
-// TODO: 补充信息完整性校验逻辑
 export const adjustPlanTool = new DynamicStructuredTool({
   name: "adjust_plan",
   description: `当用户请求调整现有健身计划时使用此工具。
@@ -28,6 +28,17 @@ export const adjustPlanTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, plan_id, adjustment }) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('adjust_plan', { userId, plan_id, adjustment });
+      if (!validation.valid) {
+        return JSON.stringify({
+          aiReply: `调整计划参数不完整：${formatValidationError(validation)}`,
+          dataType: 'plan_adjustment',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       // Parse adjustment string - MVP implementation
       let adjustmentData = {};
 

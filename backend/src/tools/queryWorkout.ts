@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { queryService } from '../services/queryService';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
-// TODO: 补充信息完整性校验逻辑
 export const queryWorkoutTool = new DynamicStructuredTool({
   name: "query_workout",
   description: `当用户询问训练记录、训练历史、统计数据时使用。
@@ -22,6 +22,17 @@ export const queryWorkoutTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, start_date, end_date, exercise_type }) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('query_workout', { userId, start_date, end_date, exercise_type });
+      if (!validation.valid) {
+        return JSON.stringify({
+          aiReply: `查询参数不完整：${formatValidationError(validation)}`,
+          dataType: 'workout_query',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       const result = await queryService.queryWorkouts(userId, start_date, end_date, exercise_type);
 
       const totalWorkouts = result.workouts?.length || 0;

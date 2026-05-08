@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
+import { validateToolInput, formatValidationError } from './utils/validation';
 
-// TODO: 补充信息完整性校验逻辑
 export const analyzeExecutionTool = new DynamicStructuredTool({
   name: "analyze_execution",
   description: `当用户询问计划执行情况、进度、或请求优化建议时使用。
@@ -20,6 +20,17 @@ export const analyzeExecutionTool = new DynamicStructuredTool({
   }),
   func: async ({ userId, planId }) => {
     try {
+      // 预校验输入
+      const validation = validateToolInput('analyze_execution', { userId, planId });
+      if (!validation.valid) {
+        return JSON.stringify({
+          aiReply: `分析计划参数不完整：${formatValidationError(validation)}`,
+          dataType: 'execution_analysis',
+          status: 'needs_more_info',
+          missingFields: validation.missingFields
+        });
+      }
+
       const analysis = await planService.getPlanAnalysis(planId, userId);
 
       // Build response message with stats and suggestions
