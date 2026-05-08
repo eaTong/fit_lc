@@ -50,7 +50,10 @@ export class ZhipuChat {
 
   constructor(useVision = false) {
     const apiKey = requireApiKey('zhipu');
-    this.model = getModelName(useVision ? 'vision' : 'chat');
+    // 直接使用 Zhipu 的模型，而不是根据 provider 获取
+    this.model = useVision
+      ? (process.env.ZHIPU_VISION_MODEL || 'glm-4v-flash')
+      : (process.env.ZHIPU_CHAT_MODEL || 'glm-4-plus');
 
     this.client = axios.create({
       baseURL: 'https://open.bigmodel.cn/api/paas/v4',
@@ -106,12 +109,21 @@ export class ZhipuChat {
     }
 
     try {
+      console.log('[ZhipuChat] Sending request to API...');
       const response = await this.client.post('/chat/completions', requestBody);
+      console.log('[ZhipuChat] Response received, status:', response.status);
       const data = response.data as ChatResponse;
+      console.log('[ZhipuChat] Response data keys:', Object.keys(data || {}));
 
-      const choice = data.choices[0];
+      const choice = data.choices?.[0];
+      console.log('[ZhipuChat] Choice:', choice);
+      if (!choice) {
+        console.error('[ZhipuChat] No choice in response:', data);
+        throw new Error('Zhipu API returned no choices');
+      }
+
       return {
-        content: choice.message.content,
+        content: choice.message?.content || '',
         usage: data.usage,
       };
     } catch (error) {

@@ -38,6 +38,7 @@ coverage/
 backend/node_modules/
 backend/logs/
 backend/test-results/
+backend/prisma/test.db
 
 # AI 生成的数据
 backend/output/*.json

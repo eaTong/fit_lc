@@ -6,16 +6,17 @@ Component({
     photos: [],
     groupedPhotos: {},
     months: [],
-    currentYear: new Date().getFullYear(),
-    currentMonth: new Date().getMonth() + 1,
     loading: false,
-    isEmpty: false
+    loadingMore: false,
+    hasMore: true,
+    cursor: null,
+    isEmpty: false,
+    uploading: false
   },
 
   lifetimes: {
     attached() {
       this.initStore();
-      this.initMonths();
       this.loadData();
     }
   },
@@ -41,20 +42,6 @@ Component({
       });
     },
 
-    initMonths() {
-      const now = new Date();
-      const months = [];
-      for (let i = 0; i < 12; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({
-          year: d.getFullYear(),
-          month: d.getMonth() + 1,
-          label: `${d.getFullYear()}年${d.getMonth() + 1}月`
-        });
-      }
-      this.setData({ months });
-    },
-
     loadData() {
       this.setData({ loading: true });
       this.fetchPhotos();
@@ -66,12 +53,13 @@ Component({
         return;
       }
 
-      const { currentYear, currentMonth } = this.data;
-      albumActions.fetchPhotos(currentYear, currentMonth).then(photos => {
-        const groupedPhotos = this.groupPhotosByDate(photos);
+      albumActions.fetchPhotosPaginated(null, 50).then(res => {
+        const groupedPhotos = this.groupPhotosByMonth(res.photos);
         this.setData({
-          photos: photos || [],
+          photos: res.photos || [],
           groupedPhotos,
+          cursor: res.nextCursor,
+          hasMore: res.hasMore,
           loading: false
         });
         this.updateEmptyState();
@@ -82,17 +70,38 @@ Component({
       });
     },
 
-    groupPhotosByDate(photos) {
+    fetchMorePhotos() {
+      const { cursor, loadingMore, hasMore } = this.data;
+      if (!hasMore || loadingMore) return;
+
+      this.setData({ loadingMore: true });
+      albumActions.fetchPhotosPaginated(cursor, 50).then(res => {
+        const allPhotos = [...this.data.photos, ...res.photos];
+        const groupedPhotos = this.groupPhotosByMonth(allPhotos);
+        this.setData({
+          photos: allPhotos,
+          groupedPhotos,
+          cursor: res.nextCursor,
+          hasMore: res.hasMore,
+          loadingMore: false
+        });
+      }).catch(err => {
+        this.setData({ loadingMore: false });
+        console.error('fetch more photos failed:', err);
+      });
+    },
+
+    groupPhotosByMonth(photos) {
       const grouped = {};
       (photos || []).forEach(photo => {
         const date = photo.created_at || photo.createdAt;
         if (date) {
           const d = new Date(date);
-          const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-          if (!grouped[dateKey]) {
-            grouped[dateKey] = [];
+          const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          if (!grouped[monthKey]) {
+            grouped[monthKey] = [];
           }
-          grouped[dateKey].push(photo);
+          grouped[monthKey].push(photo);
         }
       });
       return grouped;
@@ -103,64 +112,75 @@ Component({
       this.setData({ isEmpty: !photos || photos.length === 0 });
     },
 
-    onMonthChange(e) {
-      const index = e.detail.value;
-      const month = this.data.months[index];
-      this.setData({
-        currentYear: month.year,
-        currentMonth: month.month
-      });
-      this.loadData();
-    },
-
-    onPreMonth() {
-      let { currentYear, currentMonth } = this.data;
-      currentMonth--;
-      if (currentMonth < 1) {
-        currentMonth = 12;
-        currentYear--;
-      }
-      this.setData({ currentYear, currentMonth });
-      this.loadData();
-    },
-
-    onNextMonth() {
-      const now = new Date();
-      const maxYear = now.getFullYear();
-      const maxMonth = now.getMonth() + 1;
-
-      let { currentYear, currentMonth } = this.data;
-      currentMonth++;
-      if (currentMonth > 12) {
-        currentMonth = 1;
-        currentYear++;
-      }
-
-      if (currentYear > maxYear || (currentYear === maxYear && currentMonth > maxMonth)) {
-        wx.showToast({ title: '没有更多照片', icon: 'none' });
-        return;
-      }
-
-      this.setData({ currentYear, currentMonth });
-      this.loadData();
+    onScrollToLower() {
+      this.fetchMorePhotos();
     },
 
     onPhotoTap(e) {
       const photo = e.currentTarget.dataset.photo;
-      const urls = this.data.photos.map(p => p.url);
-      const current = photo.url;
+      const urls = this.data.photos.map(p => p.ossUrl || p.url);
+      const current = photo.ossUrl || photo.url;
       wx.previewImage({
         current,
         urls
       });
     },
 
-    onRefresh() {
-      this.fetchPhotos();
+    onPhotoLongPress(e) {
+      const photo = e.currentTarget.dataset.photo;
+      wx.showModal({
+        title: '删除照片',
+        content: '确定要删除该照片吗？',
+        success: (res) => {
+          if (res.confirm) {
+            this.deletePhoto(photo.id);
+          }
+        }
+      });
     },
 
-    getCurrentMonthLabel() {
-      return `${this.data.currentYear}年${this.data.currentMonth}月`;
+    deletePhoto(id) {
+      albumActions.deletePhoto(id).then(() => {
+        const photos = this.data.photos.filter(p => p.id !== id);
+        const groupedPhotos = this.groupPhotosByMonth(photos);
+        this.setData({ photos, groupedPhotos });
+        this.updateEmptyState();
+        wx.showToast({ title: '删除成功', icon: 'success' });
+      }).catch(err => {
+        console.error('delete photo failed:', err);
+        wx.showToast({ title: '删除失败', icon: 'none' });
+      });
+    },
+
+    onUploadTap() {
+      wx.chooseMedia({
+        count: 1,
+        mediaType: ['image'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          const filePath = res.tempFiles[0].tempFilePath;
+          this.uploadPhoto(filePath);
+        }
+      });
+    },
+
+    uploadPhoto(filePath) {
+      this.setData({ uploading: true });
+      albumActions.uploadPhoto(filePath).then(photo => {
+        const photos = [photo, ...this.data.photos];
+        const groupedPhotos = this.groupPhotosByMonth(photos);
+        this.setData({ photos, groupedPhotos, uploading: false });
+        this.updateEmptyState();
+        wx.showToast({ title: '上传成功', icon: 'success' });
+      }).catch(err => {
+        this.setData({ uploading: false });
+        console.error('upload photo failed:', err);
+        wx.showToast({ title: '上传失败', icon: 'none' });
+      });
+    },
+
+    onRefresh() {
+      this.fetchPhotos();
     }
   },
 

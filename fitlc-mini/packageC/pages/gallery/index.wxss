@@ -5,43 +5,28 @@
   background-color: var(--color-bg-primary, #0A0A0A);
 }
 
-/* Month Selector */
-.month-selector {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Upload Section */
+.upload-section {
   padding: 16rpx 32rpx;
   background-color: var(--color-bg-secondary, #1A1A1A);
   border-bottom: 1px solid var(--color-border, #333333);
   flex-shrink: 0;
 }
 
-.month-nav {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.nav-btn {
-  font-size: 32rpx;
-  color: var(--color-text-primary, #FFFFFF);
-  font-weight: 600;
-}
-
-.month-picker {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 16rpx;
-}
-
-.month-label {
+.upload-btn {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background-color: #FF4500;
+  color: #FFFFFF;
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--color-text-primary, #FFFFFF);
+  border-radius: 8rpx;
+  border: none;
+}
+
+.upload-btn[disabled] {
+  background-color: #666666;
 }
 
 /* Loading */
@@ -89,12 +74,12 @@
   padding: 16rpx 24rpx;
 }
 
-/* Date Group */
-.date-group {
+/* Month Group */
+.month-group {
   margin-bottom: 32rpx;
 }
 
-.date-label {
+.month-label {
   display: block;
   font-size: 26rpx;
   color: var(--color-text-secondary, #888888);
@@ -121,4 +106,20 @@
 .photo-image {
   width: 100%;
   height: 100%;
+}
+
+/* Load More */
+.load-more {
+  padding: 32rpx 0;
+  text-align: center;
+}
+
+.loading-more-text {
+  font-size: 24rpx;
+  color: var(--color-text-secondary, #888888);
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: var(--color-text-muted, #555555);
 }

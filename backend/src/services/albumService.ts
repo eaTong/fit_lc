@@ -33,4 +33,15 @@ export const albumService = {
   async getAllPhotos(userId: number) {
     return albumRepository.findByUserAll(userId);
   },
+
+  async getPhotosPaginated(userId: number, cursor: string | null, limit: number = 50) {
+    return albumRepository.findByUserPaginated(userId, cursor, limit);
+  },
+
+  async addPhoto(userId: number, ossUrl: string) {
+    return albumRepository.create({
+      userId,
+      ossUrl,
+    });
+  },
 };

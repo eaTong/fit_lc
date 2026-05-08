@@ -3,6 +3,14 @@ const { request, get, del, upload } = require('./client');
 
 // Album Actions
 const albumActions = {
+  // 分页获取照片
+  fetchPhotosPaginated(cursor, limit = 50) {
+    return get('/album/photos/paginated', { cursor, limit }).then(res => {
+      // res = { photos: [], nextCursor, hasMore }
+      return res.data || res;
+    });
+  },
+
   // 获取指定月份的照片
   fetchPhotos(year, month) {
     return get('/album/photos', { year, month }).then(res => res.photos || []);
@@ -18,9 +26,12 @@ const albumActions = {
     return del(`/album/photos/${id}`);
   },
 
-  // 上传图片
-  uploadImage(filePath) {
-    return upload('/album/upload', filePath, 'image').then(res => res.photo);
+  // 上传图片到相册
+  uploadPhoto(filePath) {
+    return upload('/album/photos/upload', filePath, 'file').then(res => {
+      // res = { success: true, data: photo }
+      return res.data;
+    });
   }
 };
 

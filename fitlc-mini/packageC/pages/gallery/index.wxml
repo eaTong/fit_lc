@@ -1,22 +1,13 @@
 <view class="gallery-page">
-  <!-- Month Selector -->
-  <view class="month-selector">
-    <view class="month-nav" bindtap="onPreMonth">
-      <text class="nav-btn">‹</text>
-    </view>
-    <picker
-      mode="selector"
-      range="{{months}}"
-      range-key="label"
-      value="{{currentIndex}}"
-      bindchange="onMonthChange"
-      class="month-picker"
+  <!-- Upload Button -->
+  <view class="upload-section">
+    <button
+      class="upload-btn"
+      bindtap="onUploadTap"
+      disabled="{{uploading}}"
     >
-      <text class="month-label">{{getCurrentMonthLabel()}}</text>
-    </picker>
-    <view class="month-nav" bindtap="onNextMonth">
-      <text class="nav-btn">›</text>
-    </view>
+      {{uploading ? '上传中...' : '上传照片'}}
+    </button>
   </view>
 
   <!-- Loading -->
@@ -28,7 +19,7 @@
   <view wx:elif="{{isEmpty}}" class="empty-container">
     <text class="empty-icon">🖼️</text>
     <text class="empty-text">暂无照片</text>
-    <text class="empty-hint">去聊天页记录你的第一条围度吧</text>
+    <text class="empty-hint">点击上方按钮上传照片</text>
   </view>
 
   <!-- Photo Grid -->
@@ -38,24 +29,27 @@
     scroll-y
     enable-back-to-top
     bindscrolltoupper="onRefresh"
+    bindscrolltolower="onScrollToLower"
+    lower-threshold="100"
     upper-threshold="50"
   >
-    <!-- Grouped by Date -->
-    <block wx:for="{{Object.keys(groupedPhotos)}}" wx:for-key="dateKey" wx:for-item="dateKey">
-      <view class="date-group">
-        <text class="date-label">{{dateKey}}</text>
+    <!-- Grouped by Month -->
+    <block wx:for="{{Object.keys(groupedPhotos)}}" wx:for-key="monthKey" wx:for-item="monthKey">
+      <view class="month-group">
+        <text class="month-label">{{monthKey}}</text>
         <view class="photo-grid">
           <view
-            wx:for="{{groupedPhotos[dateKey]}}"
+            wx:for="{{groupedPhotos[monthKey]}}"
             wx:for-key="photo.id"
             wx:for-item="photo"
             class="photo-item"
             data-photo="{{photo}}"
             bindtap="onPhotoTap"
+            bindlongpress="onPhotoLongPress"
           >
             <image
               class="photo-image"
-              src="{{photo.url}}"
+              src="{{photo.ossUrl || photo.url}}"
               mode="aspectFill"
               lazy-load
             />
@@ -63,5 +57,11 @@
         </view>
       </view>
     </block>
+
+    <!-- Load More -->
+    <view class="load-more">
+      <text wx:if="{{loadingMore}}" class="loading-more-text">加载更多...</text>
+      <text wx:elif="{{!hasMore}}" class="no-more-text">没有更多照片了</text>
+    </view>
   </scroll-view>
 </view>

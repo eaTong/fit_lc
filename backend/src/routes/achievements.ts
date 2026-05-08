@@ -52,6 +52,17 @@ router.get('/badges', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/all-badges', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const result = await achievementService.getAllBadgesWithStatus(userId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('Get all badges error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.get('/milestones', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;

@@ -178,7 +178,11 @@ const exerciseActions = {
 // Achievement Actions
 const achievementActions = {
   fetchBadges() {
-    return get('/achievement/badges').then(res => res.badges || []);
+    return get('/achievements/badges').then(res => res.badges || []);
+  },
+
+  fetchAllBadges() {
+    return get('/achievements/all-badges').then(res => res.data || []);
   },
 
   fetchStats() {

@@ -198,4 +198,28 @@ export const achievementService = {
       achievedAt: um.achievedAt,
     }));
   },
+
+  async getAllBadgesWithStatus(userId: number) {
+    const allBadges = await badgeRepository.findAll();
+    const userBadges = await userBadgeRepository.findByUserId(userId);
+    const earnedBadgeIds = new Set(userBadges.map(ub => ub.badgeId));
+
+    return allBadges.map(badge => {
+      const userBadge = userBadges.find(ub => ub.badgeId === badge.id);
+      return {
+        id: badge.id,
+        code: badge.code,
+        name: badge.name,
+        description: badge.description,
+        iconUrl: badge.iconUrl,
+        category: badge.category,
+        tier: badge.tier,
+        points: badge.points,
+        conditionType: badge.conditionType,
+        conditionValue: badge.conditionValue,
+        earned: earnedBadgeIds.has(badge.id),
+        achievedAt: userBadge?.achievedAt || null,
+      };
+    });
+  }
 };

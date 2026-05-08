@@ -37,8 +37,8 @@ export const aiConfig: AIConfig = {
       vision: getEnv('MINIMAX_VISION_MODEL', 'MiniMax-VL-01'),
     },
     zhipu: {
-      chat: getEnv('ZHIPU_CHAT_MODEL', 'GLM-4-Plus'),
-      vision: getEnv('ZHIPU_VISION_MODEL', 'GLM-4V-Flash'),
+      chat: getEnv('ZHIPU_CHAT_MODEL', 'glm-4-plus'),
+      vision: getEnv('ZHIPU_VISION_MODEL', 'glm-4v-flash'),
     },
   },
 };

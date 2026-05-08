@@ -84,18 +84,15 @@ function formatMessage(...args) {
 console.log = (...args) => {
   const message = formatMessage(...args);
   writeLog(accessLogPath, message);
-  // 生产环境只记录日志，不输出到 stdout
-  if (!isProduction) {
-    originalConsoleLog.apply(console, args);
-  }
+  // 同时输出到终端
+  originalConsoleLog.apply(console, args);
 };
 
 console.error = (...args) => {
   const message = formatMessage(...args);
   writeLog(errorLogPath, message);
-  if (!isProduction) {
-    originalConsoleError.apply(console, args);
-  }
+  // 同时输出到终端
+  originalConsoleError.apply(console, args);
 };
 
 // Configure multer for file uploads
@@ -113,6 +110,9 @@ const upload = multer({
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Serve static badge images
+app.use('/badges', express.static(path.join(__dirname, '../public/badges')));
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',

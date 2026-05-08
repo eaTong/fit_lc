@@ -1,8 +1,24 @@
 import { Router } from 'express';
 import { albumService } from '../services/albumService';
 import { authMiddleware } from '../middleware/auth';
+import multer from 'multer';
+import { uploadChatImage } from '../config/oss';
 
 const router = Router();
+
+// Configure multer for image uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (jpg/png/webp/gif) are allowed'));
+    }
+  }
+});
 
 /**
  * @swagger
@@ -71,6 +87,91 @@ router.delete('/photos/:id', authMiddleware, async (req, res) => {
     } else {
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
+  }
+});
+
+/**
+ * @swagger
+ * /album/photos/paginated:
+ *   get:
+ *     summary: 分页获取照片（用于无限滚动）
+ *     tags: [相册]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: 分页游标（上次返回的 createdAt），null 表示首次查询
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: 每页数量
+ *     responses:
+ *       200:
+ *         description: 分页照片结果
+ */
+router.get('/photos/paginated', authMiddleware, async (req, res) => {
+  const { cursor, limit } = req.query;
+  const limitNum = limit ? Math.min(Number(limit), 100) : 50;
+
+  const result = await albumService.getPhotosPaginated(
+    req.user!.id,
+    cursor as string | null,
+    limitNum
+  );
+
+  res.json({ success: true, data: result });
+});
+
+/**
+ * @swagger
+ * /album/photos/upload:
+ *   post:
+ *     summary: 上传照片到相册
+ *     tags: [相册]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: 图片文件
+ *     responses:
+ *       200:
+ *         description: 上传成功
+ *       400:
+ *         description: 未提供图片文件
+ */
+router.post('/photos/upload', authMiddleware, upload.single('file'), async (req: any, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No image file provided' });
+    }
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const ext = req.file.originalname.split('.').pop() || 'jpg';
+    const url = await uploadChatImage(req.user.id, req.file.buffer, ext);
+
+    // Create album photo record
+    const photo = await albumService.addPhoto(req.user.id, url);
+
+    res.json({ success: true, data: photo });
+  } catch (err) {
+    console.error('Album upload error:', err);
+    res.status(500).json({ success: false, error: 'Failed to upload image' });
   }
 });
 

@@ -56,7 +56,9 @@ export async function tryParseUserInput(
   userId: number
 ): Promise<FallbackResult> {
   // 优先级 1：围度数据
+  console.log('[FallbackHandler] Parsing text:', text.substring(0, 100));
   const measurements = tryParseMeasurements(text);
+  console.log('[FallbackHandler] Measurements found:', measurements.length);
   if (measurements.length > 0) {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -73,8 +75,23 @@ export async function tryParseUserInput(
   }
 
   // 优先级 2：训练数据（使用动作库）
+  console.log('[FallbackHandler] Trying workout parsing...');
   const workout = await tryParseWorkout(text, userId);
+  console.log('[FallbackHandler] Workout parsed:', workout ? JSON.stringify(workout).substring(0, 200) : 'null');
   if (workout) {
+    // 检查是否是部分解析（只有动作名+重量，缺少组数次数）
+    const hasPartial = workout.exercises.some((e: any) => e._partial);
+    if (hasPartial) {
+      const partialExercises = workout.exercises.filter((e: any) => e._partial);
+      const exerciseNames = partialExercises.map((e: any) => e.name).join('、');
+      const weights = partialExercises.map((e: any) => `${e.name}${e.weight}kg`).join('、');
+      return {
+        success: false,
+        reply: `好的，你做了${exerciseNames}，重量分别是${weights}。请问一共几组？每组几次？`,
+        parsedData: { type: 'workout', data: workout }
+      };
+    }
+
     try {
       const result = await saveService.saveWorkout(userId, workout.date, workout.exercises);
       return {
@@ -189,17 +206,19 @@ function tryParseMeasurements(text: string): Array<{ body_part: string; value: n
 async function tryParseWorkout(
   text: string,
   _userId: number
-): Promise<{ date: string; exercises: Array<{ name: string; sets?: number; reps?: number; weight?: number; duration?: number; distance?: number }> } | null> {
+): Promise<{ date: string; exercises: Array<{ name: string; sets?: number; reps?: number; weight?: number; duration?: number; distance?: number; _partial?: boolean }> } | null> {
   const exerciseNames = await getExerciseNames();
   if (exerciseNames.length === 0) {
+    console.log('[FallbackHandler] No exercise names cached, using simple parser');
     return tryParseWorkoutSimple(text);
   }
 
-  const exercises: Array<{ name: string; sets?: number; reps?: number; weight?: number; duration?: number; distance?: number }> = [];
+  const exercises: Array<{ name: string; sets?: number; reps?: number; weight?: number; duration?: number; distance?: number; _partial?: boolean }> = [];
 
   // 构建动作名称正则：优先匹配长名称
   const sortedNames = [...exerciseNames].sort((a, b) => b.length - a.length);
   const namePattern = sortedNames.join('|');
+  console.log('[FallbackHandler] Exercise names loaded:', exerciseNames.length, ', pattern length:', namePattern.length);
 
   // 匹配训练记录：动作名 + 重量 + 组数 + 次数
   const fullPattern = new RegExp(`(${namePattern})\\s*(\\d+(?:\\.\\d+)?)\\s*(?:公斤|kg)?\\s*(\\d+)\\s*(?:组|个)?\\s*[每x]?\\s*(\\d+)\\s*(?:次|个)?`, 'i');
@@ -207,7 +226,12 @@ async function tryParseWorkout(
   // 简单匹配：动作名 + 数字
   const simplePattern = new RegExp(`(${namePattern})\\s*(\\d+)\\s*(?:组|个|次)`, 'i');
 
+  // 部分匹配：动作名 + 重量（无组数次数）
+  const weightOnlyPattern = new RegExp(`(${namePattern})\\s*(\\d+(?:\\.\\d+)?)\\s*(?:公斤|kg)`, 'i');
+
+  console.log('[FallbackHandler] Testing patterns on:', text);
   let match = text.match(fullPattern);
+  console.log('[FallbackHandler] Full pattern match:', match ? match[0] : 'null');
   if (match) {
     exercises.push({
       name: match[1],
@@ -217,11 +241,28 @@ async function tryParseWorkout(
     });
   } else {
     match = text.match(simplePattern);
+    console.log('[FallbackHandler] Simple pattern match:', match ? match[0] : 'null');
     if (match) {
       exercises.push({
         name: match[1],
         reps: parseInt(match[2])
       });
+    } else {
+      // 检查是否有重量但无组数次数的输入
+      const weightMatch = text.match(weightOnlyPattern);
+      console.log('[FallbackHandler] Weight-only pattern match:', weightMatch ? weightMatch[0] : 'null');
+      if (weightMatch) {
+        console.log('[FallbackHandler] Partial match detected: exercise=', weightMatch[1], 'weight=', weightMatch[2]);
+        // 返回部分解析结果，让调用方询问用户补充信息
+        return {
+          date: new Date().toISOString().split('T')[0],
+          exercises: [{
+            name: weightMatch[1],
+            weight: parseFloat(weightMatch[2]),
+            _partial: true  // 标记为部分解析，需要补充信息
+          }]
+        };
+      }
     }
   }
 
@@ -246,6 +287,7 @@ async function tryParseWorkout(
       { regex: /游泳了?(\d+(?:\.\d+)?)\s*米/i, name: '游泳', distanceKey: 'distance' },
       { regex: /骑行了?(\d+(?:\.\d+)?)\s*(?:公里|km)/i, name: '骑行', distanceKey: 'distance' },
       { regex: /hiit\s*(\d+)\s*分钟/i, name: 'HIIT', durationKey: 'duration' },
+      { regex: /(?:跑了?|步行了?|游泳了?|骑行了?)\s*$/i, name: null },  // 检测有氧关键词但无数据
     ];
 
     for (const pattern of cardioPatterns) {
