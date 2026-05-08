@@ -129,7 +129,9 @@ function tryParseMeasurements(text: string): Array<{ body_part: string; value: n
     results.push({ body_part: 'biceps_r', value: parseFloat(rightBicepsMatch[1]) });
   }
   if (bicepsMatch && !leftBicepsMatch && !rightBicepsMatch) {
-    results.push({ body_part: 'biceps', value: parseFloat(bicepsMatch[1]) });
+    // 用户说"臂围36"时，同时更新左右臂围
+    results.push({ body_part: 'biceps_l', value: parseFloat(bicepsMatch[1]) });
+    results.push({ body_part: 'biceps_r', value: parseFloat(bicepsMatch[1]) });
   }
 
   // 大腿围 - 先匹配左右，再匹配通用
@@ -144,7 +146,9 @@ function tryParseMeasurements(text: string): Array<{ body_part: string; value: n
     results.push({ body_part: 'thigh_r', value: parseFloat(rightThighMatch[1]) });
   }
   if (thighMatch && !leftThighMatch && !rightThighMatch) {
-    results.push({ body_part: 'thighs', value: parseFloat(thighMatch[1]) });
+    // 用户说"大腿围36"时，同时更新左右大腿围
+    results.push({ body_part: 'thigh_l', value: parseFloat(thighMatch[1]) });
+    results.push({ body_part: 'thigh_r', value: parseFloat(thighMatch[1]) });
   }
 
   // 小腿围 - 先匹配左右，再匹配通用
@@ -159,7 +163,9 @@ function tryParseMeasurements(text: string): Array<{ body_part: string; value: n
     results.push({ body_part: 'calf_r', value: parseFloat(rightCalfMatch[1]) });
   }
   if (calfMatch && !leftCalfMatch && !rightCalfMatch) {
-    results.push({ body_part: 'calves', value: parseFloat(calfMatch[1]) });
+    // 用户说"小腿围36"时，同时更新左右小腿围
+    results.push({ body_part: 'calf_l', value: parseFloat(calfMatch[1]) });
+    results.push({ body_part: 'calf_r', value: parseFloat(calfMatch[1]) });
   }
 
   // 体重
