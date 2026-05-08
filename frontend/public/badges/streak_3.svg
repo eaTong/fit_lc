@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bronzeGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A857"/>
+      <stop offset="100%" stop-color="#8B4513"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#bronzeGrad5)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#DDA15E" stroke-width="2" opacity="0.5"/>
+  <!-- Fire/flame icon for streak -->
+  <g transform="translate(44, 30)">
+    <path d="M20 4 Q28 12 28 20 Q28 28 20 32 Q12 28 12 20 Q12 12 20 4" fill="white"/>
+    <path d="M20 12 Q24 16 24 22 Q24 28 20 30 Q16 28 16 22 Q16 16 20 12" fill="#CD7F32"/>
+    <path d="M28 16 Q36 20 36 28 Q36 34 28 36 Q20 34 20 28" stroke="white" stroke-width="2" fill="none"/>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#8B4513" font-size="12" font-weight="bold">连续3天</text>
+</svg>

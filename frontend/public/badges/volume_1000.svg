@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bronzeGrad7" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A857"/>
+      <stop offset="100%" stop-color="#8B4513"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#bronzeGrad7)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#DDA15E" stroke-width="2" opacity="0.5"/>
+  <!-- Weight plates stacked -->
+  <g transform="translate(36, 32)">
+    <circle cx="28" cy="8" r="6" fill="white"/>
+    <circle cx="28" cy="22" r="8" fill="white"/>
+    <circle cx="28" cy="40" r="10" fill="white"/>
+    <text x="28" y="13" text-anchor="middle" fill="#8B4513" font-size="6" font-weight="bold">1K</text>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#8B4513" font-size="12" font-weight="bold">初窥门径</text>
+</svg>

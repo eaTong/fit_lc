@@ -1,0 +1,19 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE566"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#goldGrad)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#FFFACD" stroke-width="2" opacity="0.6"/>
+  <!-- Crown icon -->
+  <g transform="translate(38, 32)">
+    <path d="M4 40 L4 16 L14 24 L26 8 L38 24 L48 16 L48 40 Z" fill="white"/>
+    <circle cx="14" cy="16" r="4" fill="white"/>
+    <circle cx="26" cy="8" r="4" fill="white"/>
+    <circle cx="38" cy="16" r="4" fill="white"/>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#8B6914" font-size="12" font-weight="bold">训练高手</text>
+</svg>

@@ -1,0 +1,20 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="platinumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8E8E8"/>
+      <stop offset="30%" stop-color="#D0D0D0"/>
+      <stop offset="70%" stop-color="#A0A0A0"/>
+      <stop offset="100%" stop-color="#707070"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#platinumGrad)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>
+  <!-- Phoenix/100 days icon -->
+  <g transform="translate(34, 28)">
+    <path d="M30 8 L34 16 L42 12 L38 20 L48 18 L40 24 L44 32 L36 28 L30 36 L34 26 L24 24 L32 20 L30 8" fill="white"/>
+    <path d="M20 20 L26 22 L22 16 Z" fill="#D0D0D0"/>
+    <path d="M44 22 L50 18 L46 26 Z" fill="#D0D0D0"/>
+    <circle cx="30" cy="20" r="3" fill="#FFD700"/>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#404040" font-size="12" font-weight="bold">百日蜕变</text>
+</svg>

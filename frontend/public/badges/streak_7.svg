@@ -1,0 +1,22 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bronzeGrad6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A857"/>
+      <stop offset="100%" stop-color="#8B4513"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#bronzeGrad6)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#DDA15E" stroke-width="2" opacity="0.5"/>
+  <!-- Calendar with fire -->
+  <g transform="translate(38, 32)">
+    <rect x="0" y="4" width="48" height="40" rx="4" fill="white"/>
+    <rect x="0" y="4" width="48" height="12" rx="4" fill="#CD7F32"/>
+    <rect x="16" y="0" width="4" height="8" fill="white"/>
+    <rect x="28" y="0" width="4" height="8" fill="white"/>
+    <circle cx="16" cy="28" r="4" fill="#CD7F32"/>
+    <circle cx="24" cy="28" r="4" fill="#CD7F32"/>
+    <circle cx="32" cy="28" r="4" fill="#CD7F32"/>
+    <circle cx="40" cy="28" r="4" fill="#CD7F32"/>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#8B4513" font-size="12" font-weight="bold">一周坚持</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="silverGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8E8E8"/>
+      <stop offset="50%" stop-color="#C0C0C0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#silverGrad3)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/>
+  <!-- Two weeks - calendar -->
+  <g transform="translate(38, 32)">
+    <rect x="0" y="4" width="48" height="40" rx="4" fill="white"/>
+    <rect x="0" y="4" width="48" height="12" rx="4" fill="#A0A0A0"/>
+    <rect x="16" y="0" width="4" height="8" fill="white"/>
+    <rect x="28" y="0" width="4" height="8" fill="white"/>
+    <!-- Check marks for 14 days -->
+    <path d="M8 28 L12 32 L18 24" stroke="#808080" stroke-width="2" fill="none"/>
+    <path d="M22 28 L26 32 L32 24" stroke="#808080" stroke-width="2" fill="none"/>
+    <path d="M36 28 L40 32 L46 24" stroke="#808080" stroke-width="2" fill="none"/>
+    <path d="M8 38 L12 42 L18 34" stroke="#808080" stroke-width="2" fill="none"/>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#606060" font-size="12" font-weight="bold">两周自律</text>
+</svg>

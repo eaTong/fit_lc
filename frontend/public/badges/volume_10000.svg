@@ -1,0 +1,21 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="silverGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8E8E8"/>
+      <stop offset="50%" stop-color="#C0C0C0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#silverGrad4)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/>
+  <!-- Heavy weight stack -->
+  <g transform="translate(32, 28)">
+    <rect x="0" y="32" width="56" height="8" rx="2" fill="white"/>
+    <rect x="8" y="22" width="40" height="10" rx="2" fill="white"/>
+    <rect x="16" y="12" width="24" height="10" rx="2" fill="white"/>
+    <circle cx="48" cy="22" r="10" fill="white"/>
+    <circle cx="56" cy="8" r="8" fill="white"/>
+    <text x="48" y="25" text-anchor="middle" fill="#606060" font-size="6" font-weight="bold">10K</text>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#606060" font-size="12" font-weight="bold">举重若轻</text>
+</svg>

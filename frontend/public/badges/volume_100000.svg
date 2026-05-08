@@ -1,0 +1,20 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE566"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="60" r="48" fill="url(#goldGrad3)"/>
+  <circle cx="64" cy="60" r="40" fill="none" stroke="#FFFACD" stroke-width="2" opacity="0.6"/>
+  <!-- Mountain/power icon -->
+  <g transform="translate(32, 28)">
+    <path d="M4 48 L32 8 L60 48 Z" fill="white"/>
+    <path d="M24 48 L32 28 L40 48 Z" fill="#FFD700"/>
+    <path d="M40 48 L52 24 L64 48 Z" fill="white" opacity="0.8"/>
+    <circle cx="56" cy="12" r="6" fill="white"/>
+    <text x="32" y="56" text-anchor="middle" fill="#8B6914" font-size="8" font-weight="bold">100K</text>
+  </g>
+  <text x="64" y="120" text-anchor="middle" fill="#8B6914" font-size="12" font-weight="bold">力拔山兮</text>
+</svg>
