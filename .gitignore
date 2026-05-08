@@ -36,6 +36,7 @@ coverage/
 # Backend
 backend/node_modules/
 backend/logs/
+backend/test-results/
 
 # AI 生成的数据
 backend/output/*.json

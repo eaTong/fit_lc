@@ -264,3 +264,32 @@
 .send-btn {
   color: var(--color-accent);
 }
+
+/* 需要补充信息的提示 */
+.needs-more-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16rpx 24rpx;
+  margin-top: 12rpx;
+  background: linear-gradient(135deg, rgba(255, 69, 0, 0.1), rgba(220, 20, 60, 0.05));
+  border: 1px solid var(--color-accent);
+  border-radius: 12rpx;
+}
+
+.needs-more-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.needs-more-text {
+  font-size: 26rpx;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.missing-fields {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  margin-top: 8rpx;
+}

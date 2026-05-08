@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { generateWorkoutFeedback } from '../../../src/services/coachFeedbackService';
 
-// Mock prisma before importing the service
-const mockPrisma = {
+// Mock prisma - define mocks directly in factory
+jest.mock('../../../src/config/prisma', () => ({
   workout: {
     findUnique: jest.fn(),
     findMany: jest.fn()
   }
-};
+}));
 
-jest.mock('../../../src/config/prisma', () => mockPrisma);
+import prisma from '../../../src/config/prisma';
 
 describe('CoachFeedbackService', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('CoachFeedbackService', () => {
     });
 
     it('should return default feedback for non-existent workout', async () => {
-      mockPrisma.workout.findUnique.mockResolvedValue(null);
+      (prisma.workout.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await generateWorkoutFeedback(1, 999);
 

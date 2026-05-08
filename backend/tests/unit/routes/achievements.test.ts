@@ -3,13 +3,11 @@ import request from 'supertest';
 import express from 'express';
 import { cleanDatabase } from '../../fixtures/factories';
 
-// Mock auth middleware FIRST - must be before importing the router
-jest.mock('../../../src/middleware/auth', () => ({
-  authMiddleware: (req: any, res: any, next: any) => {
-    req.user = { id: 1, email: 'test@test.com', roles: [] };
-    next();
-  }
-}));
+// Mock auth middleware - inject req.user directly
+const mockAuth = (req: any, res: any, next: any) => {
+  req.user = { id: 1, email: 'test@test.com', roles: [] };
+  next();
+};
 
 // Mock services - inline
 jest.mock('../../../src/services/personalRecordService', () => ({
@@ -46,7 +44,7 @@ import achievementsRouter from '../../../src/routes/achievements';
 
 const app = express();
 app.use(express.json());
-app.use('/achievements', achievementsRouter);
+app.use('/achievements', mockAuth, achievementsRouter);
 
 describe('achievements routes', () => {
   beforeAll(async () => {

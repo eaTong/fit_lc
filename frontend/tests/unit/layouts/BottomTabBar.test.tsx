@@ -16,7 +16,7 @@ describe('BottomTabBar', () => {
     renderWithRouter('/chat');
 
     expect(screen.getByText('首页')).toBeTruthy();
-    expect(screen.getByText('知识')).toBeTruthy();
+    expect(screen.getByText('动作')).toBeTruthy();
     expect(screen.getByText('我的')).toBeTruthy();
   });
 
@@ -24,7 +24,7 @@ describe('BottomTabBar', () => {
     renderWithRouter('/chat');
 
     expect(screen.getByText('🏠')).toBeTruthy();
-    expect(screen.getByText('📚')).toBeTruthy();
+    expect(screen.getByText('💪')).toBeTruthy();
     expect(screen.getByText('👤')).toBeTruthy();
   });
 
@@ -36,7 +36,7 @@ describe('BottomTabBar', () => {
 
     const hrefs = links.map(link => link.getAttribute('href'));
     expect(hrefs).toContain('/chat');
-    expect(hrefs).toContain('/muscles');
+    expect(hrefs).toContain('/exercises');
     expect(hrefs).toContain('/profile');
   });
 
@@ -47,18 +47,11 @@ describe('BottomTabBar', () => {
     expect(homeTab?.className).toContain('text-accent-orange');
   });
 
-  it('highlights 知识 tab on /muscles', () => {
-    renderWithRouter('/muscles');
-
-    const knowledgeTab = screen.getByText('知识').closest('a');
-    expect(knowledgeTab?.className).toContain('text-accent-orange');
-  });
-
-  it('highlights 知识 tab on /exercises', () => {
+  it('highlights 动作 tab on /exercises', () => {
     renderWithRouter('/exercises');
 
-    const knowledgeTab = screen.getByText('知识').closest('a');
-    expect(knowledgeTab?.className).toContain('text-accent-orange');
+    const exercisesTab = screen.getByText('动作').closest('a');
+    expect(exercisesTab?.className).toContain('text-accent-orange');
   });
 
   it('highlights 我的 tab on /profile', () => {

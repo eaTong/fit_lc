@@ -76,6 +76,8 @@ export interface SavedData {
   type: ToolType;
   id?: number;  // 仅保存型工具有 id
   meta?: QueryMeta | AnalysisMeta;
+  needsMoreInfo?: boolean;  // 标记是否需要补充信息
+  missingFields?: { field: string; label: string }[];  // 缺失的字段信息
 }
 
 // 计划

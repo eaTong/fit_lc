@@ -1,5 +1,7 @@
+//@ts-ignore
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
+// @ts-ignore
 import path from 'path';
 import { execSync } from 'child_process';
 

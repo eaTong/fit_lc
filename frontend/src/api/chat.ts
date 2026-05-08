@@ -1,7 +1,36 @@
 import client from './client';
 import type { ChatMessage, SavedData } from '../types';
 
-function parseSavedData(reply: string): { parsed: string; savedData?: SavedData } {
+function parseSavedData(reply: string, toolData?: any): { parsed: string; savedData?: SavedData } {
+  // Check if toolData indicates missing information
+  if (toolData?.status === 'needs_more_info') {
+    return {
+      parsed: toolData.aiReply || reply,  // Use AI reply if provided
+      savedData: {
+        type: toolData.dataType as SavedData['type'] || 'workout',
+        needsMoreInfo: true,
+        missingFields: toolData.missingFields || []
+      }
+    };
+  }
+
+  // Check for new plan generation with schedule (no ID yet)
+  if (toolData?.dataType === 'plan' && toolData.result?.schedule && !toolData.result.id) {
+    // This is a plan generation response with schedule but no saved ID
+    return {
+      parsed: toolData.aiReply || reply,
+      savedData: {
+        type: 'plan',
+        needsMoreInfo: true,
+        meta: {
+          type: 'plan',
+          planName: toolData.result.planName,
+          schedule: toolData.result.schedule
+        }
+      }
+    };
+  }
+
   const match = reply.match(/^__SAVED_TYPE__:(.+?)__:MESSAGE__(.+)$/s);
   if (!match) return { parsed: reply };
 
@@ -41,12 +70,12 @@ export const chatApi = {
     historyMessages: ChatMessage[] = [],
     imageUrls: string[] = []
   ): Promise<{ reply: string; savedData?: SavedData }> {
-    const { data } = await client.post<{ reply: string; savedData?: SavedData }>('/chat/message', {
+    const { data } = await client.post<{ reply: string; toolData?: any }>('/chat/message', {
       message,
       historyMessages,
       imageUrls,
     });
-    const { parsed, savedData } = parseSavedData(data.reply);
+    const { parsed, savedData } = parseSavedData(data.reply, data.toolData);
     return { reply: parsed, savedData };
   },
 

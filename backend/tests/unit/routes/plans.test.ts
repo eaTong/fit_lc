@@ -22,8 +22,14 @@ jest.mock('../../../src/services/planService', () => ({
     getPlan: jest.fn().mockResolvedValue(null),
     createPlan: jest.fn().mockResolvedValue(1),
     updatePlan: jest.fn().mockResolvedValue(undefined),
-    deletePlan: jest.fn().mockResolvedValue(undefined),
-    activatePlan: jest.fn().mockResolvedValue(undefined),
+    deletePlan: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('Plan not found'));
+      return Promise.resolve(undefined);
+    }),
+    activatePlan: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('Plan not found'));
+      return Promise.resolve(undefined);
+    }),
     adjustPlan: jest.fn().mockResolvedValue(undefined),
     recordExecution: jest.fn().mockResolvedValue(1),
     getPlanAnalysis: jest.fn().mockResolvedValue({}),
@@ -31,17 +37,15 @@ jest.mock('../../../src/services/planService', () => ({
   }
 }));
 
-// Mock auth middleware to inject user
-jest.mock('../../../src/middleware/auth', () => ({
-  authMiddleware: (req: any, res: any, next: any) => {
-    req.user = { id: 1, email: 'test@test.com', roles: [] };
-    next();
-  }
-}));
+// Mock auth middleware - inject req.user directly
+const mockAuth = (req: any, res: any, next: any) => {
+  req.user = { id: 1, email: 'test@test.com', roles: [] };
+  next();
+};
 
 const app = express();
 app.use(express.json());
-app.use('/plans', plansRouter);
+app.use('/plans', mockAuth, plansRouter);
 
 describe('plans routes', () => {
   beforeAll(async () => {

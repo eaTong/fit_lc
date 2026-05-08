@@ -43,6 +43,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         savedData,
       };
       set((state) => ({ messages: [...state.messages, assistantMessage], isLoading: false }));
+
+      // 如果需要补充信息，设置 lastUserMessageContent 方便用户在输入框补充
+      if (savedData?.needsMoreInfo) {
+        set({ lastUserMessageContent: content });
+      }
     } catch {
       set((state) => ({
         messages: [

@@ -38,6 +38,15 @@
           <analysis-card wx:if="{{item.toolData.dataType === 'execution_analysis'}}" data="{{item.toolData.result}}" />
         </view>
 
+        <!-- 需要补充信息的提示 -->
+        <view wx:if="{{item.needsMoreInfo}}" class="needs-more-info">
+          <text class="needs-more-icon">💡</text>
+          <text class="needs-more-text">请补充信息后再次发送</text>
+          <text wx:if="{{item.missingFields && item.missingFields.length > 0}}" class="missing-fields">
+            需要：{{item.missingFields}}
+          </text>
+        </view>
+
         <!-- AI 回复文字 -->
         <text class="message-text" wx:if="{{item.role === 'assistant'}}">{{item.toolData ? item.toolData.aiReply : item.content}}</text>
         <text class="message-text" wx:else>{{item.content}}</text>

@@ -28,13 +28,11 @@ jest.mock('../../../src/repositories/statsRepository', () => ({
   }
 }));
 
-// Mock auth middleware to inject user
-jest.mock('../../../src/middleware/auth', () => ({
-  authMiddleware: (req: any, res: any, next: any) => {
-    req.user = { id: 1, email: 'test@test.com', roles: [] };
-    next();
-  }
-}));
+// Mock auth middleware - inject req.user directly
+const mockAuth = (req: any, res: any, next: any) => {
+  req.user = { id: 1, email: 'test@test.com', roles: [] };
+  next();
+};
 
 // Mock recordService
 jest.mock('../../../src/services/recordService', () => ({
@@ -42,10 +40,22 @@ jest.mock('../../../src/services/recordService', () => ({
     getWorkouts: jest.fn().mockResolvedValue([]),
     getMeasurements: jest.fn().mockResolvedValue([]),
     getStats: jest.fn().mockResolvedValue({ totalWorkouts: 0, totalMeasurements: 0 }),
-    deleteWorkout: jest.fn().mockResolvedValue(undefined),
-    deleteMeasurement: jest.fn().mockResolvedValue(undefined),
-    restoreWorkout: jest.fn().mockResolvedValue(undefined),
-    restoreMeasurement: jest.fn().mockResolvedValue(undefined),
+    deleteWorkout: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('训练记录不存在'));
+      return Promise.resolve(undefined);
+    }),
+    deleteMeasurement: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('围度记录不存在'));
+      return Promise.resolve(undefined);
+    }),
+    restoreWorkout: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('训练记录不存在'));
+      return Promise.resolve(undefined);
+    }),
+    restoreMeasurement: jest.fn().mockImplementation((id, userId) => {
+      if (id === 99999) return Promise.reject(new Error('围度记录不存在'));
+      return Promise.resolve(undefined);
+    }),
     getMeasurementByDate: jest.fn().mockResolvedValue(null),
     upsertMeasurementItems: jest.fn().mockResolvedValue(undefined),
     createMeasurementWithItems: jest.fn().mockResolvedValue({ id: 1, date: new Date() }),
@@ -55,7 +65,7 @@ jest.mock('../../../src/services/recordService', () => ({
 
 const app = express();
 app.use(express.json());
-app.use('/records', recordsRouter);
+app.use('/records', mockAuth, recordsRouter);
 
 describe('records routes', () => {
   beforeAll(async () => {

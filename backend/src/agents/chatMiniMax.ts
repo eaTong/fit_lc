@@ -8,18 +8,16 @@ const MINIMAX_BASE_URL = "https://api.minimax.chat/v1";
  * MiniMax 提供 OpenAI 兼容 API
  */
 export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}): ChatOpenAI {
-  return new ChatOpenAI(
-    {
-      apiKey: process.env.MINIMAX_API_KEY || '',
-      model: "MiniMax-M2.7",
-      temperature: fields.temperature ?? 0.7,
-      maxTokens: fields.maxTokens ?? 4096,
-      ...fields,
+  return new ChatOpenAI({
+    apiKey: process.env.MINIMAX_API_KEY || '',
+    model: "MiniMax-M2.7",
+    temperature: fields.temperature ?? 0.7,
+    maxTokens: fields.maxTokens ?? 4096,
+    configuration: {
+      baseURL: MINIMAX_BASE_URL,
     },
-    {
-      basePath: MINIMAX_BASE_URL,
-    }
-  );
+    ...fields,
+  });
 }
 
 /**
@@ -43,17 +41,15 @@ export class ChatMiniMax extends ChatOpenAI {
   constructor(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}) {
     const apiKey = (fields.apiKey as string) || process.env.MINIMAX_API_KEY || '';
 
-    super(
-      {
-        apiKey,
-        model: (fields.model as string) || "MiniMax-M2.7",
-        temperature: fields.temperature ?? 0.7,
-        maxTokens: fields.maxTokens ?? 4096,
+    super({
+      apiKey,
+      model: (fields.model as string) || "MiniMax-M2.7",
+      temperature: fields.temperature ?? 0.7,
+      maxTokens: fields.maxTokens ?? 4096,
+      configuration: {
+        baseURL: MINIMAX_BASE_URL,
       },
-      {
-        basePath: MINIMAX_BASE_URL,
-      }
-    );
+    });
 
     this.minimaxApiKey = apiKey;
   }

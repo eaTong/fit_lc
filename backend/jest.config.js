@@ -14,6 +14,7 @@ export default {
       tsconfig: {
         module: 'ESNext',
         moduleResolution: 'bundler',
+        target: 'ES2022',
         allowJs: true,
         esModuleInterop: true,
         strict: false,

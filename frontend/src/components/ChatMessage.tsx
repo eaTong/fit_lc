@@ -25,7 +25,24 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
 
   const renderCard = () => {
     if (!message.savedData) return null;
-    const { type, id, meta } = message.savedData;
+    const { type, id, meta, needsMoreInfo } = message.savedData;
+
+    // 如果需要补充信息，显示提示卡片
+    if (needsMoreInfo) {
+      return (
+        <div className="mt-2 p-3 bg-accent-orange/10 border border-accent-orange/30 rounded-lg">
+          <div className="flex items-center gap-2 text-accent-orange text-sm">
+            <span>💡</span>
+            <span>需要补充信息</span>
+          </div>
+          {message.savedData.missingFields && message.savedData.missingFields.length > 0 && (
+            <p className="text-text-secondary text-sm mt-1">
+              请补充：{message.savedData.missingFields.map(f => f.label).join('或')}
+            </p>
+          )}
+        </div>
+      );
+    }
 
     if (type === 'plan') {
       return <PlanCard planId={id!} planName={(meta as any)?.name} />;
@@ -134,7 +151,7 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
           </button>
         )}
 
-        {!isUser && isSaved && onUndo && !isRevoked && canUndo(message.savedData?.type) && (
+        {!isUser && isSaved && onUndo && !isRevoked && canUndo(message.savedData?.type) && !message.savedData?.needsMoreInfo && (
           <button
             onClick={onUndo}
             className="mt-2 text-sm text-accent-orange hover:text-accent-red transition-colors"

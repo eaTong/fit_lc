@@ -1,56 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
+import bcrypt from 'bcrypt';
 import authRouter from '../../../src/routes/auth';
-import { cleanDatabase } from '../../fixtures/factories';
+import { cleanDatabase, createTestUser } from '../../fixtures/factories';
 import prisma from '../../../src/config/prisma';
-
-// Mock prisma to avoid database connections
-jest.mock('../../../src/config/prisma', () => ({
-  __esModule: true,
-  default: {
-    user: {
-      create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com', passwordHash: 'hash' }),
-      findUnique: jest.fn().mockResolvedValue(null),
-      findFirst: jest.fn().mockResolvedValue(null),
-    },
-    role: {
-      findUnique: jest.fn().mockResolvedValue({ id: 1, name: 'normal' }),
-    },
-    userRole: {
-      create: jest.fn().mockResolvedValue({ id: 1 }),
-    },
-    $transaction: jest.fn((fn) => fn({
-      user: {
-        create: jest.fn().mockResolvedValue({ id: 1, email: 'test@example.com', passwordHash: 'hash' }),
-        findUnique: jest.fn().mockResolvedValue(null),
-      },
-      role: {
-        findUnique: jest.fn().mockResolvedValue({ id: 1, name: 'normal' }),
-      },
-      userRole: {
-        create: jest.fn().mockResolvedValue({ id: 1 }),
-      }
-    })),
-    $disconnect: jest.fn()
-  }
-}));
-
-// Mock userRepository
-jest.mock('../../../src/repositories/userRepository', () => ({
-  userRepository: {
-    findByEmail: jest.fn().mockResolvedValue(null),
-    findById: jest.fn().mockResolvedValue(null),
-  }
-}));
-
-const app = express();
-app.use(express.json());
-app.use('/auth', authRouter);
 
 describe('auth routes', () => {
   beforeAll(async () => {
-    // Test setup
+    // Ensure normal role exists
+    const role = await prisma.role.findUnique({ where: { name: 'normal' } });
+    if (!role) {
+      await prisma.role.create({ data: { name: 'normal' } });
+    }
   });
 
   afterAll(async () => {
@@ -59,7 +21,31 @@ describe('auth routes', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    // Use a transaction to clean - must delete child records first
+    await prisma.$transaction(async (tx) => {
+      // Delete all user-owned records first (tables without cascade delete on user_id)
+      await tx.workout.deleteMany();
+      await tx.bodyMeasurement.deleteMany();
+      await tx.workoutPlan.deleteMany();
+      // Now delete user-related linkage tables
+      await tx.triggerEvent.deleteMany();
+      await tx.trendPrediction.deleteMany();
+      await tx.aggregatedStats.deleteMany();
+      await tx.personalRecord.deleteMany();
+      await tx.bodyMetrics.deleteMany();
+      await tx.coachConfig.deleteMany();
+      await tx.userContext.deleteMany();
+      await tx.userProfile.deleteMany();
+      await tx.userRole.deleteMany();
+      // Finally delete users
+      await tx.user.deleteMany();
+    });
+
+    // Re-create the normal role after cleaning
+    const role = await prisma.role.findUnique({ where: { name: 'normal' } });
+    if (!role) {
+      await prisma.role.create({ data: { name: 'normal' } });
+    }
   });
 
   describe('POST /auth/register', () => {
@@ -104,18 +90,17 @@ describe('auth routes', () => {
         .send({ email: 'duplicate@example.com', password: 'password456' });
 
       expect(res.status).toBe(400);
+      expect(res.body.error).toContain('邮箱已被注册');
     });
   });
 
   describe('POST /auth/login', () => {
-    beforeEach(async () => {
-      // Create user for login tests
+    it('should login with valid credentials', async () => {
+      // First register
       await request(app)
         .post('/auth/register')
         .send({ email: 'login@example.com', password: 'password123' });
-    });
 
-    it('should login with valid credentials', async () => {
       const res = await request(app)
         .post('/auth/login')
         .send({ email: 'login@example.com', password: 'password123' });
@@ -136,9 +121,15 @@ describe('auth routes', () => {
     });
 
     it('should return 401 for invalid password', async () => {
+      // First register with correct password
+      await request(app)
+        .post('/auth/register')
+        .send({ email: 'login2@example.com', password: 'password123' });
+
+      // Try with wrong password
       const res = await request(app)
         .post('/auth/login')
-        .send({ email: 'login@example.com', password: 'wrongpassword' });
+        .send({ email: 'login2@example.com', password: 'wrongpassword' });
 
       expect(res.status).toBe(401);
       expect(res.body).toHaveProperty('error');
@@ -163,3 +154,8 @@ describe('auth routes', () => {
     });
   });
 });
+
+// Create app at describe level for reuse
+const app = express();
+app.use(express.json());
+app.use('/auth', authRouter);
