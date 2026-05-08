@@ -13,6 +13,7 @@ import { createChatModel } from './chatFactory';
 import { executeToolsBatch, extractToolCallsFromResponse, ToolExecutionResult } from './toolExecutor';
 import { tryParseUserInput } from './fallbackHandler';
 import { buildSystemPrompt, buildHistoryMessages } from './promptBuilder';
+import { compressHistory, markToolMessages, Message } from './historyCompressor';
 
 // 工具列表（用于 bindTools）
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -54,6 +55,7 @@ async function getModel() {
 
 /**
  * 运行健身 Agent V2
+ * 历史消息超过阈值时自动压缩
  */
 export async function runAgentV2(
   userId: number,
@@ -72,14 +74,26 @@ export async function runAgentV2(
   const { message: processedMessage } = await preprocessVision(message, imageUrls);
   console.log('[FitnessAgentV2] Processed message:', processedMessage.substring(0, 100));
 
+  // 1.5 历史消息压缩（如果需要）
+  const rawMessages: Message[] = historyMessages.map(m => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.content,
+    timestamp: Date.now()  // 默认时间戳
+  }));
+  const { recent: compressedHistory, summary: historySummary } = await compressHistory(rawMessages);
+
   // 2. 构建消息
-  const systemPrompt = buildSystemPrompt(userContext);
-  const history = buildHistoryMessages(historyMessages);
+  const systemPrompt = buildSystemPrompt(userContext, historySummary);
+  const history = buildHistoryMessages(
+    compressedHistory.map(m => ({ role: m.role, content: m.content }))
+  );
   const messages = [
     systemPrompt,
     ...history,
     new HumanMessage(processedMessage)
   ];
+
+  console.log('[FitnessAgentV2] Messages prepared:', messages.length, 'history compressed:', compressedHistory.length !== historyMessages.length);
 
   // 3. LLM 调用
   const model = await getModel();

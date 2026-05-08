@@ -251,14 +251,16 @@ interface ToolResponse<T = any> {
 }
 ```
 
-**Agent 返回结构：**
+**Agent V2 返回结构：**
 ```typescript
 {
   reply: string,      // AI 最终对话回复
-  savedData: { id: number, type: string } | null,  // 保存的数据标识
-  toolData: ToolResponse | null  // 完整的 tool 返回数据
+  toolData: ToolResponse | null,  // 完整的 tool 返回数据
+  errors?: string[]    // 执行错误列表（V2 新增）
 }
 ```
+
+> V2 移除了 `savedData` 字段，`toolData` 包含完整信息。
 
 ---
 
@@ -783,17 +785,34 @@ Router → Service → Repository
 | planExecution | planRepository.recordExecution() | 单条执行记录 |
 
 ### 5.4 LangChain Agent Tools
-| Tool | 功能 |
-|------|------|
-| save_workout | 记录训练数据 |
-| save_measurement | 记录身体围度 |
-| query_workout | 查询训练历史 |
-| query_measurement | 查询围度历史 |
-| query_exercise | 查询动作库 |
-| generate_plan | AI生成健身计划 |
-| adjust_plan | 调整现有计划 |
-| analyze_execution | 分析计划执行情况 |
-| analyze_image | 分析用户上传的图片（食物/身体照片） |
+
+> **Agent V2 架构文档：** 详见 [docs/architecture/fitness-agent-v2.md](../architecture/fitness-agent-v2.md)
+
+| Tool | 功能 | 类别 |
+|------|------|------|
+| save_workout | 记录训练数据 | save |
+| save_measurement | 记录身体围度 | save |
+| query_workout | 查询训练历史 | query |
+| query_measurement | 查询围度历史 | query |
+| generate_plan | AI生成健身计划 | plan |
+| adjust_plan | 调整现有计划 | plan |
+| analyze_execution | 分析计划执行情况 | analyze |
+
+**V2 特性：**
+- 批量工具并行执行（按类别分组）
+- 统一输入校验 + `needs_more_info` 状态处理
+- 熔断器保护（5次失败熔断30秒）
+- Fallback 文本解析兜底
+- 历史消息压缩（Hybrid 方案，控制 token 成本）
+
+**返回结构：**
+```typescript
+{
+  reply: string,      // AI 最终对话回复
+  toolData: ToolResponse | null,  // 工具返回数据
+  errors?: string[]    // 执行错误列表
+}
+```
 
 ---
 

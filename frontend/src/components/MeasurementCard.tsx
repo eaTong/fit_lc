@@ -24,9 +24,28 @@ const trendIcons = {
   flat: '—',
 };
 
+// Body part English to Chinese mapping
+const bodyPartLabels: Record<string, string> = {
+  chest: '胸围',
+  waist: '腰围',
+  hips: '臀围',
+  biceps: '臂围',
+  biceps_l: '左臂围',
+  biceps_r: '右臂围',
+  thighs: '大腿围',
+  thigh_l: '左大腿围',
+  thigh_r: '右大腿围',
+  calves: '小腿围',
+  calf_l: '左小腿围',
+  calf_r: '右小腿围',
+  weight: '体重',
+  bodyFat: '体脂率',
+};
+
 export default function MeasurementCard({ label, value, date, trend, onClick, onDelete, measurement, className = '' }: MeasurementCardProps) {
   // If measurement is provided, derive label and value from its first item (History page)
-  const displayLabel = label ?? (measurement?.items[0] ? measurement.items[0].bodyPart : '');
+  const rawBodyPart = measurement?.items[0] ? measurement.items[0].bodyPart : '';
+  const displayLabel = label ?? (rawBodyPart ? (bodyPartLabels[rawBodyPart] || rawBodyPart) : '');
   const displayValue = value ?? measurement?.items[0]?.value ?? null;
   const displayDate = date ?? measurement?.date;
 
@@ -51,7 +70,7 @@ export default function MeasurementCard({ label, value, date, trend, onClick, on
         {displayValue !== null ? (
           <>
             <span className="text-text-primary font-heading">{displayValue}</span>
-            <span className="text-text-muted text-sm">cm</span>
+            <span className="text-text-muted text-sm">{rawBodyPart === 'weight' || rawBodyPart === 'bodyFat' ? '' : 'cm'}</span>
             {trend && (
               <span className={`text-lg ${trendColors[trend]}`}>{trendIcons[trend]}</span>
             )}

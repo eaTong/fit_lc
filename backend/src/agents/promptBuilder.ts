@@ -15,8 +15,10 @@ interface UserContext {
 
 /**
  * 构建健身 Agent 系统提示词
+ * @param userContext 用户上下文
+ * @param historySummary 历史消息摘要（可选，用于压缩后的长对话）
  */
-export function buildSystemPrompt(userContext: UserContext | null): SystemMessage {
+export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null): SystemMessage {
   const {
     today: todayStr,
     yesterday: yesterdayStr,
@@ -24,6 +26,15 @@ export function buildSystemPrompt(userContext: UserContext | null): SystemMessag
     dayAfterTomorrow: dayAfterTomorrowStr,
     startOfWeekStr
   } = getWeekBounds();
+
+  // 历史摘要部分
+  let historySection = '';
+  if (historySummary) {
+    historySection = `\n【对话历史摘要】
+${historySummary}
+（以上是你与用户之前的对话要点）
+`;
+  }
 
   // 用户背景部分
   let contextSection = '';
@@ -72,6 +83,7 @@ ${userContext.context_text}
 
 ${coachPersona}
 
+${historySection}
 ${contextSection}
 
 【日期参考 - 今天：${todayStr}】

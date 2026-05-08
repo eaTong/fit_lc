@@ -1,6 +1,23 @@
 import React from 'react';
 import type { Workout, Measurement } from '../../types';
 
+const bodyPartLabels: Record<string, string> = {
+  chest: '胸围',
+  waist: '腰围',
+  hips: '臀围',
+  biceps: '臂围',
+  biceps_l: '左臂围',
+  biceps_r: '右臂围',
+  thighs: '大腿围',
+  thigh_l: '左大腿围',
+  thigh_r: '右大腿围',
+  calves: '小腿围',
+  calf_l: '左小腿围',
+  calf_r: '右小腿围',
+  weight: '体重',
+  bodyFat: '体脂率',
+};
+
 interface CalendarDetailProps {
   date: string; // 'YYYY-MM-DD' format
   workouts: Workout[];
@@ -68,7 +85,7 @@ export default function CalendarDetail({
           <h4 className="text-text-primary font-semibold mb-2">围度记录</h4>
           {measurements.map((measurement) => (
             <div key={measurement.id} className="text-text-secondary text-sm mb-1">
-              📏 {measurement.items.map((i) => `${i.bodyPart}: ${i.value}`).join(' / ')}
+              📏 {measurement.items.map((i) => `${bodyPartLabels[i.bodyPart] || i.bodyPart}: ${i.value}`).join(' / ')}
             </div>
           ))}
         </div>
