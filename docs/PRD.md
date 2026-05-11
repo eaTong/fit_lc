@@ -272,17 +272,42 @@ interface ToolResponse<T = any> {
 - `ClarificationManager` - 核心管理器，处理澄清会话创建、完成、过期
 - `clarificationStore` - 内存存储，TTL 5分钟
 - `clarificationPrompts` - 追问模板生成
-- `extractClarification` - 解析用户回复，补充缺失信息
+- `clarificationPrompts.ts` - 生成追问模板
+- `extractClarification.ts` - 解析用户回复，补充缺失信息
+  - `tryParseWorkout()` - 完整解析（包含动作名）
+  - `tryParseSetsAndReps()` - 仅解析组数/次数（复用已有动作名）
 
 **核心流程**:
 1. 用户输入 → LLM 识别意图 → 参数验证
 2. 信息不完整 → 创建澄清会话 → 生成追问
 3. 用户回复 → 合并上下文 → 重新验证/执行
 
+**部分输入保留**：
+当用户回复"3组7次"时（无动作名），系统复用 `partialInput` 中已有的动作名：
+```
+partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
+用户回复: "3组7次" → supplementedInput: { exercises: [{ name: "卧推", weight: 80, sets: 3, reps: 7 }] }
+```
+
 **限制**:
 - 同一用户同时只允许一个澄清会话
 - 最多3次追问循环
 - Session TTL 5分钟
+
+**API 返回标识**：
+```json
+{
+  "reply": "卧推 80kg，很棒！请问一共几组，每组几次？",
+  "toolData": { "clarificationSessionId": "uuid" },
+  "needsClarification": true
+}
+```
+
+| 标识 | 说明 |
+|------|------|
+| `needsClarification` | true 时表示需要追问 |
+| `clarificationSessionId` | 澄清会话 ID |
+| `clarificationEnded` | true 时表示澄清结束但信息仍不完整 |
 
 ---
 

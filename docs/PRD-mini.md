@@ -154,6 +154,26 @@ fitlc-mini/
 - 用户消息（右侧）+ AI 回复（左侧）
 - 已保存标识 + 撤销按钮
 - 时间戳显示
+- **追问提示**（意图澄清机制）：`needsClarification=true` 时显示追问提示样式
+- **澄清结束**：`clarificationEnded=true` 时显示澄清结束提示
+
+#### 4.1.6 意图澄清机制
+当用户输入信息不完整时，AI 自动追问。
+
+| API 返回标识 | 说明 |
+|-------------|------|
+| `needsClarification: true` | 表示需要追问 |
+| `clarificationSessionId` | 澄清会话 ID |
+| `clarificationEnded: true` | 澄清结束但信息仍不完整 |
+
+**示例流程**：
+```
+用户: "卧推80公斤"
+AI: "卧推 80kg，很棒！请问一共几组，每组几次？" (needsClarification: true)
+
+用户: "3组7次"
+AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
+```
 
 ### 4.2 动作库
 
