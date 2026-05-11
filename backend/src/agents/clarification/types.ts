@@ -15,7 +15,7 @@ export interface ClarificationSession {
     userMessage: string;
     llmInterpretation: string;
   };
-  clarificationCount: number;  // 澄清轮次计数
+  clarificationCount: number;
 }
 
 export interface ClarificationResult {
@@ -25,3 +25,6 @@ export interface ClarificationResult {
   sessionId: string;
   clarificationEnded?: boolean;
 }
+
+// Force TypeScript to emit this file
+export const __CLARIFICATION_TYPES_EXPORT = true;
