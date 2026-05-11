@@ -15,9 +15,10 @@ const chatActions = {
     const timestamp = Date.now();
     return post('/chat/message', { message: content, imageUrls }).then(res => {
       // 后端返回 { reply, toolData }
-      // 检查是否需要补充信息
-      const needsMoreInfo = res.toolData?.status === 'needs_more_info';
-      const missingFields = res.toolData?.missingFields || [];
+      // 检查是否需要追问（澄清机制）
+      const needsClarification = res.needsClarification === true || res.toolData?.clarificationSessionId;
+      const clarificationEnded = res.clarificationEnded === true;
+      const clarificationSessionId = res.toolData?.clarificationSessionId || null;
 
       // 返回用户消息和AI回复，构造完整的消息对象
       const userMessage = {
@@ -34,10 +35,11 @@ const chatActions = {
         // 从 toolData 提取 savedData 用于撤销判断
         savedData: res.toolData?.result?.id
           ? { id: res.toolData.result.id, type: res.toolData.dataType }
-          : (needsMoreInfo ? { type: res.toolData.dataType || 'workout', needsMoreInfo: true, missingFields } : null),
+          : (clarificationSessionId ? { type: res.toolData?.dataType || 'workout', clarificationSessionId } : null),
         toolData: res.toolData || null,
-        needsMoreInfo: needsMoreInfo,
-        missingFields: missingFields,
+        needsClarification: needsClarification,
+        clarificationEnded: clarificationEnded,
+        clarificationSessionId: clarificationSessionId,
         createdAt: new Date().toISOString()
       };
       return [userMessage, assistantMessage];
