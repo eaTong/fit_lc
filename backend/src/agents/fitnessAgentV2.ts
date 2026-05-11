@@ -14,6 +14,8 @@ import { executeToolsBatch, extractToolCallsFromResponse, ToolExecutionResult } 
 import { tryParseUserInput } from './fallbackHandler';
 import { buildSystemPrompt, buildHistoryMessages } from './promptBuilder';
 import { compressHistory, markToolMessages, Message } from './historyCompressor';
+import { clarificationManager } from './clarification';
+import { extractClarification补充 } from './clarification/extractClarification';
 
 // 工具列表（用于 bindTools）
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -67,12 +69,14 @@ export async function runAgentV2(
   reply: string;
   toolData: any;
   errors?: string[];
+  clarificationEnded?: boolean;
+  needsClarification?: boolean;
 }> {
   console.log('[FitnessAgentV2] Starting agent with message:', message.substring(0, 100));
 
   // 1. Vision 预处理
   console.log('[Step 1] Vision preprocessing...');
-  const { message: processedMessage } = await preprocessVision(message, imageUrls);
+  let processedMessage = (await preprocessVision(message, imageUrls)).message;
   console.log('[Step 1] Processed message:', processedMessage.substring(0, 200));
 
   // 1.5 历史消息压缩（如果需要）
@@ -86,6 +90,79 @@ export async function runAgentV2(
   console.log('[Step 1.5] History compressed:', historyMessages.length, '->', compressedHistory.length, 'messages');
   if (historySummary) {
     console.log('[Step 1.5] History summary:', historySummary.substring(0, 200));
+  }
+
+  // 1.6 检查澄清会话
+  console.log('[Step 1.6] Checking for active clarification session...');
+  const activeClarification = await clarificationManager.getActiveSession(userId);
+  if (activeClarification) {
+    console.log('[Step 1.6] Found active session:', activeClarification.id);
+
+    const { supplementedInput, hasNewData } = await extractClarification补充(
+      processedMessage,
+      activeClarification,
+      userId
+    );
+
+    if (hasNewData) {
+      console.log('[Step 1.6] Extracted new data from clarification response');
+
+      const stillMissing = activeClarification.missingFields.filter(f => {
+        const fieldPath = f.field;
+        if (fieldPath.includes('[')) {
+          const [arrayKey, rest] = fieldPath.split(/[\[\]]/);
+          return !supplementedInput[arrayKey]?.[0]?.[rest];
+        }
+        return supplementedInput[fieldPath] === undefined;
+      });
+
+      if (stillMissing.length === 0) {
+        // 澄清完成，直接执行工具而不依赖 LLM 再次调用
+        await clarificationManager.completeSession(activeClarification.id, userId, supplementedInput);
+        console.log('[Step 1.6] Clarification complete, executing tool directly');
+
+        // 直接执行工具，携带完整参数
+        const toolResult = await executeToolsBatch([{
+          name: activeClarification.toolName,
+          input: supplementedInput,
+          id: `clarification-complete-${activeClarification.id}`
+        }], userId);
+
+        if (toolResult.successCount > 0) {
+          const result = toolResult.results[0];
+          console.log('[Step 1.6] Tool executed successfully:', result.result?.aiReply);
+          return {
+            reply: result.result?.aiReply || '信息已保存',
+            toolData: result.result
+          };
+        } else {
+          // 工具执行失败，返回错误
+          return {
+            reply: toolResult.errors[0] || '保存失败，请重试',
+            toolData: null
+          };
+        }
+      } else {
+        activeClarification.partialInput = supplementedInput;
+        activeClarification.missingFields = stillMissing;
+        activeClarification.clarificationCount++;
+        console.log('[Step 1.6] Still missing:', stillMissing.map(f => f.label).join(', '));
+
+        if (clarificationManager.shouldEndClarification(activeClarification)) {
+          const reply = await clarificationManager.generateReply(activeClarification);
+          return { reply, toolData: null, clarificationEnded: true };
+        }
+
+        const reply = await clarificationManager.generateReply(activeClarification);
+        return { reply, toolData: { clarificationSessionId: activeClarification.id }, needsClarification: true };
+      }
+    } else {
+      // 无新数据，也递增计数防止无限循环
+      activeClarification.clarificationCount++;
+      console.log('[Step 1.6] No new data extracted, generating follow-up question');
+      const reply = await clarificationManager.generateReply(activeClarification);
+      return { reply, toolData: { clarificationSessionId: activeClarification.id }, needsClarification: true };
+    }
   }
 
   // 2. 构建消息
@@ -155,6 +232,33 @@ export async function runAgentV2(
       console.log('[Step 6]   ✓', r.toolName, '->', JSON.stringify(r.result)?.substring(0, 100));
     } else {
       console.log('[Step 6]   ✗', r.toolName, '->', r.error);
+    }
+  }
+
+  // 6.1 检查验证失败并创建澄清会话
+  for (const result of executionResult.results) {
+    if (!result.success && result.validationResult && !result.validationResult.valid) {
+      console.log('[Step 6.1] Validation failed, missing fields:', result.validationResult.missingFields.map(f => f.label).join(', '));
+
+      const activeSession = await clarificationManager.getActiveSession(userId);
+      if (activeSession && clarificationManager.shouldEndClarification(activeSession)) {
+        const reply = await clarificationManager.generateReply(activeSession);
+        return { reply, toolData: null, clarificationEnded: true };
+      }
+
+      const session = await clarificationManager.createSession({
+        toolName: result.toolName,
+        userId,
+        partialInput: toolCalls.find(tc => tc.name === result.toolName)?.input || {},
+        missingFields: result.validationResult.missingFields,
+        userMessage: processedMessage,
+        llmInterpretation: extractToolInterpretation(response, toolCalls)
+      });
+
+      console.log('[Step 6.1] Created clarification session:', session.id);
+
+      const reply = await clarificationManager.generateReply(session);
+      return { reply, toolData: { clarificationSessionId: session.id }, needsClarification: true };
     }
   }
 
@@ -262,6 +366,16 @@ function extractText(content: any): string {
       .join('');
   }
   return '';
+}
+
+/**
+ * 从 LLM 响应中提取工具调用解释
+ */
+function extractToolInterpretation(response: any, toolCalls: any[]): string {
+  if (toolCalls.length > 0) {
+    return `调用工具 ${toolCalls[0].name}，参数：${JSON.stringify(toolCalls[0].input)}`;
+  }
+  return extractText(response.content);
 }
 
 // ============== 辅助函数 ==============
