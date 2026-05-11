@@ -15,6 +15,7 @@ interface UserProfile {
   experience: Experience;
   equipment: string;
   targetMuscles?: string[];
+  preferredExercises?: string[];  // 用户偏好动作列表
   conditions?: string;
   body_weight: number;
   body_fat?: number;
@@ -56,7 +57,7 @@ interface MuscleExercise {
  * Queries from Exercise table based on equipment, difficulty, and muscle groups
  */
 export async function generateExercisesForProfile(userProfile: UserProfile): Promise<GeneratedExercise[]> {
-  const { goal, frequency, experience, equipment, targetMuscles } = userProfile;
+  const { goal, frequency, experience, equipment, targetMuscles, preferredExercises } = userProfile;
 
   // 解析器械列表
   const equipmentList = equipment
@@ -82,6 +83,11 @@ export async function generateExercisesForProfile(userProfile: UserProfile): Pro
   const equipmentFilter = equipmentEnums.length > 0
     ? { in: equipmentEnums }
     : undefined;
+
+  // 偏好动作集合（用于快速查找）
+  const preferredSet = preferredExercises
+    ? new Set(preferredExercises.map(e => e.toLowerCase().trim()))
+    : new Set<string>();
 
   // 肌肉群恢复周期（小时）
   const muscleRecoveryHours = {
@@ -170,14 +176,26 @@ export async function generateExercisesForProfile(userProfile: UserProfile): Pro
       // 获取该肌肉群的动作
       const muscleExercises = exercisesByMuscle[muscleGroup] || [];
 
-      // 优先选择主发力肌肉的动作
-      const primaryExercises = muscleExercises.filter(e => e.role === 'primary');
-      const secondaryExercises = muscleExercises.filter(e => e.role === 'secondary');
+      // 优先选择用户偏好的动作
+      let selected: MuscleExercise[] = [];
+      if (preferredSet.size > 0) {
+        const preferredForMuscle = muscleExercises.filter(e =>
+          preferredSet.has(e.exerciseName.toLowerCase().trim())
+        );
+        if (preferredForMuscle.length > 0) {
+          selected = preferredForMuscle.slice(0, 2);
+        }
+      }
 
-      // 选择动作：主+辅各1-2个
-      const selectedPrimary = primaryExercises.slice(0, 2);
-      const selectedSecondary = secondaryExercises.slice(0, 1);
-      const selected = [...selectedPrimary, ...selectedSecondary];
+      // 如果没有偏好动作，使用默认选择逻辑
+      if (selected.length === 0) {
+        // 优先选择主发力肌肉的动作
+        const primaryExercises = muscleExercises.filter(e => e.role === 'primary');
+        const secondaryExercises = muscleExercises.filter(e => e.role === 'secondary');
+
+        // 选择动作：主+辅各1-2个
+        selected = [...primaryExercises.slice(0, 2), ...secondaryExercises.slice(0, 1)];
+      }
 
       // 如果目标肌肉明确，优先选择目标肌肉的动作
       if (targetMuscles && targetMuscles.includes(muscleGroup)) {
@@ -314,6 +332,7 @@ export const generatePlanTool = new DynamicStructuredTool({
       experience: z.enum(["beginner", "intermediate", "advanced"]).describe("训练经验水平"),
       equipment: z.string().describe("可用健身设备列表，逗号分隔"),
       targetMuscles: z.array(z.string()).optional().describe("优先训练的肌肉群"),
+      preferredExercises: z.array(z.string()).optional().describe("用户偏好的动作列表"),
       conditions: z.string().optional().describe("身体状况或限制"),
       body_weight: z.number().describe("体重(kg)"),
       body_fat: z.number().optional().describe("体脂率(%)"),

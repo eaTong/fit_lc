@@ -66,17 +66,25 @@ Component({
           .map(pe => ({
             id: pe.exercise_id,
             name: pe.exercise?.name || pe.name || '未知动作',
-            targetSets: pe.sets || 3,
-            targetReps: pe.reps || pe.repetitions || 10,
-            sets: this.initSetsArray(pe.sets || 3, pe.reps || 10)
+            targetSets: pe.targetSets ?? pe.sets || 3,
+            targetReps: pe.targetReps ?? pe.reps ?? pe.repetitions ?? '8-12',
+            targetWeight: pe.targetWeight ?? pe.weight ?? null,
+            sets: this.initSetsArray(
+              pe.targetSets ?? pe.sets ?? 3,
+              pe.targetReps ?? pe.reps ?? 10
+            )
           }));
       } else if (plan.exercises && Array.isArray(plan.exercises)) {
         exercises = plan.exercises.map(ex => ({
           id: ex.id,
           name: ex.name || '未知动作',
-          targetSets: ex.sets || 3,
-          targetReps: ex.reps || 10,
-          sets: this.initSetsArray(ex.sets || 3, ex.reps || 10)
+          targetSets: ex.targetSets ?? ex.sets ?? 3,
+          targetReps: ex.targetReps ?? ex.reps ?? '8-12',
+          targetWeight: ex.targetWeight ?? ex.weight ?? null,
+          sets: this.initSetsArray(
+            ex.targetSets ?? ex.sets ?? 3,
+            ex.targetReps ?? ex.reps ?? 10
+          )
         }));
       }
 

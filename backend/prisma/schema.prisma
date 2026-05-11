@@ -151,10 +151,12 @@ model PlanExercise {
   exerciseId   Int?     @map("exercise_id")          // 关联 exercises.id
   exerciseName String   @map("exercise_name") @db.VarChar(100)  // 保留便于快速展示
   targetMuscles String?  @map("target_muscles") @db.VarChar(100) // 目标肌肉群，如 "chest,triceps"
-  sets         Int      @default(3)
-  reps         String   @db.VarChar(20)
-  weight       Decimal? @db.Decimal(5, 2)
-  duration     Int?
+
+  // 用户预设值（执行时可覆盖）
+  targetSets   Int      @default(3)  @map("target_sets")
+  targetReps   String   @db.VarChar(20)  @map("target_reps")
+  targetWeight Decimal? @db.Decimal(5,2) @map("target_weight")
+  targetDuration Int?   @map("target_duration")
   restSeconds  Int      @default(60) @map("rest_seconds")
   orderIndex   Int      @default(0) @map("order_index")
   createdAt    DateTime @default(now()) @map("created_at")

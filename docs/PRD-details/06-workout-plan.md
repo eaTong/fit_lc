@@ -111,12 +111,13 @@ AI: 近两周执行分析：
 | exerciseName | VARCHAR(100) | 动作名称（保留便于快速展示，即使有 exerciseId） |
 | dayOfWeek | INT | 星期几(1-7) |
 | targetMuscles | VARCHAR(100) | 目标肌肉群字符串，如 "chest,triceps" |
-| sets | INT | 组数 |
-| reps | VARCHAR(20) | 次数范围，如 "8-12" |
-| weight | DECIMAL(5,2) | 重量(kg)；AI生成时可能为空 |
-| duration | INT | 时长(分钟)；如有氧运动 |
+| targetSets | INT | 目标组数（V2 新增 target 前缀） |
+| targetReps | VARCHAR(20) | 目标次数范围，如 "8-12"（V2 新增 target 前缀） |
+| targetWeight | DECIMAL(5,2) | 目标重量(kg)；AI生成时可能为空（V2 新增 target 前缀） |
+| targetDuration | INT | 目标时长(分钟)；如有氧运动（V2 新增 target 前缀） |
 | restSeconds | INT | 组间休息(秒) |
 | orderIndex | INT | 同日内的顺序 |
+| sets/reps/weight/duration | INT/VARCHAR/DECIMAL/INT | 兼容旧字段名（V1 兼容） |
 
 ### plan_executions - 执行记录
 | 字段 | 类型 | 说明 |
@@ -406,6 +407,20 @@ AI分析执行数据，给出建议
 │  完成度: 1/3 动作                          │
 │              [提交打卡]                      │
 └─────────────────────────────────────────────┘
+```
+
+**V2 新增：AI聊天保存训练自动同步**
+```
+用户通过AI聊天保存训练记录时
+    ↓
+系统自动检查是否有活跃计划
+    ↓
+模糊匹配训练动作与计划动作（Levenshtein距离≤3）
+    ↓
+自动创建执行记录（无需手动打卡）
+    ↓
+返回结果时提示用户"已同步到您的【计划名】"
+```
 ```
 
 ### 生成计划页 `/plans/new`

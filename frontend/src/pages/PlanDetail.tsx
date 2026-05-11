@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlanStore } from '../stores/planStore';
 import { useToastStore } from '../stores/toastStore';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import type { Plan } from '../types';
+import PlanStatsCard from '../components/plan/PlanStatsCard';
+import WeeklyProgressBar from '../components/plan/WeeklyProgressBar';
+import ExecutionCalendar from '../components/plan/ExecutionCalendar';
+import type { Plan, ExecutionStats } from '../types';
 
 const goalLabels: Record<Plan['goal'], string> = {
   bulk: '增肌',
@@ -46,14 +49,21 @@ function StatusBadge({ status }: { status: Plan['status'] }) {
 export default function PlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentPlan: plan, isLoading, fetchPlan, activatePlan } = usePlanStore();
+  const { currentPlan: plan, isLoading, fetchPlan, activatePlan, analysis, fetchAnalysis } = usePlanStore();
   const { addToast } = useToastStore();
+  const [activeTab, setActiveTab] = useState<'exercises' | 'stats'>('exercises');
 
   useEffect(() => {
     if (id) {
       fetchPlan(Number(id));
     }
   }, [id, fetchPlan]);
+
+  useEffect(() => {
+    if (plan?.status === 'active' && id) {
+      fetchAnalysis(Number(id));
+    }
+  }, [plan?.status, id, fetchAnalysis]);
 
   const handleActivate = async () => {
     if (!plan) return;
@@ -124,37 +134,92 @@ export default function PlanDetail() {
         </div>
       </Card>
 
-      {/* Exercises by Day */}
-      <div className="space-y-4 mb-6">
-        {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-          const exercises = exercisesByDay[day];
-          if (!exercises || exercises.length === 0) return null;
+      {/* Tabs */}
+      {plan.status === 'active' && (
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('exercises')}
+            className={`px-4 py-2 rounded ${
+              activeTab === 'exercises'
+                ? 'bg-accent-primary text-white'
+                : 'bg-primary-secondary text-text-secondary'
+            }`}
+          >
+            训练动作
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`px-4 py-2 rounded ${
+              activeTab === 'stats'
+                ? 'bg-accent-primary text-white'
+                : 'bg-primary-secondary text-text-secondary'
+            }`}
+          >
+            执行统计
+          </button>
+        </div>
+      )}
 
-          return (
-            <Card key={day}>
-              <h3 className="font-heading text-lg font-bold text-text-primary mb-3">
-                {dayLabels[day]}
-              </h3>
-              <ul className="space-y-2">
-                {exercises.map((exercise, index) => (
-                  <li
-                    key={exercise.id || index}
-                    className="flex items-center justify-between py-2 border-b border-border last:border-b-0"
-                  >
-                    <div>
-                      <span className="text-text-primary font-medium">{exercise.exercise_name}</span>
-                    </div>
-                    <div className="text-sm text-text-secondary text-right">
-                      <span>{exercise.sets}组 x {exercise.reps}次</span>
-                      {exercise.weight && <span> @ {exercise.weight}kg</span>}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          );
-        })}
-      </div>
+      {activeTab === 'stats' ? (
+        <>
+          {analysis && <PlanStatsCard stats={analysis} planName={plan.name} />}
+
+          <div className="mt-6">
+            <h3 className="font-medium mb-3">本周进度</h3>
+            <WeeklyProgressBar
+              progress={[
+                { dayOfWeek: 1, completed: false, hasWorkout: true },
+                { dayOfWeek: 2, completed: true, hasWorkout: true },
+                { dayOfWeek: 3, completed: true, hasWorkout: true },
+                { dayOfWeek: 4, completed: false, hasWorkout: true },
+                { dayOfWeek: 5, completed: false, hasWorkout: false },
+                { dayOfWeek: 6, completed: false, hasWorkout: false },
+                { dayOfWeek: 7, completed: false, hasWorkout: false },
+              ]}
+              startDate={new Date()}
+            />
+          </div>
+
+          <div className="mt-6">
+            <h3 className="font-medium mb-3">执行日历</h3>
+            <ExecutionCalendar executions={[]} month={new Date()} />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Exercises by Day */}
+          <div className="space-y-4 mb-6">
+            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+              const exercises = exercisesByDay[day];
+              if (!exercises || exercises.length === 0) return null;
+
+              return (
+                <Card key={day}>
+                  <h3 className="font-heading text-lg font-bold text-text-primary mb-3">
+                    {dayLabels[day]}
+                  </h3>
+                  <ul className="space-y-2">
+                    {exercises.map((exercise, index) => (
+                      <li
+                        key={exercise.id || index}
+                        className="flex items-center justify-between py-2 border-b border-border last:border-b-0"
+                      >
+                        <div>
+                          <span className="text-text-primary font-medium">{exercise.exercise_name}</span>
+                        </div>
+                        <div className="text-sm text-text-secondary text-right">
+                          <span>{exercise.targetSets ?? exercise.sets}组 x {exercise.targetReps ?? exercise.reps}次</span>
+                          {(exercise.targetWeight ?? exercise.weight) && <span> @ {exercise.targetWeight ?? exercise.weight}kg</span>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-4">

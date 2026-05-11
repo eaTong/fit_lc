@@ -4,14 +4,24 @@ import { usePlanStore } from '../stores/planStore';
 import { useToastStore } from '../stores/toastStore';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import ExecutionProgressRing from '../components/plan/ExecutionProgressRing';
+import ExerciseEditor from '../components/plan/ExerciseEditor';
 
 const DAY_NAMES = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
 interface ExerciseStatus {
   exerciseId: number;
   completed: boolean;
-  completedWeight?: number;
-  completedReps?: number;
+  completedWeight: number | null;
+  completedReps: string;
+}
+
+interface ExerciseForEdit {
+  id: number;
+  exerciseName: string;
+  targetSets: number;
+  targetReps: string;
+  targetWeight: number | null;
 }
 
 export default function PlanExecute() {
@@ -22,6 +32,7 @@ export default function PlanExecute() {
 
   const [exerciseStatuses, setExerciseStatuses] = useState<Record<number, ExerciseStatus>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<ExerciseForEdit | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -37,8 +48,8 @@ export default function PlanExecute() {
           statuses[ex.id] = {
             exerciseId: ex.id,
             completed: false,
-            completedWeight: ex.weight,
-            completedReps: parseInt(ex.reps) || 0,
+            completedWeight: ex.targetWeight ?? ex.weight ?? null,
+            completedReps: ex.targetReps ?? ex.reps ?? '8-12',
           };
         }
       });
@@ -92,6 +103,33 @@ export default function PlanExecute() {
     }
   };
 
+  const completedCount = Object.values(exerciseStatuses).filter(s => s.completed).length;
+
+  const openExerciseEditor = (ex: typeof todayExercises[0]) => {
+    if (!ex.id) return;
+    const status = exerciseStatuses[ex.id];
+    setEditingExercise({
+      id: ex.id,
+      exerciseName: ex.exercise_name,
+      targetSets: ex.targetSets ?? ex.sets ?? 3,
+      targetReps: status?.completedReps ?? ex.targetReps ?? ex.reps ?? '8-12',
+      targetWeight: status?.completedWeight ?? ex.targetWeight ?? ex.weight ?? null,
+    });
+  };
+
+  const handleEditSave = (updates: { targetSets: number; targetReps: string; targetWeight: number | null }) => {
+    if (!editingExercise) return;
+    setExerciseStatuses(prev => ({
+      ...prev,
+      [editingExercise.id]: {
+        ...prev[editingExercise.id],
+        completedWeight: updates.targetWeight,
+        completedReps: updates.targetReps,
+      },
+    }));
+    setEditingExercise(null);
+  };
+
   if (!currentPlan) {
     return (
       <div className="px-6 py-4 text-center text-text-secondary">
@@ -124,6 +162,10 @@ export default function PlanExecute() {
         </Card>
       ) : (
         <>
+          <div className="flex justify-center mb-8">
+            <ExecutionProgressRing completed={completedCount} total={todayExercises.length} />
+          </div>
+
           <div className="space-y-4 mb-6">
             {todayExercises.map((ex) => {
               const status = ex.id ? exerciseStatuses[ex.id] : null;
@@ -150,15 +192,18 @@ export default function PlanExecute() {
                           {ex.exercise_name}
                         </h3>
                         <p className="text-text-secondary text-sm">
-                          {ex.sets}组 × {ex.reps}次
-                          {ex.weight ? ` × ${ex.weight}kg` : ''}
+                          {ex.targetSets ?? ex.sets}组 × {status?.completedReps ?? ex.targetReps ?? ex.reps}
+                          {status?.completedWeight ? ` × ${status.completedWeight}kg` : (ex.targetWeight ?? ex.weight ? ` × ${ex.targetWeight ?? ex.weight}kg` : '')}
                         </p>
                       </div>
                     </div>
 
-                    {isCompleted && (
-                      <span className="text-accent-primary text-sm">已完成</span>
-                    )}
+                    <button
+                      onClick={() => openExerciseEditor(ex)}
+                      className="text-accent-primary text-sm px-3 py-1 border border-accent-primary rounded hover:bg-accent-primary/10"
+                    >
+                      编辑
+                    </button>
                   </div>
                 </Card>
               );
@@ -174,6 +219,14 @@ export default function PlanExecute() {
             {isSubmitting ? '提交中...' : '提交打卡'}
           </Button>
         </>
+      )}
+
+      {editingExercise && (
+        <ExerciseEditor
+          exercise={editingExercise}
+          onSave={handleEditSave}
+          onCancel={() => setEditingExercise(null)}
+        />
       )}
     </div>
   );

@@ -18,6 +18,11 @@ export const planRepository = {
     exerciseId?: number | null;
     exerciseName: string;
     targetMuscles?: string | null;
+    targetSets?: number;
+    targetReps?: string;
+    targetWeight?: number;
+    targetDuration?: number;
+    // 兼容旧字段
     sets?: number;
     reps?: string;
     weight?: number;
@@ -52,10 +57,10 @@ export const planRepository = {
               exerciseId: exercise.exerciseId ?? null,
               exerciseName: exercise.exerciseName,
               targetMuscles: exercise.targetMuscles ?? null,
-              sets: exercise.sets ?? 3,
-              reps: exercise.reps ?? '8-12',
-              weight: exercise.weight ? new Decimal(exercise.weight.toString()) : null,
-              duration: exercise.duration ?? null,
+              targetSets: exercise.targetSets ?? exercise.sets ?? 3,
+              targetReps: exercise.targetReps ?? exercise.reps ?? '8-12',
+              targetWeight: exercise.targetWeight ? new Decimal(exercise.targetWeight.toString()) : exercise.weight ? new Decimal(exercise.weight.toString()) : null,
+              targetDuration: exercise.targetDuration ?? exercise.duration ?? null,
               restSeconds: exercise.restSeconds ?? 60,
               orderIndex: exercise.orderIndex ?? 0
             }
@@ -107,7 +112,32 @@ export const planRepository = {
 
   async findActive(userId: number) {
     return prisma.workoutPlan.findFirst({
-      where: { userId, status: 'active' }
+      where: { userId, status: 'active' },
+      include: {
+        exercises: {
+          orderBy: { orderIndex: 'asc' }
+        }
+      }
+    });
+  },
+
+  async recordExecutionFromWorkout(data: {
+    planId: number;
+    planExerciseId: number;
+    scheduledDate: string;
+    completedReps: number;
+    completedWeight: number;
+  }) {
+    return prisma.planExecution.create({
+      data: {
+        planId: data.planId,
+        planExerciseId: data.planExerciseId,
+        scheduledDate: new Date(data.scheduledDate),
+        completedAt: new Date(),
+        completedReps: data.completedReps,
+        completedWeight: new Decimal(data.completedWeight.toString()),
+        status: 'completed'
+      }
     });
   },
 
@@ -163,6 +193,11 @@ export const planRepository = {
     exerciseId?: number | null;
     exerciseName: string;
     targetMuscles?: string | null;
+    targetSets?: number;
+    targetReps?: string;
+    targetWeight?: number;
+    targetDuration?: number;
+    // 兼容旧字段
     sets?: number;
     reps?: string;
     weight?: number;
@@ -177,10 +212,10 @@ export const planRepository = {
         exerciseId: exercise.exerciseId ?? null,
         exerciseName: exercise.exerciseName,
         targetMuscles: exercise.targetMuscles ?? null,
-        sets: exercise.sets ?? 3,
-        reps: exercise.reps ?? '8-12',
-        weight: exercise.weight ? new Decimal(exercise.weight.toString()) : null,
-        duration: exercise.duration ?? null,
+        targetSets: exercise.targetSets ?? exercise.sets ?? 3,
+        targetReps: exercise.targetReps ?? exercise.reps ?? '8-12',
+        targetWeight: exercise.targetWeight ? new Decimal(exercise.targetWeight.toString()) : exercise.weight ? new Decimal(exercise.weight.toString()) : null,
+        targetDuration: exercise.targetDuration ?? exercise.duration ?? null,
         restSeconds: exercise.restSeconds ?? 60,
         orderIndex: exercise.orderIndex ?? 0
       }
@@ -229,10 +264,10 @@ export const planRepository = {
     exerciseId: number;
     exerciseName: string;
     targetMuscles: string;
-    sets: number;
-    reps: string;
-    weight: number;
-    duration: number;
+    targetSets: number;
+    targetReps: string;
+    targetWeight: number;
+    targetDuration: number;
     restSeconds: number;
     orderIndex: number;
   }>) {
@@ -240,7 +275,7 @@ export const planRepository = {
       where: { id: exerciseId },
       data: {
         ...data,
-        weight: data.weight !== undefined ? new Decimal(data.weight.toString()) : undefined
+        targetWeight: data.targetWeight !== undefined ? new Decimal(data.targetWeight.toString()) : undefined
       }
     });
   },

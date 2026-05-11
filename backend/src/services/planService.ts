@@ -172,11 +172,69 @@ export const planService = {
         name: e.exerciseName,
         targetMuscles: e.targetMuscles,
         dayOfWeek: e.dayOfWeek,
-        sets: e.sets,
-        reps: e.reps,
+        targetSets: e.targetSets,
+        targetReps: e.targetReps,
+        targetWeight: e.targetWeight,
         exerciseId: e.exerciseId
       })),
       suggestions
+    };
+  },
+
+  async syncWorkoutToPlanExecution(userId: number, workout: {
+    date: string;
+    exercises: Array<{
+      name: string;
+      sets: number;
+      reps: number;
+      weight: number;
+    }>;
+  }): Promise<{ synced: boolean; planId?: number; matchedCount: number }> {
+    // 1. 查找用户的活跃计划
+    const activePlan = await planRepository.findActive(userId);
+    if (!activePlan) {
+      return { synced: false, matchedCount: 0 };
+    }
+
+    // 2. 获取今日是星期几
+    const workoutDate = new Date(workout.date);
+    const dayOfWeek = workoutDate.getDay() === 0 ? 7 : workoutDate.getDay();
+
+    // 3. 查找计划中该天的训练安排
+    const planExercises = (activePlan.exercises || []).filter(
+      (e: any) => e.dayOfWeek === dayOfWeek
+    );
+
+    if (planExercises.length === 0) {
+      return { synced: false, planId: activePlan.id, matchedCount: 0 };
+    }
+
+    // 4. 动态导入 fuzzyMatch 避免循环依赖
+    const { fuzzyMatch } = require('../utils/fuzzyMatch');
+
+    // 5. 匹配动作并创建执行记录
+    let matchedCount = 0;
+    for (const exercise of workout.exercises) {
+      const matchedPlanExercise = planExercises.find((pe: any) =>
+        fuzzyMatch(pe.exerciseName, exercise.name)
+      );
+
+      if (matchedPlanExercise) {
+        await planRepository.recordExecutionFromWorkout({
+          planId: activePlan.id,
+          planExerciseId: matchedPlanExercise.id,
+          scheduledDate: workout.date,
+          completedReps: exercise.sets * exercise.reps,
+          completedWeight: exercise.weight,
+        });
+        matchedCount++;
+      }
+    }
+
+    return {
+      synced: matchedCount > 0,
+      planId: activePlan.id,
+      matchedCount
     };
   }
 };

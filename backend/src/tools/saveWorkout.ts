@@ -5,6 +5,8 @@ import { generateWorkoutFeedback } from '../services/coachFeedbackService';
 import { personalRecordService } from '../services/personalRecordService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
+import { planService } from '../services/planService';
+import { planRepository } from '../repositories/planRepository';
 
 // Types for the tool
 interface ExerciseInput {
@@ -126,6 +128,29 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       }
 
       const feedbackMsg = feedback.personalized_comment;
+
+      // 同步到活跃计划
+      try {
+        const syncResult = await planService.syncWorkoutToPlanExecution(userId, {
+          date: finalDate,
+          exercises: exercises.map(e => ({
+            name: e.name,
+            sets: e.sets || 0,
+            reps: e.reps || 0,
+            weight: e.weight || 0
+          }))
+        });
+
+        if (syncResult.synced && syncResult.planId) {
+          const plan = await planRepository.findById(syncResult.planId);
+          const planName = plan?.name || '计划';
+          achievementMsg += `\n\n📋 已同步到您的【${planName}】`;
+        }
+      } catch (syncError) {
+        console.error('Failed to sync workout to plan:', syncError);
+        // 不影响主流程
+      }
+
       const aiReply = `${result.message}\n\n${feedbackMsg}${achievementMsg}`;
 
       return JSON.stringify({
