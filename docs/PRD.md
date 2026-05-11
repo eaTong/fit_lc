@@ -262,6 +262,28 @@ interface ToolResponse<T = any> {
 
 > V2 移除了 `savedData` 字段，`toolData` 包含完整信息。
 
+#### 3.1.14 意图澄清机制
+
+当用户输入信息不完整时，AI 自动追问并携带已解析的信息，避免用户重复输入。
+
+**实现位置**: `backend/src/agents/clarification/`
+
+**核心组件**:
+- `ClarificationManager` - 核心管理器，处理澄清会话创建、完成、过期
+- `clarificationStore` - 内存存储，TTL 5分钟
+- `clarificationPrompts` - 追问模板生成
+- `extractClarification` - 解析用户回复，补充缺失信息
+
+**核心流程**:
+1. 用户输入 → LLM 识别意图 → 参数验证
+2. 信息不完整 → 创建澄清会话 → 生成追问
+3. 用户回复 → 合并上下文 → 重新验证/执行
+
+**限制**:
+- 同一用户同时只允许一个澄清会话
+- 最多3次追问循环
+- Session TTL 5分钟
+
 ---
 
 ### 3.2 训练动作库
