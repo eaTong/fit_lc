@@ -18,33 +18,35 @@ Page({
 
   onLoad() {
     // 检查登录
-    if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/index' });
-      return;
-    }
+    authActions.checkAuth().then(isAuth => {
+      if (!isAuth) {
+        wx.redirectTo({ url: '/pages/login/index' });
+        return;
+      }
 
-    const app = getApp();
-    const user = app.store.getState().user;
-    this.setData({ user });
+      const app = getApp();
+      const user = app.store.getState().user;
+      this.setData({ user });
 
-    // 监听状态变化
-    this.unsubscribe = app.store.subscribe(state => {
-      this.setData({
-        messages: state.chatMessages,
-        isLoading: state.isLoading,
-        user: state.user
+      // 监听状态变化
+      this.unsubscribe = app.store.subscribe(state => {
+        this.setData({
+          messages: state.chatMessages,
+          isLoading: state.isLoading,
+          user: state.user
+        });
+        this.scrollToBottom();
       });
-      this.scrollToBottom();
+
+      // 加载缓存消息
+      const cached = storage.getCachedMessages();
+      if (cached.length > 0) {
+        this.setData({ messages: cached });
+      }
+
+      // 加载最新消息
+      this.loadMessages();
     });
-
-    // 加载缓存消息
-    const cached = storage.getCachedMessages();
-    if (cached.length > 0) {
-      this.setData({ messages: cached });
-    }
-
-    // 加载最新消息
-    this.loadMessages();
   },
 
   onUnload() {

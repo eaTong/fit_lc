@@ -23,14 +23,28 @@ function getToken() {
 
 // Auth Actions
 const authActions = {
-  checkAuth() {
+  async checkAuth() {
     const token = getToken();
     if (!token) return false;
+
+    // 设置 token 到 store
     const user = wx.getStorageSync(config.STORAGE_KEY.USER) || null;
     getStore().setState({ token, user });
-    // 获取最新用户信息（包含头像）
-    userActions.fetchProfile();
-    return true;
+
+    // 验证 token 是否有效
+    try {
+      await get('/users/me/profile');
+      // token 有效，获取最新用户信息
+      userActions.fetchProfile();
+      return true;
+    } catch (err) {
+      // token 无效，清除并返回 false
+      console.log('[Auth] Token invalid, clearing...');
+      wx.removeStorageSync(config.STORAGE_KEY.TOKEN);
+      wx.removeStorageSync(config.STORAGE_KEY.USER);
+      getStore().setState({ token: null, user: null });
+      return false;
+    }
   },
 
   login(code) {
