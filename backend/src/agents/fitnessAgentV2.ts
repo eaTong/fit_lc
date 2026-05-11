@@ -117,9 +117,31 @@ export async function runAgentV2(
       });
 
       if (stillMissing.length === 0) {
+        // 澄清完成，直接执行工具而不依赖 LLM 再次调用
         await clarificationManager.completeSession(activeClarification.id, userId, supplementedInput);
-        console.log('[Step 1.6] Clarification complete, input is now valid');
-        processedMessage = JSON.stringify(supplementedInput);
+        console.log('[Step 1.6] Clarification complete, executing tool directly');
+
+        // 直接执行工具，携带完整参数
+        const toolResult = await executeToolsBatch([{
+          name: activeClarification.toolName,
+          input: supplementedInput,
+          id: `clarification-complete-${activeClarification.id}`
+        }], userId);
+
+        if (toolResult.successCount > 0) {
+          const result = toolResult.results[0];
+          console.log('[Step 1.6] Tool executed successfully:', result.result?.aiReply);
+          return {
+            reply: result.result?.aiReply || '信息已保存',
+            toolData: result.result
+          };
+        } else {
+          // 工具执行失败，返回错误
+          return {
+            reply: toolResult.errors[0] || '保存失败，请重试',
+            toolData: null
+          };
+        }
       } else {
         activeClarification.partialInput = supplementedInput;
         activeClarification.missingFields = stillMissing;
@@ -135,6 +157,8 @@ export async function runAgentV2(
         return { reply, toolData: { clarificationSessionId: activeClarification.id }, needsClarification: true };
       }
     } else {
+      // 无新数据，也递增计数防止无限循环
+      activeClarification.clarificationCount++;
       console.log('[Step 1.6] No new data extracted, generating follow-up question');
       const reply = await clarificationManager.generateReply(activeClarification);
       return { reply, toolData: { clarificationSessionId: activeClarification.id }, needsClarification: true };
