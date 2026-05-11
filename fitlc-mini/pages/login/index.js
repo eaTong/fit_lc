@@ -8,10 +8,12 @@ Page({
   },
 
   onLoad() {
-    // 检查是否已登录
-    if (checkAuth()) {
-      wx.switchTab({ url: '/pages/chat/index' });
-    }
+    // 检查是否已登录（异步）
+    authActions.checkAuth().then(isAuth => {
+      if (isAuth) {
+        wx.switchTab({ url: '/pages/chat/index' });
+      }
+    });
   },
 
   onLogin() {
