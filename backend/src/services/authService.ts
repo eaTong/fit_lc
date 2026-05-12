@@ -7,11 +7,15 @@ import { roleRepository } from '../repositories/roleRepository';
 // Bcrypt salt rounds, configurable via environment (default 10 for security/performance balance)
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
-// Lazy validation for JWT_SECRET - only checked when actually needed
+// JWT_SECRET must be set in environment - no fallback for security
 let _JWT_SECRET: string | null = null;
 function getJwtSecret(): string {
   if (!_JWT_SECRET) {
-    _JWT_SECRET = process.env.JWT_SECRET || 'default-secret-for-testing';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+    _JWT_SECRET = secret;
   }
   return _JWT_SECRET;
 }

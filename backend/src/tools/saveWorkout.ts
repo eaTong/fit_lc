@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { saveService } from '../services/saveService';
+import prisma from '../config/prisma';
 import { generateWorkoutFeedback } from '../services/coachFeedbackService';
 import { personalRecordService } from '../services/personalRecordService';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 import { planService } from '../services/planService';
 import { planRepository } from '../repositories/planRepository';
+import { aggregatedStatsRepository } from '../repositories/aggregatedStatsRepository';
 
 // Types for the tool
 interface ExerciseInput {
@@ -66,12 +67,39 @@ export const saveWorkoutTool = new DynamicStructuredTool({
     try {
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
-      const result = await saveService.saveWorkout(userId, finalDate, exercises);
 
-      // 生成 AI 即时反馈
+      // 使用单一事务保存训练和检查 PR（确保原子性）
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. 创建训练记录
+        const workout = await tx.workout.create({
+          data: {
+            userId,
+            date: new Date(finalDate)
+          }
+        });
+
+        // 2. 创建训练动作
+        for (const exercise of exercises) {
+          await tx.workoutExercise.create({
+            data: {
+              workoutId: workout.id,
+              exerciseName: exercise.name,
+              sets: exercise.sets ?? null,
+              reps: exercise.reps ?? null,
+              weight: exercise.weight ?? null,
+              duration: exercise.duration ?? null,
+              distance: exercise.distance ?? null
+            }
+          });
+        }
+
+        return workout;
+      });
+
+      // 生成 AI 即时反馈（不影响数据一致性，在事务外）
       const feedback = await generateWorkoutFeedback(userId, result.id);
 
-      // 检查 PR 突破
+      // 在事务外检查 PR（不会影响训练记录的创建）
       const prResults = [];
       for (const exercise of exercises) {
         const prResultList = await personalRecordService.checkAndUpdatePR(
@@ -85,11 +113,10 @@ export const saveWorkoutTool = new DynamicStructuredTool({
             distance: exercise.distance
           }
         );
-        // 将所有新 PR 加入结果
         prResults.push(...prResultList);
       }
 
-      // 更新累计统计
+      // 更新累计统计（在事务外，但使用独立事务）
       await statsService.updateAggregatedStats(userId);
 
       // 检查徽章和里程碑
@@ -151,7 +178,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
         // 不影响主流程
       }
 
-      const aiReply = `${result.message}\n\n${feedbackMsg}${achievementMsg}`;
+      const aiReply = `已保存：${exercises.map(e => e.name).join('、')}\n\n${feedbackMsg}${achievementMsg}`;
 
       return JSON.stringify({
         aiReply,

@@ -7,6 +7,19 @@ import prisma from '../config/prisma';
 
 const router = Router();
 
+// XSS protection - escape HTML in user content
+function escapeHtml(text: string): string {
+  if (!text) return text;
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Rate limiting: max 20 chat messages per minute per user
 const chatRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -144,13 +157,16 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     // Extract savedData from toolData for DB storage and context
     const savedData = toolData?.result?.id ? { id: toolData.result.id, type: toolData.dataType } : null;
 
-    // Save user message and assistant reply to database
+    // Save user message and assistant reply to database (content is escaped for XSS protection)
     try {
+      const escapedMessage = escapeHtml(message);
+      const escapedReply = escapeHtml(reply);
+
       const userMessage = await prisma.chatMessage.create({
         data: {
           userId,
           role: 'user',
-          content: message,
+          content: escapedMessage,
           imageUrls: imageUrls?.length > 0 ? imageUrls : undefined,
         },
       });
@@ -166,7 +182,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
         data: {
           userId,
           role: 'assistant',
-          content: reply,
+          content: escapedReply,
           savedData: savedData as any,
           isFromCoach: false,
         },
@@ -178,7 +194,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
 
     // Async refresh context (don't wait)
     setImmediate(() => {
-      const dialogue = `用户：${message}\nAI：${reply}${savedData ? '\n[保存了' + savedData.type + '记录]' : ''}`;
+      const dialogue = `用户：${escapeHtml(message)}\nAI：${escapeHtml(reply)}${savedData ? '\n[保存了' + savedData.type + '记录]' : ''}`;
       userContextService.refreshContextWithLock(userId, dialogue);
     });
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authMiddleware, requireRole } from '../middleware/auth';
@@ -137,6 +136,7 @@ router.post('/', async (req: Request, res: Response) => {
         details: validationResult.error.errors
       });
     }
+    // @ts-ignore - Zod schema type mismatch with repository expected type
     const exercise = await exerciseRepository.create(validationResult.data);
     res.json(exercise);
   } catch (err: any) {
@@ -388,6 +388,7 @@ router.post('/:id/variants', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid data', details: validationResult.error.errors });
     }
     const exerciseId = parseInt(String(req.params.id));
+    // @ts-ignore - Zod schema type mismatch with repository expected type
     const variant = await exerciseVariantRepository.create({
       exerciseId,
       ...validationResult.data,

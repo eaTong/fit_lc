@@ -5,7 +5,8 @@
 
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { saveService } from '../services/saveService';
+import { Decimal } from '@prisma/client/runtime/client';
+import prisma from '../config/prisma';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 import { validateToolInput, formatValidationError } from './utils/validation';
@@ -67,9 +68,52 @@ export const saveMeasurementTool = new DynamicStructuredTool({
 
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
-      const result = await saveService.saveMeasurement(userId, finalDate, measurements);
 
-      // 更新累计统计
+      // 解析日期
+      let dateObj: Date;
+      if (finalDate.includes('T')) {
+        dateObj = new Date(finalDate);
+      } else {
+        const [year, month, day] = finalDate.split('-').map(Number);
+        const now = new Date();
+        dateObj = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
+      }
+
+      // 使用事务保存围度记录（确保原子性）
+      const result = await prisma.$transaction(async (tx) => {
+        // 转换格式：body_part -> bodyPart
+        const items = measurements
+          .filter(m => m && m.body_part !== undefined && m.value !== undefined)
+          .map(m => ({
+            bodyPart: m.body_part,
+            value: new Decimal(m.value.toString())
+          }));
+
+        const measurement = await tx.bodyMeasurement.create({
+          data: {
+            userId,
+            date: dateObj,
+            items: {
+              create: items
+            }
+          },
+          include: {
+            items: true
+          }
+        });
+
+        return {
+          id: measurement.id,
+          date: finalDate,
+          measurements: measurements.map(m => ({
+            body_part: m.body_part,
+            value: m.value
+          })),
+          message: `已保存：${measurements.map(m => `${m.body_part} ${m.value}cm`).join('，')}`
+        };
+      });
+
+      // 更新累计统计（在独立事务中）
       await statsService.updateAggregatedStats(userId);
 
       // 检查徽章和里程碑
@@ -88,10 +132,6 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       }
 
       const aiReply = `${result.message}${achievementMsg}`;
-      const measurementsData = measurements.map(m => ({
-        body_part: m.body_part,
-        value: m.value
-      }));
 
       return JSON.stringify({
         aiReply,
@@ -99,7 +139,7 @@ export const saveMeasurementTool = new DynamicStructuredTool({
         result: {
           id: result.id,
           date: finalDate,
-          measurements: measurementsData,
+          measurements: result.measurements,
           achievements: achievements.length > 0 || milestones.length > 0 ? {
             badges: achievements.map(b => b.name),
             milestones: milestones.map(m => m.name)

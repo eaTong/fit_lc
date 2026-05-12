@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { uploadChatImage, uploadAudio } from '../config/oss';
 import multer from 'multer';
 
@@ -48,7 +47,8 @@ const upload = multer({
  */
 router.post('/image', upload.single('file'), async (req, res) => {
   try {
-    if (!req.file) {
+    const file = (req as any).file;
+    if (!file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
@@ -56,8 +56,8 @@ router.post('/image', upload.single('file'), async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const ext = req.file.originalname.split('.').pop() || 'jpg';
-    const url = await uploadChatImage(req.user.id, req.file.buffer, ext);
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const url = await uploadChatImage(req.user.id, file.buffer, ext);
 
     res.json({ url });
   } catch (err) {
@@ -107,7 +107,8 @@ const audioUpload = multer({
 
 router.post('/audio', audioUpload.single('file'), async (req, res) => {
   try {
-    if (!req.file) {
+    const file = (req as any).file;
+    if (!file) {
       return res.status(400).json({ error: 'No audio file provided' });
     }
 
@@ -115,8 +116,8 @@ router.post('/audio', audioUpload.single('file'), async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const ext = req.file.originalname.split('.').pop() || 'mp3';
-    const url = await uploadAudio(req.user.id, req.file.buffer, ext);
+    const ext = file.originalname.split('.').pop() || 'mp3';
+    const url = await uploadAudio(req.user.id, file.buffer, ext);
 
     res.json({ url });
   } catch (err) {

@@ -22,6 +22,7 @@ import triggersRouter from './routes/triggers';
 import uploadRouter from './routes/upload';
 import albumRoutes from './routes/album';
 import { authMiddleware } from './middleware/auth';
+import { errorResponse } from './utils/error';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
@@ -162,6 +163,14 @@ app.use('/api/achievements', authMiddleware, achievementsRouter);
 app.use('/api/triggers', authMiddleware, triggersRouter);
 app.use('/api/upload', authMiddleware, uploadRouter);
 app.use('/api/album', authMiddleware, albumRoutes);
+
+// Global error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Unhandled error:', err);
+  const status = err.statusCode || err.status || 500;
+  const message = status === 500 ? 'Internal server error' : err.message;
+  errorResponse(res, status, message);
+});
 
 app.listen(PORT, () => {
   console.log(`七练后端服务运行于端口 ${PORT}`);
