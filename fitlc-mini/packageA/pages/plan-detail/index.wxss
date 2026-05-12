@@ -227,6 +227,14 @@
   background-color: #666666;
 }
 
+.progress-bar-fill.in-progress {
+  background-color: #FF4500;
+}
+
+.progress-bar-fill.pending {
+  background-color: #333333;
+}
+
 .day-status {
   font-size: 20rpx;
   color: #888888;

@@ -108,8 +108,9 @@ Component({
       }
 
       const totalCount = exercises.length;
+      // 环形进度：只要动作有任意一组完成即算"进行中"
       const completedCount = exercises.filter(ex =>
-        ex.sets && ex.sets.length > 0 && ex.sets.every(s => s.completed)
+        ex.sets && ex.sets.length > 0 && ex.sets.some(s => s.completed)
       ).length;
 
       this.setData({ exercises, totalCount, completedCount });
@@ -135,13 +136,23 @@ Component({
 
       const context = wx.createCanvasContext('progressRing', this);
       const size = 160;
-      const center = size / 2;
-      const radius = 60;
+      const baseRadius = 60;
       const lineWidth = 12;
+
+      // 获取设备像素比，处理高清屏幕
+      const sysInfo = wx.getSystemInfoSync();
+      const pixelRatio = sysInfo.pixelRatio || 2;
+
+      // 设置 canvas 实际渲染尺寸（防止模糊）
+      this.setData({ ringSize: size * pixelRatio });
+
+      const center = size / 2;
+      const radius = baseRadius;
 
       // Background circle
       context.setStrokeStyle('#333333');
       context.setLineWidth(lineWidth);
+      context.beginPath();
       context.arc(center, center, radius, 0, 2 * Math.PI);
       context.stroke();
 
@@ -150,6 +161,7 @@ Component({
       const endAngle = percentage * 2 * Math.PI - Math.PI / 2;
 
       context.setStrokeStyle('#FF4500');
+      context.setLineWidth(lineWidth);
       context.setLineCap('round');
       context.beginPath();
       context.arc(center, center, radius, -Math.PI / 2, endAngle);
@@ -205,8 +217,9 @@ Component({
 
     updateProgress() {
       const { exercises } = this.data;
+      // 环形进度：只要动作有任意一组完成即算"进行中"
       const completedCount = exercises.filter(ex =>
-        ex.sets && ex.sets.length > 0 && ex.sets.every(s => s.completed)
+        ex.sets && ex.sets.length > 0 && ex.sets.some(s => s.completed)
       ).length;
       this.setData({ completedCount });
       this.drawProgressRing();
@@ -266,9 +279,10 @@ Component({
       const { editingExercise, editingIndex, exercises } = this.data;
       if (editingExercise === null || editingIndex < 0) return;
 
-      const sets = editingExercise.tempSets;
-      const reps = parseInt(editingExercise.tempReps) || 10;
-      const weight = editingExercise.tempWeight;
+      // 数值边界校验
+      const sets = Math.min(Math.max(parseInt(editingExercise.tempSets) || 3, 1), 10);
+      const reps = Math.min(Math.max(parseInt(editingExercise.tempReps) || 10, 1), 100);
+      const weight = editingExercise.tempWeight ? Math.min(Math.max(parseFloat(editingExercise.tempWeight), 0), 500) : 0;
 
       // Create new sets array with the edited values
       const newSets = [];
@@ -287,7 +301,7 @@ Component({
         ...updatedExercises[editingIndex],
         targetSets: sets,
         targetReps: String(reps),
-        targetWeight: weight ? parseFloat(weight) : null,
+        targetWeight: weight > 0 ? weight : null,
         sets: newSets
       };
 

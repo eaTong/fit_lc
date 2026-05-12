@@ -187,6 +187,9 @@ Component({
     },
 
     getDayStatus(dateStr) {
+      // 注意：当前 analysis API 不包含 executions 历史记录
+      // 日历状态需要后端支持 execuitons 字段才可显示
+      // 目前返回 'none'，后端完善后可显示实际状态
       const { analysis } = this.data;
       if (!analysis || !analysis.executions) return 'none';
       const exec = analysis.executions.find(e => e.date === dateStr);
@@ -275,17 +278,40 @@ Component({
     },
 
     getDayProgressClass(dayIndex) {
-      // For now, return empty - would need execution data per day
-      return '';
+      // 基于当前日期和计划安排判断状态
+      const today = new Date();
+      const todayDayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
+
+      // 今天是进行中状态
+      if (dayIndex === todayDayOfWeek) {
+        return 'in-progress';
+      }
+      // 已过的训练日显示为已完成（假设用户已完成）
+      if (dayIndex < todayDayOfWeek) {
+        return 'completed';
+      }
+      // 未来的日子
+      return 'pending';
     },
 
     getDayProgressWidth(item) {
-      // For now, return 0 - would need execution data per day
-      return 0;
+      // 根据状态返回进度条宽度
+      const className = this.getDayProgressClass(item.dayIndex);
+      switch (className) {
+        case 'completed': return 100;
+        case 'in-progress': return 50;
+        default: return 0;
+      }
     },
 
     getDayStatusIcon(dayIndex) {
-      return '';
+      const className = this.getDayProgressClass(dayIndex);
+      switch (className) {
+        case 'completed': return '✓';
+        case 'in-progress': return '●';
+        case 'skipped': return '×';
+        default: return '○';
+      }
     },
 
     goBack() {

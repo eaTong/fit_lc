@@ -13,7 +13,7 @@
   <view wx:elif="{{plan}}" class="execution-content">
     <!-- Progress Ring Section -->
     <view class="progress-ring-section">
-      <canvas canvas-id="progressRing" class="progress-ring-canvas"></canvas>
+      <canvas canvas-id="progressRing" class="progress-ring-canvas" style="width:160px;height:160px;"></canvas>
       <view class="progress-ring-center">
         <text class="progress-count">{{completedCount}}/{{totalCount}}</text>
         <text class="progress-label">完成</text>
