@@ -2,8 +2,8 @@
 
 > **注意：** 本文档为微信小程序版 PRD，记录已实现的功能。
 
-**版本：** 1.1
-**日期：** 2026-05-07
+**版本：** 1.2
+**日期：** 2026-05-12
 **状态：** 已上线
 
 ---
@@ -62,33 +62,42 @@
 ```
 fitlc-mini/
 ├── pages/               # 主包页面
-│   ├── chat/           # AI 对话页
-│   ├── login/          # 登录页
-│   ├── exercises/      # 动作库（整合肌肉库）
-│   ├── profile/        # 个人中心
-│   └── settings/       # 设置页
+│   ├── chat/           # AI 对话页 (chat.js)
+│   ├── login/          # 登录页 (login.js)
+│   ├── exercises/      # 动作库 (exercises.js)
+│   ├── profile/        # 个人中心 (profile.js)
+│   └── settings/       # 设置页 (settings.js)
 ├── packageA/           # 分包A：健身计划
 │   └── pages/
-│       ├── plans/          # 计划列表
-│       ├── plan-generate/  # 生成计划
-│       ├── plan-detail/    # 计划详情
-│       └── plan-execute/   # 执行打卡
+│       ├── plans/          # 计划列表 (plans.js)
+│       ├── plan-generate/  # 生成计划 (plan-generate.js)
+│       ├── plan-detail/    # 计划详情 (plan-detail.js)
+│       └── plan-execute/   # 执行打卡 (plan-execute.js)
 ├── packageB/           # 分包B：围度/日历
 │   └── pages/
-│       ├── measurements/   # 围度记录
-│       └── calendar/       # 日历
+│       ├── measurements/   # 围度记录 (measurements.js)
+│       └── calendar/       # 日历 (calendar.js)
 ├── packageC/           # 分包C：徽章/动作/相册
 │   └── pages/
-│       ├── badges/          # 徽章墙
-│       ├── exercise-detail/ # 动作详情
-│       └── gallery/        # 相册
+│       ├── badges/          # 徽章墙 (badges.js)
+│       ├── exercise-detail/ # 动作详情 (exercise-detail.js)
+│       └── gallery/        # 相册 (gallery.js)
 ├── api/                # API 客户端
 ├── store/              # 全局状态管理
 ├── assets/             # 静态资源
 └── components/         # 公共组件
 ```
 
-### 2.3 分包策略
+### 2.3 文件命名规范
+**页面和组件文件名应与文件夹名称保持一致，避免使用 `index` 命名。**
+
+例如：
+- `pages/chat/index.js` → `pages/chat/chat.js`
+- `components/button/index.js` → `components/button/button.js`
+
+原因：微信小程序的分包机制会导致路径解析问题，统一的命名便于维护和理解。
+
+### 2.4 分包策略
 小程序采用**独立分包**机制：
 - **主包**：TabBar 页面（chat/exercises/profile）+ 登录页
 - **分包A**：健身计划模块（plans/plan-generate/plan-detail/plan-execute）
@@ -102,27 +111,27 @@ fitlc-mini/
 ### 3.1 TabBar 配置
 | Tab | 页面路径 | 图标 |
 |-----|---------|------|
-| 对话 | /pages/chat/index | home.png |
-| 动作库 | /pages/exercises/index | exercises.png |
-| 我的 | /pages/profile/index | profile.png |
+| 对话 | /pages/chat/chat | home.png |
+| 动作库 | /pages/exercises/exercises | exercises.png |
+| 我的 | /pages/profile/profile | profile.png |
 
 ### 3.2 页面清单
 | 路径 | 页面名称 | 包 | 说明 |
 |------|---------|-----|------|
-| /pages/chat/index | AI对话 | 主包 | 核心功能，训练/围度记录 |
-| /pages/login/index | 登录 | 主包 | 用户登录 |
-| /pages/exercises/index | 动作库 | 主包 | 动作列表+肌肉侧边栏 |
-| /pages/profile/index | 个人中心 | 主包 | 头像、统计、身体数据、快速入口 |
-| /pages/settings/index | 设置 | 主包 | 基础信息、身体数据 |
-| /packageA/pages/plans/index | 计划列表 | 分包A | 用户所有计划 |
-| /packageA/pages/plan-generate/index | 生成计划 | 分包A | AI 生成新计划 |
-| /packageA/pages/plan-detail/index | 计划详情 | 分包A | 查看和编辑计划 |
-| /packageA/pages/plan-execute/index | 执行打卡 | 分包A | 打卡记录 |
-| /packageB/pages/measurements/index | 围度记录 | 分包B | 围度历史 |
-| /packageB/pages/calendar/index | 日历 | 分包B | 月历打卡视图 |
-| /packageC/pages/badges/index | 徽章墙 | 分包C | 用户徽章 |
-| /packageC/pages/exercise-detail/index | 动作详情 | 分包C | 动作完整信息 |
-| /packageC/pages/gallery/index | 相册 | 分包C | 照片浏览 |
+| /pages/chat/chat | AI对话 | 主包 | 核心功能，训练/围度记录 |
+| /pages/login/login | 登录 | 主包 | 用户登录 |
+| /pages/exercises/exercises | 动作库 | 主包 | 动作列表+肌肉侧边栏 |
+| /pages/profile/profile | 个人中心 | 主包 | 头像、统计、身体数据、快速入口 |
+| /pages/settings/settings | 设置 | 主包 | 基础信息、身体数据 |
+| /packageA/pages/plans/plans | 计划列表 | 分包A | 用户所有计划 |
+| /packageA/pages/plan-generate/plan-generate | 生成计划 | 分包A | AI 生成新计划 |
+| /packageA/pages/plan-detail/plan-detail | 计划详情 | 分包A | 查看和编辑计划 |
+| /packageA/pages/plan-execute/plan-execute | 执行打卡 | 分包A | 打卡记录 |
+| /packageB/pages/measurements/measurements | 围度记录 | 分包B | 围度历史 |
+| /packageB/pages/calendar/calendar | 日历 | 分包B | 月历打卡视图 |
+| /packageC/pages/badges/badges | 徽章墙 | 分包C | 用户徽章 |
+| /packageC/pages/exercise-detail/exercise-detail | 动作详情 | 分包C | 动作完整信息 |
+| /packageC/pages/gallery/gallery | 相册 | 分包C | 照片浏览 |
 
 ---
 
@@ -219,11 +228,11 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
 #### 4.3.4 快捷入口
 | 入口 | 图标 | 跳转 |
 |------|------|------|
-| 训练记录 | 📋 | /packageB/pages/calendar/index |
-| 围度记录 | 📏 | /packageB/pages/measurements/index |
-| 训练计划 | 📅 | /packageA/pages/plans/index |
-| 徽章墙 | 🏆 | /packageC/pages/badges/index |
-| 相册 | 📷 | /packageC/pages/gallery/index |
+| 训练记录 | 📋 | /packageB/pages/calendar/calendar |
+| 围度记录 | 📏 | /packageB/pages/measurements/measurements |
+| 训练计划 | 📅 | /packageA/pages/plans/plans |
+| 徽章墙 | 🏆 | /packageC/pages/badges/badges |
+| 相册 | 📷 | /packageC/pages/gallery/gallery |
 
 ### 4.4 健身计划
 
@@ -288,25 +297,25 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
     {
       "root": "packageA",
       "pages": [
-        "pages/plans/index",
-        "pages/plan-generate/index",
-        "pages/plan-detail/index",
-        "pages/plan-execute/index"
+        "pages/plans/plans",
+        "pages/plan-generate/plan-generate",
+        "pages/plan-detail/plan-detail",
+        "pages/plan-execute/plan-execute"
       ]
     },
     {
       "root": "packageB",
       "pages": [
-        "pages/measurements/index",
-        "pages/calendar/index"
+        "pages/measurements/measurements",
+        "pages/calendar/calendar"
       ]
     },
     {
       "root": "packageC",
       "pages": [
-        "pages/badges/index",
-        "pages/exercise-detail/index",
-        "pages/gallery/index"
+        "pages/badges/badges",
+        "pages/exercise-detail/exercise-detail",
+        "pages/gallery/gallery"
       ]
     }
   ]
@@ -409,6 +418,7 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
 |------|------|------|
 | 1.0 | 2026-05-02 | 初始版本，微信小程序 PRD |
 | 1.1 | 2026-05-07 | 新增围度记录Inline Edit功能；修复API端点（delete改用DELETE方法）；更新围度模块API |
+| 1.2 | 2026-05-12 | 优化文件命名规范，页面和组件文件名改为与文件夹同名，避免使用index命名 |
 
 ### B. 相关文档
 | 文档 | 路径 |
