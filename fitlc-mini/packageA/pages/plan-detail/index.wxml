@@ -49,20 +49,73 @@
 
     <!-- Progress Stats (for active plans) -->
     <view wx:if="{{plan.status === 'active' && analysis}}" class="stats-card">
-      <view class="stats-title">执行进度</view>
+      <view class="stats-title">执行统计</view>
       <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{getCompletedWorkouts()}}/{{getTotalWorkouts()}}</text>
+          <text class="stat-label">已完成</text>
+        </view>
         <view class="stat-item">
           <text class="stat-value">{{getCompletionRate()}}%</text>
           <text class="stat-label">完成率</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{getCompletedWorkouts()}}</text>
-          <text class="stat-label">已完成</text>
+          <text class="stat-value">{{getStreakDays()}}天</text>
+          <text class="stat-label">连续打卡</text>
         </view>
-        <view class="stat-item">
-          <text class="stat-value">{{getTotalWorkouts()}}</text>
-          <text class="stat-label">总训练</text>
+      </view>
+
+      <!-- Weekly Progress Bar -->
+      <view class="weekly-progress">
+        <text class="progress-title">本周进度</text>
+        <view class="progress-bars">
+          <view wx:for="{{weekDays}}" wx:key="dayIndex" class="progress-day">
+            <text class="day-name">{{item.day}}</text>
+            <view class="progress-bar-container">
+              <view
+                class="progress-bar-fill {{getDayProgressClass(item.dayIndex)}}"
+                style="width: {{getDayProgressWidth(item)}}%"
+              ></view>
+            </view>
+            <text class="day-status">{{getDayStatusIcon(item.dayIndex)}}</text>
+          </view>
         </view>
+      </view>
+    </view>
+
+    <!-- Calendar View (for active plans) -->
+    <view wx:if="{{plan.status === 'active'}}" class="calendar-section">
+      <view class="calendar-header">
+        <text class="section-title">日历视图</text>
+        <view class="calendar-nav">
+          <text class="nav-btn" bindtap="onPrevMonth">&lt;</text>
+          <text class="calendar-title">{{calendarYear}}年{{calendarMonth}}月</text>
+          <text class="nav-btn" bindtap="onNextMonth">&gt;</text>
+        </view>
+      </view>
+
+      <view class="calendar-grid">
+        <view class="calendar-weekdays">
+          <text wx:for="{{['一','二','三','四','五','六','日']}}" wx:key="*this" class="weekday">{{item}}</text>
+        </view>
+        <view class="calendar-days">
+          <view
+            wx:for="{{calendarDays}}"
+            wx:key="index"
+            class="calendar-day {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.status}}"
+          >
+            <text wx:if="{{!item.empty}}" class="day-number">{{item.day}}</text>
+            <text wx:if="{{!item.empty && item.status === 'completed'}}" class="day-icon">✓</text>
+            <text wx:if="{{!item.empty && item.status === 'skipped'}}" class="day-icon">×</text>
+            <text wx:if="{{!item.empty && item.status === 'rest'}}" class="day-icon">░</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="calendar-legend">
+        <text class="legend-item"><text class="dot completed"></text>完成</text>
+        <text class="legend-item"><text class="dot skipped"></text>跳过</text>
+        <text class="legend-item"><text class="dot rest"></text>休息</text>
       </view>
     </view>
 

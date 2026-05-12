@@ -11,6 +11,15 @@
 
   <!-- Execution Content -->
   <view wx:elif="{{plan}}" class="execution-content">
+    <!-- Progress Ring Section -->
+    <view class="progress-ring-section">
+      <canvas canvas-id="progressRing" class="progress-ring-canvas"></canvas>
+      <view class="progress-ring-center">
+        <text class="progress-count">{{completedCount}}/{{totalCount}}</text>
+        <text class="progress-label">完成</text>
+      </view>
+    </view>
+
     <!-- Date Card -->
     <view class="date-card">
       <text class="date-label">{{getTodayLabel()}}</text>
@@ -84,6 +93,11 @@
             </view>
           </view>
 
+          <!-- Exercise Actions -->
+          <view class="exercise-actions">
+            <text class="edit-btn" bindtap="onEditExercise" data-index="{{index}}">编辑重量/次数</text>
+          </view>
+
           <!-- Exercise Notes -->
           <view class="exercise-notes">
             <text class="notes-label">备注</text>
@@ -116,6 +130,60 @@
     >
       <text wx:if="{{!isSubmitting}}" class="checkin-btn-text">完成打卡</text>
       <text wx:if="{{isSubmitting}}" class="checkin-btn-text">提交中...</text>
+    </view>
+  </view>
+
+  <!-- Exercise Editor Modal -->
+  <view wx:if="{{showEditModal}}" class="modal-mask" bindtap="onCloseEditModal">
+    <view class="modal-content" catchtap="noop">
+      <view class="modal-header">
+        <text class="modal-title">编辑动作 - {{editingExercise.name}}</text>
+      </view>
+
+      <view class="modal-body">
+        <!-- Sets Selector -->
+        <view class="edit-row">
+          <text class="edit-label">组数</text>
+          <view class="sets-selector">
+            <text
+              wx:for="{{[3, 4, 5, 6]}}"
+              wx:key="*this"
+              class="sets-option {{editingExercise.tempSets === item ? 'selected' : ''}}"
+              data-sets="{{item}}"
+              bindtap="onSelectSets"
+            >{{item}}</text>
+          </view>
+        </view>
+
+        <!-- Reps Input -->
+        <view class="edit-row">
+          <text class="edit-label">每组次数</text>
+          <input
+            class="edit-input"
+            type="number"
+            placeholder="如 8-12"
+            value="{{editingExercise.tempReps}}"
+            bindinput="onEditRepsInput"
+          />
+        </view>
+
+        <!-- Weight Input -->
+        <view class="edit-row">
+          <text class="edit-label">重量 (kg)</text>
+          <input
+            class="edit-input"
+            type="digit"
+            placeholder="如 60"
+            value="{{editingExercise.tempWeight}}"
+            bindinput="onEditWeightInput"
+          />
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="modal-btn cancel" bindtap="onCloseEditModal">取消</button>
+        <button class="modal-btn confirm" bindtap="onConfirmEdit">确认完成</button>
+      </view>
     </view>
   </view>
 </view>

@@ -8,12 +8,25 @@ Component({
     exercises: [],
     isLoading: false,
     isSubmitting: false,
-    error: ''
+    error: '',
+    // Progress ring
+    completedCount: 0,
+    totalCount: 0,
+    // Editor modal
+    showEditModal: false,
+    editingExercise: null,
+    editingIndex: -1
   },
 
   lifetimes: {
     attached() {
       this.initStore();
+    }
+  },
+
+  pageLifetimes: {
+    show() {
+      this.drawProgressRing();
     }
   },
 
@@ -45,6 +58,7 @@ Component({
       planActions.fetchPlan(planId).then(plan => {
         this.setData({ plan, isLoading: false });
         this.prepareExercises(plan);
+        this.drawProgressRing();
       }).catch(err => {
         console.error('fetchPlan failed:', err);
         this.setData({ isLoading: false, error: err.message || '加载失败' });
@@ -54,14 +68,12 @@ Component({
     prepareExercises(plan) {
       if (!plan) return;
 
-      // Get current day of week (1=周一 to 7=周日)
       const today = new Date();
       const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
 
       let exercises = [];
 
       if (plan.plan_exercises && plan.plan_exercises.length > 0) {
-        // Filter by numeric day_of_week
         exercises = plan.plan_exercises
           .filter(pe => pe.day_of_week === dayOfWeek)
           .map(pe => ({
@@ -76,7 +88,6 @@ Component({
             )
           }));
       } else if (plan.exercises && Array.isArray(plan.exercises)) {
-        // Fallback: distribute evenly
         exercises = plan.exercises.map(ex => ({
           id: ex.id,
           name: ex.name || '未知动作',
@@ -96,7 +107,12 @@ Component({
         ];
       }
 
-      this.setData({ exercises });
+      const totalCount = exercises.length;
+      const completedCount = exercises.filter(ex =>
+        ex.sets && ex.sets.length > 0 && ex.sets.every(s => s.completed)
+      ).length;
+
+      this.setData({ exercises, totalCount, completedCount });
     },
 
     initSetsArray(sets, reps) {
@@ -113,12 +129,44 @@ Component({
       return arr;
     },
 
+    drawProgressRing() {
+      const { completedCount, totalCount } = this.data;
+      if (totalCount === 0) return;
+
+      const context = wx.createCanvasContext('progressRing', this);
+      const size = 160;
+      const center = size / 2;
+      const radius = 60;
+      const lineWidth = 12;
+
+      // Background circle
+      context.setStrokeStyle('#333333');
+      context.setLineWidth(lineWidth);
+      context.arc(center, center, radius, 0, 2 * Math.PI);
+      context.stroke();
+
+      // Progress arc
+      const percentage = totalCount > 0 ? completedCount / totalCount : 0;
+      const endAngle = percentage * 2 * Math.PI - Math.PI / 2;
+
+      context.setStrokeStyle('#FF4500');
+      context.setLineCap('round');
+      context.beginPath();
+      context.arc(center, center, radius, -Math.PI / 2, endAngle);
+      context.stroke();
+
+      context.draw();
+
+      this.setData({ completedCount, totalCount });
+    },
+
     onSetWeightChange(e) {
       const { exerciseIndex, setIndex } = e.currentTarget.dataset;
       const weight = e.detail.value;
       const exercises = [...this.data.exercises];
       exercises[exerciseIndex].sets[setIndex].weight = weight;
       this.setData({ exercises });
+      this.updateProgress();
     },
 
     onSetRepsChange(e) {
@@ -127,6 +175,7 @@ Component({
       const exercises = [...this.data.exercises];
       exercises[exerciseIndex].sets[setIndex].reps = reps;
       this.setData({ exercises });
+      this.updateProgress();
     },
 
     onSetCompletedChange(e) {
@@ -135,6 +184,7 @@ Component({
       const exercises = [...this.data.exercises];
       exercises[exerciseIndex].sets[setIndex].completed = completed;
       this.setData({ exercises });
+      this.updateProgress();
     },
 
     onSetNotesChange(e) {
@@ -151,6 +201,104 @@ Component({
       const exercises = [...this.data.exercises];
       exercises[exerciseIndex].exerciseNotes = notes;
       this.setData({ exercises });
+    },
+
+    updateProgress() {
+      const { exercises } = this.data;
+      const completedCount = exercises.filter(ex =>
+        ex.sets && ex.sets.length > 0 && ex.sets.every(s => s.completed)
+      ).length;
+      this.setData({ completedCount });
+      this.drawProgressRing();
+    },
+
+    // Edit Exercise Modal
+    onEditExercise(e) {
+      const index = e.currentTarget.dataset.index;
+      const exercise = this.data.exercises[index];
+      if (!exercise) return;
+
+      const firstSet = exercise.sets && exercise.sets[0] ? exercise.sets[0] : null;
+
+      this.setData({
+        showEditModal: true,
+        editingIndex: index,
+        editingExercise: {
+          name: exercise.name,
+          tempSets: exercise.targetSets || 3,
+          tempReps: firstSet ? String(firstSet.reps || '') : '',
+          tempWeight: firstSet ? String(firstSet.weight || '') : ''
+        }
+      });
+    },
+
+    onCloseEditModal() {
+      this.setData({
+        showEditModal: false,
+        editingExercise: null,
+        editingIndex: -1
+      });
+    },
+
+    noop() {
+      // Prevent tap propagation
+    },
+
+    onSelectSets(e) {
+      const sets = e.currentTarget.dataset.sets;
+      const editingExercise = { ...this.data.editingExercise, tempSets: sets };
+      this.setData({ editingExercise });
+    },
+
+    onEditRepsInput(e) {
+      const reps = e.detail.value;
+      const editingExercise = { ...this.data.editingExercise, tempReps: reps };
+      this.setData({ editingExercise });
+    },
+
+    onEditWeightInput(e) {
+      const weight = e.detail.value;
+      const editingExercise = { ...this.data.editingExercise, tempWeight: weight };
+      this.setData({ editingExercise });
+    },
+
+    onConfirmEdit() {
+      const { editingExercise, editingIndex, exercises } = this.data;
+      if (editingExercise === null || editingIndex < 0) return;
+
+      const sets = editingExercise.tempSets;
+      const reps = parseInt(editingExercise.tempReps) || 10;
+      const weight = editingExercise.tempWeight;
+
+      // Create new sets array with the edited values
+      const newSets = [];
+      for (let i = 0; i < sets; i++) {
+        newSets.push({
+          setIndex: i + 1,
+          weight: weight,
+          reps: reps,
+          completed: i < (exercises[editingIndex].sets?.filter(s => s.completed).length || 0),
+          notes: ''
+        });
+      }
+
+      const updatedExercises = [...exercises];
+      updatedExercises[editingIndex] = {
+        ...updatedExercises[editingIndex],
+        targetSets: sets,
+        targetReps: String(reps),
+        targetWeight: weight ? parseFloat(weight) : null,
+        sets: newSets
+      };
+
+      this.setData({
+        exercises: updatedExercises,
+        showEditModal: false,
+        editingExercise: null,
+        editingIndex: -1
+      });
+
+      this.updateProgress();
     },
 
     onCompleteCheckin() {
@@ -172,11 +320,9 @@ Component({
 
       this.setData({ isSubmitting: true });
 
-      // Build execution data per exercise (flatten sets to completed reps/weight)
       const executionPromises = exercises
         .filter(ex => ex.sets && ex.sets.some(s => s.completed))
         .map(ex => {
-          // Calculate total completed reps and average weight
           const completedSets = ex.sets.filter(s => s.completed);
           const totalReps = completedSets.reduce((sum, s) => sum + (parseInt(s.reps) || 0), 0);
           const totalWeight = completedSets.reduce((sum, s) => sum + (parseFloat(s.weight) || 0), 0);
