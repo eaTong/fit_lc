@@ -10,5 +10,8 @@
   "devDependencies": {
     "jest": "^27.5.1",
     "miniprogram-automator": "^0.12.1"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
   }
 }

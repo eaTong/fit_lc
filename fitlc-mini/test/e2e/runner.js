@@ -1,5 +1,5 @@
 // fitlc-mini/test/e2e/runner.js
-// E2E Test Runner for FitLC Mini Program
+// E2E Test Runner for 七练小程序
 const path = require('path');
 
 // Check if we have the required dependency

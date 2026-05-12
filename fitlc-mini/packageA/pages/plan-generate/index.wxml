@@ -25,30 +25,34 @@
 
     <!-- Goal Selection -->
     <view class="goal-grid">
-      <block wx:for="{{goalOptions}}" wx:key="value">
-        <view
-          class="goal-card {{isGoalSelected(item.value) ? 'selected' : ''}}"
-          bindtap="onGoalSelect"
-          data-value="{{item.value}}"
-        >
-          <text class="goal-icon">{{item.icon}}</text>
-          <text class="goal-label">{{item.label}}</text>
-          <text class="goal-desc">{{item.desc}}</text>
-        </view>
-      </block>
+      <view class="goal-card" bindtap="onGoalSelect" data-value="bulk">
+        <text class="goal-icon">💪</text>
+        <text class="goal-label">增肌</text>
+        <text class="goal-desc">+肌肉量</text>
+      </view>
+      <view class="goal-card" bindtap="onGoalSelect" data-value="cut">
+        <text class="goal-icon">🔥</text>
+        <text class="goal-label">减脂</text>
+        <text class="goal-desc">-体脂率</text>
+      </view>
+      <view class="goal-card" bindtap="onGoalSelect" data-value="maintain">
+        <text class="goal-icon">⚖️</text>
+        <text class="goal-label">维持</text>
+        <text class="goal-desc">保持现状</text>
+      </view>
     </view>
 
     <view class="step-title" style="margin-top: 40rpx;">计划周期</view>
     <view class="cycle-row">
-      <block wx:for="{{cycleOptions}}" wx:key="this">
-        <view
-          class="cycle-btn {{isCycleSelected(item) ? 'selected' : ''}}"
-          bindtap="onCycleSelect"
-          data-weeks="{{item}}"
-        >
-          {{item}}周
-        </view>
-      </block>
+      <view
+        wx:for="{{cycleOptions}}"
+        wx:key="*this"
+        class="cycle-btn {{isCycleSelected(item) ? 'selected' : ''}}"
+        data-weeks="{{item}}"
+        bindtap="onCycleSelect"
+      >
+        {{item}}周
+      </view>
     </view>
 
     <view class="bottom-btn">
@@ -73,28 +77,28 @@
 
     <view class="step-title" style="margin-top: 40rpx;">可用器械（多选）</view>
     <view class="equipment-grid">
-      <block wx:for="{{equipmentOptions}}" wx:key="this">
-        <view
-          class="equipment-btn {{isEquipmentSelected(item) ? 'selected' : ''}}"
-          bindtap="onEquipmentToggle"
-          data-eq="{{item}}"
-        >
-          {{item}}
-        </view>
-      </block>
+      <view
+        wx:for="{{equipmentOptions}}"
+        wx:key="*this"
+        class="equipment-btn {{isEquipmentSelected(item) ? 'selected' : ''}}"
+        data-eq="{{item}}"
+        bindtap="onEquipmentToggle"
+      >
+        {{item}}
+      </view>
     </view>
 
     <view class="step-title" style="margin-top: 40rpx;">训练经验</view>
     <view class="experience-row">
-      <block wx:for="{{experienceOptions}}" wx:key="value">
-        <view
-          class="exp-btn {{isExperienceSelected(item.value) ? 'selected' : ''}}"
-          bindtap="onExperienceSelect"
-          data-value="{{item.value}}"
-        >
-          {{item.label}}
-        </view>
-      </block>
+      <view
+        wx:for="{{experienceOptions}}"
+        wx:key="value"
+        class="exp-btn {{isExperienceSelected(item.value) ? 'selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onExperienceSelect"
+      >
+        {{item.label}}
+      </view>
     </view>
 
     <view class="bottom-btns">

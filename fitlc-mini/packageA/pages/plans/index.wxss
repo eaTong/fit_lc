@@ -6,6 +6,32 @@
   padding: 20rpx;
 }
 
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0 30rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.create-btn {
+  background-color: #FF4500;
+  padding: 16rpx 28rpx;
+  border-radius: 4rpx;
+}
+
+.create-btn-text {
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
 /* Tab Switcher */
 .tab-switcher {
   display: flex;

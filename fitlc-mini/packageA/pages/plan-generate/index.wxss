@@ -94,6 +94,7 @@
 .goal-grid {
   display: flex;
   gap: 20rpx;
+  height: 240rpx;
 }
 
 .goal-card {
@@ -101,32 +102,37 @@
   background-color: #1A1A1A;
   border: 2px solid #333333;
   border-radius: 8rpx;
-  padding: 30rpx 20rpx;
+  padding: 24rpx 16rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .goal-card.selected {
   border-color: #FF4500;
-  background-color: #1A1A1A;
+  background-color: rgba(255, 69, 0, 0.1);
 }
 
 .goal-icon {
-  font-size: 48rpx;
-  margin-bottom: 16rpx;
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+  pointer-events: none;
 }
 
 .goal-label {
   font-size: 28rpx;
   font-weight: 600;
   color: #FFFFFF;
-  margin-bottom: 8rpx;
+  margin-bottom: 6rpx;
+  pointer-events: none;
 }
 
 .goal-desc {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #888888;
+  pointer-events: none;
 }
 
 /* Cycle Row */
@@ -144,6 +150,7 @@
   text-align: center;
   color: #FFFFFF;
   font-size: 28rpx;
+  position: relative;
 }
 
 .cycle-btn.selected {

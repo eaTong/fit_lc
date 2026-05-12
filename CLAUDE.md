@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-FitLC 是一个 AI 健身记录 SaaS 系统，通过自然语言自动记录健身数据和身体围度。基于 LangChain.js 和 MiniMax AI 构建。
+七练是一款 AI 健身记录 SaaS 系统，通过自然语言自动记录健身数据和身体围度。基于 LangChain.js 和 MiniMax AI 构建。
 
 **技术栈：**
 - 前端：React + Vite + TailwindCSS（暗色主题）

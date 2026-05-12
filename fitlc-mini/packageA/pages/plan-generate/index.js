@@ -47,6 +47,7 @@ Component({
   methods: {
     // Step 1: Goal & Cycle
     onGoalSelect(e) {
+      console.log('[DEBUG] onGoalSelect called', e);
       const value = e.currentTarget.dataset.value;
       this.setData({ 'formData.goal': value });
     },

@@ -4,7 +4,7 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'FitLC API',
+      title: '七练 API',
       version: '1.0.0',
       description: 'AI健身记录 SaaS 系统 API 文档',
     },

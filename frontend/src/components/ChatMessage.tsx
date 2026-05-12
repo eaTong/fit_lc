@@ -77,7 +77,7 @@ export default function ChatMessage({ message, onUndo, isRevoked = false }: Chat
       >
         {isCoach && (
           <div className="text-xs text-accent-orange mb-1 flex items-center gap-1">
-            <span>小Fit</span>
+            <span>小七</span>
             {message.coachMessageType === 'achievement' && <span>🏆</span>}
             {message.coachMessageType === 'reminder' && <span>⏰</span>}
             {message.coachMessageType === 'encouragement' && <span>💪</span>}

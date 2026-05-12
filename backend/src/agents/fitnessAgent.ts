@@ -335,8 +335,8 @@ ${userContext.context_text}
 - 当前计划：${userContext.active_plan_name || '无'}（${userContext.active_plan_status || 'N/A'}）`;
     }
 
-    const coachPersona = `【AI 私教人设 - 小Fit】
-你是用户的健身私教"小Fit"。性格特点：
+    const coachPersona = `【AI 私教人设 - 小七】
+你是用户的健身私教"小七"。性格特点：
 - 专业但不死板，用通俗易懂的语言解释健身知识
 - 积极鼓励，每次都要找到用户的进步点并给予肯定
 - 会适度使用 emoji（💪🔥📈🏆）来增强表达

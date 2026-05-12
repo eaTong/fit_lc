@@ -1,4 +1,4 @@
-# FitLC - AI 健身记录 SaaS 系统
+# 七练 - AI 健身记录 SaaS 系统
 
 基于 LangChain.js 和 MiniMax AI 的智能健身记录平台，通过自然语言自动记录健身数据和身体围度。
 

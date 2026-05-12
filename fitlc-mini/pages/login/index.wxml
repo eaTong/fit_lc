@@ -1,7 +1,7 @@
 <view class="login-container">
   <view class="logo-section">
     <image class="logo" src="/assets/logo.png" mode="aspectFit" />
-    <text class="app-name">FitLC</text>
+    <text class="app-name">七练</text>
     <text class="app-desc">AI 健身记录助手</text>
   </view>
 

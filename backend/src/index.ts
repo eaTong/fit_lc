@@ -164,5 +164,5 @@ app.use('/api/upload', authMiddleware, uploadRouter);
 app.use('/api/album', authMiddleware, albumRoutes);
 
 app.listen(PORT, () => {
-  console.log(`FitLC backend running on port ${PORT}`);
+  console.log(`七练后端服务运行于端口 ${PORT}`);
 });

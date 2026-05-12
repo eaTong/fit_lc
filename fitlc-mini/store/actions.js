@@ -151,7 +151,8 @@ const recordActions = {
 // Plan Actions
 const planActions = {
   fetchPlans() {
-    return get('/plans').then(plans => {
+    return get('/plans').then(res => {
+      const plans = res.plans || [];
       getStore().setState({ plans });
       return plans;
     });
