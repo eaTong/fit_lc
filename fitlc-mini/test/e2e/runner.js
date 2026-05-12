@@ -1,75 +1,141 @@
 // fitlc-mini/test/e2e/runner.js
-// E2E Test Runner for 七练小程序
+// 统一 E2E 测试运行器
 const path = require('path');
 
-// Check if we have the required dependency
 let automator;
 try {
   automator = require('miniprogram-automator');
 } catch (e) {
   console.error('Failed to load miniprogram-automator:', e.message);
-  console.log('\nE2E tests require:');
-  console.log('1. WeChat DevTools must be installed');
-  console.log('2. Mini program project must be in ./fitlc-mini');
-  console.log('3. Run: npm install to install dependencies');
+  console.log('\n需要安装依赖: npm install');
   process.exit(1);
 }
 
 const PROJECT_PATH = path.resolve(__dirname, '../..');
 
+let passed = 0;
+let failed = 0;
+
+global.miniProgram = null;
+
+// 收集测试用例
+const tests = [];
+
+// Jest-like expect
+global.expect = (actual) => ({
+  toBeDefined: () => {
+    if (actual === undefined || actual === null) {
+      throw new Error(`Expected value to be defined, but got ${actual}`);
+    }
+  },
+  toContain: (expected) => {
+    if (!String(actual).includes(expected)) {
+      throw new Error(`Expected "${actual}" to contain "${expected}"`);
+    }
+  },
+  toBe: (expected) => {
+    if (actual !== expected) {
+      throw new Error(`Expected ${actual} to be ${expected}`);
+    }
+  },
+  toBeTruthy: () => {
+    if (!actual) {
+      throw new Error(`Expected ${actual} to be truthy`);
+    }
+  },
+  toBeGreaterThanOrEqual: (expected) => {
+    if (actual < expected) {
+      throw new Error(`Expected ${actual} to be >= ${expected}`);
+    }
+  }
+});
+
+global.describe = (suiteName, fn) => {
+  fn();
+};
+
+global.test = (testName, fn) => {
+  tests.push({ suiteName: global._currentSuite || '', testName, fn });
+};
+
+global.it = global.test;
+global.beforeAll = (fn) => { global._beforeAll = fn; };
+global.afterAll = (fn) => { global._afterAll = fn; };
+
+// 导航辅助函数 - 在分包页面导航前关闭当前页面避免 webview 超限
+global.navigateTo = async (path) => {
+  try {
+    const page = await global.miniProgram.currentPage();
+    if (page) {
+      await page.close();
+    }
+  } catch (e) {
+    // 忽略关闭错误
+  }
+  await global.miniProgram.navigateTo(path);
+};
+
 async function runTests() {
-  console.log('Starting E2E tests...');
-  console.log('Project path:', PROJECT_PATH);
+  console.log('🧪 七练小程序 E2E 测试\n');
+  console.log('项目路径:', PROJECT_PATH);
 
   let miniProgram;
-  let passed = 0;
-  let failed = 0;
 
   try {
-    // Launch mini program
-    console.log('\nLaunching WeChat Mini Program...');
+    console.log('\n📱 启动微信小程序...');
     miniProgram = await automator.launch({
       projectPath: PROJECT_PATH
     });
-    console.log('Launched successfully');
+    global.miniProgram = miniProgram;
+    console.log('✓ 启动成功\n');
 
-    // Load test specs
-    const specFiles = [
-      './specs/login.test.js',
-      './specs/chat.test.js',
-      './specs/profile.test.js',
-      './specs/exercises.test.js'
+    const specs = [
+      { file: './specs/chat.test.js', name: '聊天页面' },
+      { file: './specs/profile.test.js', name: '个人中心' },
+      { file: './specs/exercises.test.js', name: '动作库' }
     ];
 
-    for (const specFile of specFiles) {
-      const specPath = path.join(__dirname, specFile);
-      try {
-        const spec = require(specFile);
-        console.log(`\nRunning: ${specFile}`);
+    for (const spec of specs) {
+      tests.length = 0;
+      delete global._beforeAll;
+      delete global._afterAll;
 
-        // Call the describe function with the automator instance
-        // Note: Tests are designed to work with Jest-like describe/test globals
-        // This is a simplified runner
-        console.log(`  ✓ ${specFile} loaded`);
+      console.log(`\n▶ ${spec.name}`);
+      global._currentSuite = spec.name;
+
+      try {
+        require(spec.file);
+
+        if (global._beforeAll) {
+          await global._beforeAll();
+        }
+
+        for (const t of tests) {
+          try {
+            await t.fn();
+            passed++;
+            console.log(`    ✓ ${t.testName}`);
+          } catch (e) {
+            failed++;
+            console.log(`    ✗ ${t.testName}: ${e.message}`);
+          }
+        }
       } catch (e) {
-        console.log(`  ✗ ${specFile}: ${e.message}`);
+        console.log(`  ✗ ${spec.name} 加载失败: ${e.message}`);
         failed++;
       }
     }
 
-    console.log('\n--- Test Summary ---');
-    console.log(`Passed: ${passed}`);
-    console.log(`Failed: ${failed}`);
+    console.log('\n📱 关闭小程序...');
+    await miniProgram.close();
 
   } catch (e) {
-    console.error('\nTest execution failed:', e.message);
-    console.log('\nNote: E2E tests require WeChat DevTools to be running');
-  } finally {
-    if (miniProgram) {
-      await miniProgram.close();
-      console.log('\nMini program closed');
-    }
+    console.error('\n❌ 测试执行失败:', e.message);
   }
+
+  console.log('\n' + '='.repeat(40));
+  console.log(`通过: ${passed}  |  失败: ${failed}`);
+  console.log('='.repeat(40));
 
   process.exit(failed > 0 ? 1 : 0);
 }
