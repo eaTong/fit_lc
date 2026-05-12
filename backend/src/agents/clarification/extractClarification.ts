@@ -151,6 +151,51 @@ async function tryParseWorkout(text: string): Promise<{ date: string; exercises:
 }
 
 /**
+ * 仅解析组数和次数（当文本中没有动作名时使用）
+ */
+function tryParseSetsAndReps(text: string): { sets?: number; reps?: number } | null {
+  // 匹配 "3组7次" / "三组七次" / "3组" / "7次" 等模式
+  const chineseNumbers: Record<string, number> = {
+    '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+    '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+  };
+
+  let sets: number | undefined;
+  let reps: number | undefined;
+
+  // 匹配组数: "3组" / "三组" / "3个" / "三个"
+  const setsPattern = /([一二三四五六七八九十\d]+)\s*(?:组|个)/i;
+  const setsMatch = text.match(setsPattern);
+  if (setsMatch) {
+    const numStr = setsMatch[1];
+    sets = chineseNumbers[numStr] || parseInt(numStr);
+  }
+
+  // 匹配次数: "7次" / "七次" / "8个"
+  const repsPattern = /([一二三四五六七八九十\d]+)\s*(?:次|个)/i;
+  const repsMatch = text.match(repsPattern);
+  if (repsMatch) {
+    const numStr = repsMatch[1];
+    reps = chineseNumbers[numStr] || parseInt(numStr);
+  }
+
+  // 也支持 "3x7" 或 "3*7" 格式
+  if (sets === undefined || reps === undefined) {
+    const combinedPattern = /(\d+)\s*[x*x]\s*(\d+)/i;
+    const combinedMatch = text.match(combinedPattern);
+    if (combinedMatch) {
+      sets = sets || parseInt(combinedMatch[1]);
+      reps = reps || parseInt(combinedMatch[2]);
+    }
+  }
+
+  if (sets !== undefined || reps !== undefined) {
+    return { sets, reps };
+  }
+  return null;
+}
+
+/**
  * 从用户回复中提取澄清信息，复用到 partialInput
  */
 export async function extractClarification补充(
@@ -162,8 +207,11 @@ export async function extractClarification补充(
   let hasNewData = false;
 
   if (session.toolName === 'save_workout') {
+    // 优先用完整解析（包含动作名）
     const workout = await tryParseWorkout(message);
+
     if (workout?.exercises?.[0]) {
+      // 有动作名，提取所有字段
       const exercise = workout.exercises[0];
       if (!supplementedInput.exercises) {
         supplementedInput.exercises = [{}];
@@ -188,6 +236,22 @@ export async function extractClarification补充(
       if (exercise.distance && supplementedInput.exercises[0].distance === undefined) {
         supplementedInput.exercises[0].distance = exercise.distance;
         hasNewData = true;
+      }
+    } else {
+      // 没有动作名（如用户只说"3组7次"），使用 partialInput 中已有的动作名
+      const existingExercise = supplementedInput.exercises?.[0];
+      if (existingExercise?.name) {
+        const setsReps = tryParseSetsAndReps(message);
+        if (setsReps) {
+          if (setsReps.sets !== undefined && supplementedInput.exercises[0].sets === undefined) {
+            supplementedInput.exercises[0].sets = setsReps.sets;
+            hasNewData = true;
+          }
+          if (setsReps.reps !== undefined && supplementedInput.exercises[0].reps === undefined) {
+            supplementedInput.exercises[0].reps = setsReps.reps;
+            hasNewData = true;
+          }
+        }
       }
     }
   }

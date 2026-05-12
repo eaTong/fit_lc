@@ -110,8 +110,16 @@ export async function runAgentV2(
       const stillMissing = activeClarification.missingFields.filter(f => {
         const fieldPath = f.field;
         if (fieldPath.includes('[')) {
-          const [arrayKey, rest] = fieldPath.split(/[\[\]]/);
-          return !supplementedInput[arrayKey]?.[0]?.[rest];
+          const parts = fieldPath.split(/[\[\]]/).filter(p => p.length > 0);
+          const arrayKey = parts[0];
+          let fieldName = 'sets';
+          for (let i = parts.length - 1; i >= 0; i--) {
+            if (!/^\d+$/.test(parts[i])) {
+              fieldName = parts[i].replace(/^\./, '');
+              break;
+            }
+          }
+          return !supplementedInput[arrayKey]?.[0]?.[fieldName];
         }
         return supplementedInput[fieldPath] === undefined;
       });

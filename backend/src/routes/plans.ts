@@ -7,7 +7,7 @@ const router = Router();
 
 // Validation schemas
 const userProfileSchema = z.object({
-  name: z.string().min(1, '计划名称不能为空'),
+  name: z.string().min(1, '计划名称不能为空').optional(),
   goal: z.enum(['bulk', 'cut', 'maintain']),
   frequency: z.number().min(1).max(7, '频率应为1-7次/周'),
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
