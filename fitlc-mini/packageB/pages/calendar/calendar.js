@@ -99,7 +99,7 @@ Component({
 
     fetchRecords() {
       if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
         return;
       }
 
@@ -347,11 +347,11 @@ Component({
       const record = e.currentTarget.dataset.record;
       if (record.type === 'workout') {
         wx.navigateTo({
-          url: `/pages/chat/index?workoutId=${record.id}`
+          url: `/pages/chat/chat?workoutId=${record.id}`
         });
       } else {
         wx.navigateTo({
-          url: `/pages/chat/index?measurementId=${record.id}`
+          url: `/pages/chat/chat?measurementId=${record.id}`
         });
       }
     },

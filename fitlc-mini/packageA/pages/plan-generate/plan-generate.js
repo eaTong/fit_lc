@@ -38,7 +38,7 @@ Component({
   lifetimes: {
     attached() {
       if (!checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
         return;
       }
     }
@@ -146,7 +146,7 @@ Component({
         wx.showToast({ title: '计划生成成功', icon: 'success' });
         setTimeout(() => {
           wx.navigateTo({
-            url: `/packageA/pages/plan-detail/index?id=${res.planId}`
+            url: `/packageA/pages/plan-detail/plan-detail?id=${res.planId}`
           });
         }, 1500);
       }).catch(err => {

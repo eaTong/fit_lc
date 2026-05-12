@@ -20,7 +20,7 @@ Page({
     // 检查登录
     authActions.checkAuth().then(isAuth => {
       if (!isAuth) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
         return;
       }
 

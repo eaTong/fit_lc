@@ -98,7 +98,7 @@ Component({
 
     fetchData() {
       if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
         return;
       }
 
@@ -269,7 +269,7 @@ Component({
     onMeasurementTap(e) {
       const measurement = e.currentTarget.dataset.measurement;
       wx.navigateTo({
-        url: `/pages/chat/index?measurementId=${measurement.id}`
+        url: `/pages/chat/chat?measurementId=${measurement.id}`
       });
     },
 

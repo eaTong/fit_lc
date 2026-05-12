@@ -1,10 +1,10 @@
 {
   "pages": [
-    "pages/chat/index",
-    "pages/login/index",
-    "pages/exercises/index",
-    "pages/profile/index",
-    "pages/settings/index"
+    "pages/chat/chat",
+    "pages/login/login",
+    "pages/exercises/exercises",
+    "pages/profile/profile",
+    "pages/settings/settings"
   ],
   "window": {
     "backgroundTextStyle": "dark",
@@ -19,19 +19,19 @@
     "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/chat/index",
+        "pagePath": "pages/chat/chat",
         "text": "对话",
         "iconPath": "assets/tabbar/home.png",
         "selectedIconPath": "assets/tabbar/home-active.png"
       },
       {
-        "pagePath": "pages/exercises/index",
+        "pagePath": "pages/exercises/exercises",
         "text": "动作库",
         "iconPath": "assets/tabbar/exercises.png",
         "selectedIconPath": "assets/tabbar/exercises-active.png"
       },
       {
-        "pagePath": "pages/profile/index",
+        "pagePath": "pages/profile/profile",
         "text": "我的",
         "iconPath": "assets/tabbar/profile.png",
         "selectedIconPath": "assets/tabbar/profile-active.png"
@@ -42,25 +42,25 @@
     {
       "root": "packageA",
       "pages": [
-        "pages/plans/index",
-        "pages/plan-generate/index",
-        "pages/plan-detail/index",
-        "pages/plan-execute/index"
+        "pages/plans/plans",
+        "pages/plan-generate/plan-generate",
+        "pages/plan-detail/plan-detail",
+        "pages/plan-execute/plan-execute"
       ]
     },
     {
       "root": "packageB",
       "pages": [
-        "pages/measurements/index",
-        "pages/calendar/index"
+        "pages/measurements/measurements",
+        "pages/calendar/calendar"
       ]
     },
     {
       "root": "packageC",
       "pages": [
-        "pages/badges/index",
-        "pages/exercise-detail/index",
-        "pages/gallery/index"
+        "pages/badges/badges",
+        "pages/exercise-detail/exercise-detail",
+        "pages/gallery/gallery"
       ]
     }
   ],

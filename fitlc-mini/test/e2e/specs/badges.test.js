@@ -7,7 +7,7 @@ describe('徽章墙页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageC/pages/badges/index');
+    await global.miniProgram.navigateTo('/packageC/pages/badges/badges');
     const page = await global.miniProgram.currentPage();
     expect(page).toBeTruthy();
   });
@@ -16,7 +16,7 @@ describe('徽章墙页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageC/pages/badges/index');
+    await global.miniProgram.navigateTo('/packageC/pages/badges/badges');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.header-title', { timeout: 5000 });
     const headerTitle = await page.$('.header-title');
@@ -27,7 +27,7 @@ describe('徽章墙页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageC/pages/badges/index');
+    await global.miniProgram.navigateTo('/packageC/pages/badges/badges');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.badges-container, .loading-container', { timeout: 5000 });
     const container = await page.$('.badges-container, .loading-container');

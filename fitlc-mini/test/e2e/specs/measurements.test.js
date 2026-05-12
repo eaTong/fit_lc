@@ -7,7 +7,7 @@ describe('围度记录页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/measurements/index');
+    await global.miniProgram.navigateTo('/packageB/pages/measurements/measurements');
     const page = await global.miniProgram.currentPage();
     expect(page).toBeTruthy();
   });
@@ -16,7 +16,7 @@ describe('围度记录页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/measurements/index');
+    await global.miniProgram.navigateTo('/packageB/pages/measurements/measurements');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.tab-container', { timeout: 5000 });
     const tabContainer = await page.$('.tab-container');
@@ -27,7 +27,7 @@ describe('围度记录页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/measurements/index');
+    await global.miniProgram.navigateTo('/packageB/pages/measurements/measurements');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.tab-item', { timeout: 5000 });
     const tabItems = await page.$$('.tab-item');
@@ -38,7 +38,7 @@ describe('围度记录页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/measurements/index');
+    await global.miniProgram.navigateTo('/packageB/pages/measurements/measurements');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.latest-card, .content-container', { timeout: 5000 });
     const content = await page.$('.latest-card, .content-container');

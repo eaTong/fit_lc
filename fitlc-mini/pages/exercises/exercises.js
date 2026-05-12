@@ -26,7 +26,7 @@ Page({
 
   onLoad() {
     if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/index' });
+      wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
     this.loadData();
@@ -240,7 +240,7 @@ Page({
 
   onExerciseTap(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/packageC/pages/exercise-detail/index?id=${id}` });
+    wx.navigateTo({ url: `/packageC/pages/exercise-detail/exercise-detail?id=${id}` });
   },
 
   onMusclePageTap() {

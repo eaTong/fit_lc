@@ -8,7 +8,7 @@ describe('健身计划页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageA/pages/plans/index');
+    await global.miniProgram.navigateTo('/packageA/pages/plans/plans');
     const page = await global.miniProgram.currentPage();
     expect(page).toBeTruthy();
   });
@@ -17,7 +17,7 @@ describe('健身计划页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageA/pages/plans/index');
+    await global.miniProgram.navigateTo('/packageA/pages/plans/plans');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.page-title', { timeout: 5000 });
     const title = await page.$('.page-title');
@@ -28,7 +28,7 @@ describe('健身计划页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageA/pages/plans/index');
+    await global.miniProgram.navigateTo('/packageA/pages/plans/plans');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.create-btn', { timeout: 5000 });
     const createBtn = await page.$('.create-btn');
@@ -39,7 +39,7 @@ describe('健身计划页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageA/pages/plans/index');
+    await global.miniProgram.navigateTo('/packageA/pages/plans/plans');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.tab-switcher', { timeout: 5000 });
     const tabSwitcher = await page.$('.tab-switcher');
@@ -50,7 +50,7 @@ describe('健身计划页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageA/pages/plans/index');
+    await global.miniProgram.navigateTo('/packageA/pages/plans/plans');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.plans-list, .empty-state', { timeout: 5000 });
     const content = await page.$('.plans-list, .empty-state');

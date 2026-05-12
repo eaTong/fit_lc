@@ -7,7 +7,7 @@ describe('日历页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/calendar/index');
+    await global.miniProgram.navigateTo('/packageB/pages/calendar/calendar');
     const page = await global.miniProgram.currentPage();
     expect(page).toBeTruthy();
   });
@@ -16,7 +16,7 @@ describe('日历页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageB/pages/calendar/index');
+    await global.miniProgram.navigateTo('/packageB/pages/calendar/calendar');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.calendar-container, .calendar', { timeout: 5000 });
     const calendar = await page.$('.calendar-container, .calendar');

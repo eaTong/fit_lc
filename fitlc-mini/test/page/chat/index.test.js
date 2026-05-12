@@ -58,7 +58,7 @@ describe('Chat Page Logic', () => {
 
       // Simulate onLoad check
       if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
       }
 
       expect(wx.redirectTo).toHaveBeenCalledWith({ url: '/pages/login/index' });

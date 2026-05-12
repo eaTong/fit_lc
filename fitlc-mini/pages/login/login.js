@@ -11,7 +11,7 @@ Page({
     // 检查是否已登录（异步）
     authActions.checkAuth().then(isAuth => {
       if (isAuth) {
-        wx.switchTab({ url: '/pages/chat/index' });
+        wx.switchTab({ url: '/pages/chat/chat' });
       }
     });
   },
@@ -32,7 +32,7 @@ Page({
         // 发送 code 到后端，换 token
         authActions.login(loginRes.code).then(res => {
           this.setData({ loading: false });
-          wx.switchTab({ url: '/pages/chat/index' });
+          wx.switchTab({ url: '/pages/chat/chat' });
         }).catch(err => {
           this.setData({ loading: false, error: err.message || '登录失败' });
         });

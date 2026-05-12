@@ -8,7 +8,7 @@ Page({
 
   onLoad() {
     if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/index' });
+      wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
     this.loadData();
@@ -190,6 +190,6 @@ Page({
   },
 
   goToBodyData() {
-    wx.navigateTo({ url: '/packageB/pages/measurements/index' });
+    wx.navigateTo({ url: '/packageB/pages/measurements/measurements' });
   }
 });

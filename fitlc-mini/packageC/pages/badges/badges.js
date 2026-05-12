@@ -37,7 +37,7 @@ Component({
 
     fetchAllBadges() {
       if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/index' });
+        wx.redirectTo({ url: '/pages/login/login' });
         return;
       }
 

@@ -242,6 +242,15 @@ interface ToolResponse<T = any> {
 - 状态管理：本地 Storage + globalData
 - 网络：wx.request
 
+### 文件命名规范
+**页面和组件文件名应与文件夹名称保持一致，避免使用 `index` 命名。**
+
+例如：
+- `pages/chat/index.js` → `pages/chat/chat.js`
+- `components/button/index.js` → `components/button/button.js`
+
+原因：微信小程序的分包机制会导致路径解析问题，统一的命名便于维护和理解。
+
 ### 分包策略
 采用**独立分包**机制，减少主包体积：
 

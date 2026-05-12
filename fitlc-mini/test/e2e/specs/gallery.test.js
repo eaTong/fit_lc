@@ -7,7 +7,7 @@ describe('相册页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageC/pages/gallery/index');
+    await global.miniProgram.navigateTo('/packageC/pages/gallery/gallery');
     const page = await global.miniProgram.currentPage();
     expect(page).toBeTruthy();
   });
@@ -16,7 +16,7 @@ describe('相册页面 E2E', () => {
     try {
       await global.miniProgram.navigateBack({ delta: 1 });
     } catch (e) { /* 忽略返回错误 */ }
-    await global.miniProgram.navigateTo('/packageC/pages/gallery/index');
+    await global.miniProgram.navigateTo('/packageC/pages/gallery/gallery');
     const page = await global.miniProgram.currentPage();
     await page.waitFor('.gallery-container, .gallery-grid, .empty-state', { timeout: 5000 });
     const gallery = await page.$('.gallery-container, .gallery-grid, .empty-state');

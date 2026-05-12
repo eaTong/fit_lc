@@ -22,7 +22,7 @@ Page({
 
   onLoad() {
     if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/index' });
+      wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
 
@@ -149,7 +149,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           authActions.logout();
-          wx.redirectTo({ url: '/pages/login/index' });
+          wx.redirectTo({ url: '/pages/login/login' });
         }
       }
     });
@@ -157,26 +157,26 @@ Page({
 
   // Navigation handlers - subpackage pages use packageX/pages/xxx/index
   goToMeasurements() {
-    wx.navigateTo({ url: '/packageB/pages/measurements/index' });
+    wx.navigateTo({ url: '/packageB/pages/measurements/measurements' });
   },
 
   goToCalendar() {
-    wx.navigateTo({ url: '/packageB/pages/calendar/index' });
+    wx.navigateTo({ url: '/packageB/pages/calendar/calendar' });
   },
 
   goToPlans() {
-    wx.navigateTo({ url: '/packageA/pages/plans/index' });
+    wx.navigateTo({ url: '/packageA/pages/plans/plans' });
   },
 
   goToBadges() {
-    wx.navigateTo({ url: '/packageC/pages/badges/index' });
+    wx.navigateTo({ url: '/packageC/pages/badges/badges' });
   },
 
   goToGallery() {
-    wx.navigateTo({ url: '/packageC/pages/gallery/index' });
+    wx.navigateTo({ url: '/packageC/pages/gallery/gallery' });
   },
 
   goToSettings() {
-    wx.navigateTo({ url: '/pages/settings/index' });
+    wx.navigateTo({ url: '/pages/settings/settings' });
   }
 });

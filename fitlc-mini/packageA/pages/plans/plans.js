@@ -72,13 +72,13 @@ Component({
     goToPlanDetail(e) {
       const planId = e.currentTarget.dataset.id;
       wx.navigateTo({
-        url: `/packageA/pages/plan-detail/index?id=${planId}`,
+        url: `/packageA/pages/plan-detail/plan-detail?id=${planId}`,
       });
     },
 
     onCreatePlan() {
       wx.navigateTo({
-        url: '/packageA/pages/plan-generate/index',
+        url: '/packageA/pages/plan-generate/plan-generate',
       });
     },
 
