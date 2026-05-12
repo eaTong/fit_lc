@@ -62,19 +62,6 @@ global.it = global.test;
 global.beforeAll = (fn) => { global._beforeAll = fn; };
 global.afterAll = (fn) => { global._afterAll = fn; };
 
-// 导航辅助函数 - 在分包页面导航前关闭当前页面避免 webview 超限
-global.navigateTo = async (path) => {
-  try {
-    const page = await global.miniProgram.currentPage();
-    if (page) {
-      await page.close();
-    }
-  } catch (e) {
-    // 忽略关闭错误
-  }
-  await global.miniProgram.navigateTo(path);
-};
-
 async function runTests() {
   console.log('🧪 七练小程序 E2E 测试\n');
   console.log('项目路径:', PROJECT_PATH);
@@ -89,13 +76,58 @@ async function runTests() {
     global.miniProgram = miniProgram;
     console.log('✓ 启动成功\n');
 
-    const specs = [
+    // 主 tab 页面测试
+    const mainSpecs = [
       { file: './specs/chat.test.js', name: '聊天页面' },
       { file: './specs/profile.test.js', name: '个人中心' },
       { file: './specs/exercises.test.js', name: '动作库' }
     ];
 
-    for (const spec of specs) {
+    // 分包页面测试
+    const subpackageSpecs = [
+      { file: './specs/plans.test.js', name: '健身计划' },
+      { file: './specs/measurements.test.js', name: '围度记录' },
+      { file: './specs/badges.test.js', name: '徽章墙' },
+      { file: './specs/calendar.test.js', name: '日历' },
+      { file: './specs/gallery.test.js', name: '相册' }
+    ];
+
+    // 运行主 tab 页面测试
+    console.log('======== 主 Tab 页面测试 ========');
+    for (const spec of mainSpecs) {
+      tests.length = 0;
+      delete global._beforeAll;
+      delete global._afterAll;
+
+      console.log(`\n▶ ${spec.name}`);
+      global._currentSuite = spec.name;
+
+      try {
+        require(spec.file);
+
+        if (global._beforeAll) {
+          await global._beforeAll();
+        }
+
+        for (const t of tests) {
+          try {
+            await t.fn();
+            passed++;
+            console.log(`    ✓ ${t.testName}`);
+          } catch (e) {
+            failed++;
+            console.log(`    ✗ ${t.testName}: ${e.message}`);
+          }
+        }
+      } catch (e) {
+        console.log(`  ✗ ${spec.name} 加载失败: ${e.message}`);
+        failed++;
+      }
+    }
+
+    // 运行分包页面测试
+    console.log('\n======== 分包页面测试 ========');
+    for (const spec of subpackageSpecs) {
       tests.length = 0;
       delete global._beforeAll;
       delete global._afterAll;
@@ -131,6 +163,13 @@ async function runTests() {
 
   } catch (e) {
     console.error('\n❌ 测试执行失败:', e.message);
+    if (miniProgram) {
+      try {
+        await miniProgram.close();
+      } catch (closeErr) {
+        // 忽略关闭错误
+      }
+    }
   }
 
   console.log('\n' + '='.repeat(40));
