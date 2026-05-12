@@ -47,7 +47,10 @@ backend/output/*.json
 # Frontend
 frontend/node_modules/
 frontend/dist/
-frontend/test-results/.worktrees/
+frontend/test-results/
+
+# Mini Program
+fitlc-mini/node_modules/
 
 
 tmp/
