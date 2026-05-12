@@ -1,81 +1,162 @@
 <view class="page-container">
-  <!-- Form Container -->
-  <view class="form-container">
-    <!-- Goal Picker -->
-    <view class="form-item">
-      <text class="form-label">训练目标</text>
-      <picker
-        mode="selector"
-        range="{{goalRange}}"
-        value="{{goalValues.indexOf(formData.goal)}}"
-        bindchange="onGoalChange"
-      >
-        <view class="picker-value">
-          <text class="picker-text">{{goalRange[goalValues.indexOf(formData.goal)]}}</text>
-          <text class="picker-arrow">›</text>
+  <!-- Progress Indicator -->
+  <view class="progress-bar">
+    <view class="progress-steps">
+      <view class="progress-step {{currentStep >= 1 ? 'active' : ''}} {{currentStep > 1 ? 'completed' : ''}}">
+        <view class="step-circle">{{currentStep > 1 ? '✓' : '1'}}</view>
+        <text class="step-label">目标</text>
+      </view>
+      <view class="progress-line {{currentStep > 1 ? 'active' : ''}}"></view>
+      <view class="progress-step {{currentStep >= 2 ? 'active' : ''}} {{currentStep > 2 ? 'completed' : ''}}">
+        <view class="step-circle">{{currentStep > 2 ? '✓' : '2'}}</view>
+        <text class="step-label">训练</text>
+      </view>
+      <view class="progress-line {{currentStep > 2 ? 'active' : ''}}"></view>
+      <view class="progress-step {{currentStep >= 3 ? 'active' : ''}}">
+        <view class="step-circle">3</view>
+        <text class="step-label">身体数据</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Step 1: Goal & Cycle -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <view class="step-title">选择您的训练目标</view>
+
+    <!-- Goal Selection -->
+    <view class="goal-grid">
+      <block wx:for="{{goalOptions}}" wx:key="value">
+        <view
+          class="goal-card {{isGoalSelected(item.value) ? 'selected' : ''}}"
+          bindtap="onGoalSelect"
+          data-value="{{item.value}}"
+        >
+          <text class="goal-icon">{{item.icon}}</text>
+          <text class="goal-label">{{item.label}}</text>
+          <text class="goal-desc">{{item.desc}}</text>
         </view>
-      </picker>
+      </block>
     </view>
 
-    <!-- Frequency Picker -->
-    <view class="form-item">
-      <text class="form-label">每周训练天数</text>
-      <picker
-        mode="selector"
-        range="{{['1天', '2天', '3天', '4天', '5天', '6天', '7天']}}"
-        value="{{formData.frequency - 1}}"
-        bindchange="onFrequencyChange"
-      >
-        <view class="picker-value">
-          <text class="picker-text">{{formData.frequency}}天/周</text>
-          <text class="picker-arrow">›</text>
+    <view class="step-title" style="margin-top: 40rpx;">计划周期</view>
+    <view class="cycle-row">
+      <block wx:for="{{cycleOptions}}" wx:key="this">
+        <view
+          class="cycle-btn {{isCycleSelected(item) ? 'selected' : ''}}"
+          bindtap="onCycleSelect"
+          data-weeks="{{item}}"
+        >
+          {{item}}周
         </view>
-      </picker>
+      </block>
     </view>
 
-    <!-- Duration Picker -->
-    <view class="form-item">
-      <text class="form-label">每次训练时长</text>
-      <picker
-        mode="selector"
-        range="{{durationRange}}"
-        value="{{durationValues.indexOf(formData.durationMinutes)}}"
-        bindchange="onDurationChange"
-      >
-        <view class="picker-value">
-          <text class="picker-text">{{durationRange[durationValues.indexOf(formData.durationMinutes)]}}</text>
-          <text class="picker-arrow">›</text>
+    <view class="bottom-btn">
+      <view class="primary-btn" bindtap="onStep1Next">下一步 →</view>
+    </view>
+  </view>
+
+  <!-- Step 2: Frequency & Equipment -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="step-title">每周训练几次？</view>
+    <picker
+      mode="selector"
+      range="{{['2天', '3天', '4天', '5天', '6天']}}"
+      value="{{formData.frequency - 2}}"
+      bindchange="onFrequencyChange"
+    >
+      <view class="picker-box">
+        <text>{{formData.frequency}}天/周</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+
+    <view class="step-title" style="margin-top: 40rpx;">可用器械（多选）</view>
+    <view class="equipment-grid">
+      <block wx:for="{{equipmentOptions}}" wx:key="this">
+        <view
+          class="equipment-btn {{isEquipmentSelected(item) ? 'selected' : ''}}"
+          bindtap="onEquipmentToggle"
+          data-eq="{{item}}"
+        >
+          {{item}}
         </view>
-      </picker>
+      </block>
     </view>
 
-    <!-- Focus Areas Picker (Multi-select) -->
-    <view class="form-item">
-      <text class="form-label">部位重点（可选）</text>
-      <picker
-        mode="multiSelector"
-        range="{{focusAreaOptions}}"
-        value="{{selectedFocusAreas}}"
-        bindchange="onFocusAreaChange"
-      >
-        <view class="picker-value">
-          <text class="picker-text {{selectedFocusAreas.length === 0 ? 'placeholder' : ''}}">
-            {{selectedFocusAreas.length > 0 ? selectedFocusAreas.join('、') : '未选择'}}
-          </text>
-          <text class="picker-arrow">›</text>
+    <view class="step-title" style="margin-top: 40rpx;">训练经验</view>
+    <view class="experience-row">
+      <block wx:for="{{experienceOptions}}" wx:key="value">
+        <view
+          class="exp-btn {{isExperienceSelected(item.value) ? 'selected' : ''}}"
+          bindtap="onExperienceSelect"
+          data-value="{{item.value}}"
+        >
+          {{item.label}}
         </view>
-      </picker>
+      </block>
     </view>
 
-    <!-- Error Message -->
-    <view wx:if="{{error}}" class="error-text">
-      <text>{{error}}</text>
+    <view class="bottom-btns">
+      <view class="outline-btn" bindtap="onStep2Back">← 上一步</view>
+      <view class="primary-btn" bindtap="onStep2Next">下一步 →</view>
+    </view>
+  </view>
+
+  <!-- Step 3: Body Data -->
+  <view class="step-content" wx:if="{{currentStep === 3}}">
+    <view class="step-title">基本身体数据（帮助计算合适的重量）</view>
+
+    <view class="input-row">
+      <view class="input-item">
+        <text class="input-label">身高 (cm)</text>
+        <input
+          type="number"
+          class="input-box"
+          placeholder="175"
+          value="{{formData.height}}"
+          bindinput="onHeightInput"
+        />
+      </view>
+      <view class="input-item">
+        <text class="input-label">体重 (kg)</text>
+        <input
+          type="number"
+          class="input-box"
+          placeholder="70"
+          value="{{formData.body_weight}}"
+          bindinput="onWeightInput"
+        />
+      </view>
     </view>
 
-    <!-- Submit Button -->
-    <view class="submit-btn {{isLoading ? 'loading' : ''}}" bindtap="onSubmit">
-      <text wx:if="{{!isLoading}}" class="submit-btn-text">生成计划</text>
-      <text wx:else class="submit-btn-text">生成中...</text>
+    <view class="step-subtitle">体脂率（可选）</view>
+    <input
+      type="digit"
+      class="input-box full"
+      placeholder="18.5"
+      value="{{formData.body_fat}}"
+      bindinput="onBodyFatInput"
+    />
+
+    <view class="step-subtitle">伤病/身体状况（可选）</view>
+    <textarea
+      class="textarea-box"
+      placeholder="如有伤病或身体状况请在此说明"
+      value="{{formData.conditions}}"
+      bindinput="onConditionsInput"
+    />
+
+    <view class="bottom-btns">
+      <view class="outline-btn" bindtap="onStep3Back">← 上一步</view>
+      <view class="primary-btn {{isLoading ? 'loading' : ''}}" bindtap="onSubmit">
+        {{isLoading ? '生成中...' : '生成计划'}}
+      </view>
     </view>
+  </view>
+
+  <!-- Error Message -->
+  <view wx:if="{{error}}" class="error-text">
+    <text>{{error}}</text>
   </view>
 </view>

@@ -32,7 +32,8 @@ export interface Workout {
 }
 
 // 围度记录
-export type BodyPart = 'chest' | 'waist' | 'hips' | 'biceps' | 'thighs' | 'calves' | 'weight' | 'bodyFat' | 'other';
+// 注意：后端支持左右区分的部位（biceps_l, biceps_r, thigh_l, thigh_r, calf_l, calf_r）
+export type BodyPart = 'chest' | 'waist' | 'hips' | 'biceps' | 'biceps_l' | 'biceps_r' | 'thighs' | 'thigh_l' | 'thigh_r' | 'calves' | 'calf_l' | 'calf_r' | 'weight' | 'bodyFat' | 'other';
 
 export interface MeasurementItem {
   bodyPart: BodyPart;

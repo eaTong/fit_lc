@@ -54,23 +54,26 @@ Component({
     prepareExercises(plan) {
       if (!plan) return;
 
-      const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      // Get current day of week (1=周一 to 7=周日)
       const today = new Date();
-      const dayOfWeek = dayLabels[today.getDay()];
+      const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
 
       let exercises = [];
 
       if (plan.plan_exercises && plan.plan_exercises.length > 0) {
+        // Filter by numeric day_of_week
         exercises = plan.plan_exercises
-          .filter(pe => pe.day_of_week === dayOfWeek || !pe.day_of_week)
+          .filter(pe => pe.day_of_week === dayOfWeek)
           .map(pe => ({
             id: pe.exercise_id,
             name: pe.exercise?.name || pe.name || '未知动作',
             targetSets: pe.sets || 3,
             targetReps: pe.reps || pe.repetitions || 10,
+            restSeconds: pe.rest_seconds || 60,
             sets: this.initSetsArray(pe.sets || 3, pe.reps || 10)
           }));
       } else if (plan.exercises && Array.isArray(plan.exercises)) {
+        // Fallback: distribute evenly
         exercises = plan.exercises.map(ex => ({
           id: ex.id,
           name: ex.name || '未知动作',
@@ -82,7 +85,7 @@ Component({
 
       if (exercises.length === 0) {
         exercises = [
-          { id: 1, name: '暂无训练动作', targetSets: 0, targetReps: 0, sets: [] }
+          { id: 1, name: '今日无训练安排', targetSets: 0, targetReps: 0, sets: [] }
         ];
       }
 
@@ -162,21 +165,27 @@ Component({
 
       this.setData({ isSubmitting: true });
 
-      const executionData = exercises.map(ex => ({
-        exerciseId: ex.id,
-        sets: ex.sets.map(s => ({
-          weight: parseFloat(s.weight) || 0,
-          reps: parseInt(s.reps) || 0,
-          completed: s.completed,
-          notes: s.notes || ''
-        })),
-        notes: ex.exerciseNotes || ''
-      }));
+      // Build execution data per exercise (flatten sets to completed reps/weight)
+      const executionPromises = exercises
+        .filter(ex => ex.sets && ex.sets.some(s => s.completed))
+        .map(ex => {
+          // Calculate total completed reps and average weight
+          const completedSets = ex.sets.filter(s => s.completed);
+          const totalReps = completedSets.reduce((sum, s) => sum + (parseInt(s.reps) || 0), 0);
+          const totalWeight = completedSets.reduce((sum, s) => sum + (parseFloat(s.weight) || 0), 0);
+          const avgWeight = completedSets.length > 0 ? totalWeight / completedSets.length : 0;
 
-      planActions.recordExecution(planId, {
-        date: executionDate,
-        exercises: executionData
-      }).then(() => {
+          return planActions.recordExecution(planId, {
+            plan_exercise_id: ex.id,
+            scheduled_date: executionDate,
+            completed_reps: totalReps,
+            completed_weight: Math.round(avgWeight * 10) / 10,
+            status: 'completed',
+            notes: ex.exerciseNotes || ''
+          });
+        });
+
+      Promise.all(executionPromises).then(() => {
         this.setData({ isSubmitting: false });
         wx.showToast({
           title: '打卡成功',

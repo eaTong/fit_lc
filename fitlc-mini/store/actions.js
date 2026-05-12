@@ -157,12 +157,28 @@ const planActions = {
     });
   },
 
+  fetchPlan(id) {
+    return get(`/plans/${id}`).then(plan => plan);
+  },
+
   generatePlan(params) {
     return post('/plans/generate', params).then(plan => plan);
   },
 
   activatePlan(id) {
     return post(`/plans/${id}/activate`).then(res => res.success);
+  },
+
+  recordExecution(id, data) {
+    return post(`/plans/${id}/executions`, data).then(res => res.executionId);
+  },
+
+  adjustPlan(id, adjustments) {
+    return post(`/plans/${id}/adjust`, adjustments).then(res => res.success);
+  },
+
+  analyzeExecution(id) {
+    return get(`/plans/${id}/executions/analysis`).then(res => res.analysis);
   }
 };
 

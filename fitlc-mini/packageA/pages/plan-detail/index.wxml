@@ -19,7 +19,9 @@
           <text class="status-text">{{getStatusLabel(plan.status)}}</text>
         </view>
       </view>
-      <view class="plan-meta">
+
+      <!-- Plan Meta Grid -->
+      <view class="plan-meta-grid">
         <view class="meta-item">
           <text class="meta-label">目标</text>
           <text class="meta-value">{{getGoalLabel(plan.goal)}}</text>
@@ -31,6 +33,35 @@
         <view class="meta-item">
           <text class="meta-label">周期</text>
           <text class="meta-value">{{plan.duration_weeks}}周</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">经验</text>
+          <text class="meta-value">{{getExperienceLabel(plan.experience)}}</text>
+        </view>
+      </view>
+
+      <!-- Equipment -->
+      <view wx:if="{{plan.equipment}}" class="equipment-row">
+        <text class="meta-label">器械：</text>
+        <text class="equipment-tags">{{plan.equipment}}</text>
+      </view>
+    </view>
+
+    <!-- Progress Stats (for active plans) -->
+    <view wx:if="{{plan.status === 'active' && analysis}}" class="stats-card">
+      <view class="stats-title">执行进度</view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{getCompletionRate()}}%</text>
+          <text class="stat-label">完成率</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{getCompletedWorkouts()}}</text>
+          <text class="stat-label">已完成</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{getTotalWorkouts()}}</text>
+          <text class="stat-label">总训练</text>
         </view>
       </view>
     </view>
@@ -78,10 +109,21 @@
     <text class="empty-desc">无法找到该训练计划</text>
   </view>
 
-  <!-- Bottom Action -->
-  <view wx:if="{{plan && plan.status !== 'completed'}}" class="bottom-action">
-    <view class="start-btn" bindtap="onStartExecute">
+  <!-- Bottom Actions -->
+  <view wx:if="{{plan}}" class="bottom-action">
+    <!-- Draft plan: show activate button -->
+    <view wx:if="{{plan.status === 'draft'}}" class="activate-btn" bindtap="onActivate">
+      <text class="activate-btn-text">激活计划</text>
+    </view>
+
+    <!-- Active plan: show start execute button -->
+    <view wx:if="{{plan.status === 'active'}}" class="start-btn" bindtap="onStartExecute">
       <text class="start-btn-text">开始执行</text>
+    </view>
+
+    <!-- Completed plan: show back button -->
+    <view wx:if="{{plan.status === 'completed'}}" class="outline-btn" bindtap="goBack">
+      <text class="outline-btn-text">返回</text>
     </view>
   </view>
 </view>

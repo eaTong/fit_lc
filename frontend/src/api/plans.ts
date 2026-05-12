@@ -36,7 +36,7 @@ export const plansApi = {
   },
 
   async recordExecution(planId: number, execution: ExecutionInput): Promise<{ id: number; success: boolean }> {
-    const { data } = await client.post<{ id: number; success: boolean }>(`/plans/${planId}/execute`, execution);
+    const { data } = await client.post<{ id: number; success: boolean }>(`/plans/${planId}/executions`, execution);
     return data;
   },
 

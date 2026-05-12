@@ -101,10 +101,12 @@
 
 .plan-meta {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20rpx;
 }
 
 .meta-item {
+  min-width: 130rpx;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
@@ -230,4 +232,101 @@
   color: #FFFFFF;
   font-size: 32rpx;
   font-weight: bold;
+}
+
+/* Equipment Row */
+.equipment-row {
+  margin-top: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.equipment-row .meta-label {
+  margin-bottom: 0;
+  margin-right: 8rpx;
+}
+
+.equipment-tags {
+  color: #FFFFFF;
+  font-size: 24rpx;
+}
+
+/* Stats Card */
+.stats-card {
+  background-color: #1A1A1A;
+  border: 2px solid #FF4500;
+  border-radius: 8rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.stats-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 20rpx;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FF4500;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #888888;
+  margin-top: 8rpx;
+}
+
+/* Activate Button */
+.activate-btn {
+  background-color: #4CAF50;
+  padding: 28rpx 0;
+  border-radius: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.activate-btn:active {
+  background-color: #43a047;
+}
+
+.activate-btn-text {
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+/* Outline Button */
+.outline-btn {
+  background-color: transparent;
+  border: 2px solid #333333;
+  padding: 28rpx 0;
+  border-radius: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outline-btn:active {
+  border-color: #FF4500;
+}
+
+.outline-btn-text {
+  color: #888888;
+  font-size: 32rpx;
 }
