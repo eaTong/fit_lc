@@ -87,12 +87,16 @@ export interface PlanExercise {
   plan_id?: number;
   day_of_week: number;
   exercise_name: string;
-  sets: number;
-  reps: string;
-  weight?: number;
+  targetSets?: number;
+  targetReps?: string;
+  targetWeight?: number | null;
   duration?: number;
   rest_seconds?: number;
   order_index: number;
+  // 兼容旧字段名
+  sets?: number;
+  reps?: string;
+  weight?: number;
 }
 
 export interface Plan {
@@ -129,8 +133,8 @@ export interface UserProfile {
 export interface ExecutionInput {
   plan_exercise_id: number;
   scheduled_date: string;
-  completed_reps?: number;
-  completed_weight?: number;
+  completed_reps?: string | number;
+  completed_weight?: number | null;
   status: 'completed' | 'skipped';
   notes?: string;
 }
