@@ -2,8 +2,8 @@
 
 > **注意：** 本文档为微信小程序版 PRD，记录已实现的功能。
 
-**版本：** 1.2
-**日期：** 2026-05-12
+**版本：** 1.5
+**日期：** 2026-05-13
 **状态：** 已上线
 
 ---
@@ -280,11 +280,88 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
 - 网格布局
 - 全屏预览
 
-### 4.8 徽章
+### 4.9 设置页
 
-#### 4.8.1 徽章展示
-- 获得的所有徽章
-- 徽章详情（名称、描述、获得时间）
+#### 4.9.1 页面结构
+- **个人信息 section**：
+  - 头像（可上传）
+  - 昵称（弹窗编辑）
+  - 性别（弹窗选择：男/女）
+  - 身高（弹窗编辑，单位 cm）
+- **身体数据 section**：
+  - 身体数据入口 → 跳转 `/packageB/pages/measurements/measurements`
+
+#### 4.9.2 功能说明
+| 功能 | 说明 |
+|------|------|
+| uploadAvatar | 选择图片上传，更新头像 |
+| editNickname | showModal 弹窗编辑昵称 |
+| editGender | showModal 选择性别（男/女） |
+| editHeight | showModal 编辑身高（验证 0-300cm） |
+| goToBodyData | 跳转到围度记录页面 |
+
+**注意：** 体重、体脂编辑功能在围度记录页面（measurements）实现，settings 页通过"身体数据"入口跳转。
+
+### 4.10 页面入口关系
+```
+profile ──┬── settings ──────────── goToBodyData ──→ measurements
+          │                                        │
+          │                         ┌─────────────┴─────────────┐
+          └── gallery              calendar                    │
+                          badges              exercise-detail
+```
+
+### 4.11 成就庆祝弹窗
+
+#### 4.11.1 功能描述
+聊天过程中根据后端返回的成就类型，队列式逐一展示庆祝弹窗（3秒/个）。
+
+#### 4.11.2 弹窗类型
+| 类型 | 触发条件 | 显示内容 |
+|------|---------|---------|
+| `first_workout` | `toolData.result.isFirstWorkout === true` | 🎉 "恭喜完成首次训练！" |
+| `first_measurement` | `toolData.result.isFirstMeasurement === true` | 📏 "恭喜完成首次围度记录！" |
+| `pr_break` | `achievements.isNewPR === true` | 🏆 PR 数值变化（旧值 → 新值） |
+| `badge` | `achievements.badges.length > 0` | 🎖️ 徽章名称 |
+| `milestone` | `achievements.milestones.length > 0` | ⭐ 里程碑名称 |
+
+#### 4.11.3 实现方式
+- **组件**：`components/celebration/celebration`
+- **动画**：wx.createAnimation 淡入淡出（300ms）
+- **队列**：多个成就逐一展示，每个 3 秒后自动切换下一个
+- **触发**：chat.js 中 `handleAchievements()` 方法检测 toolData 并添加到队列
+
+#### 4.11.4 后端接口变更
+| 文件 | 新增字段 |
+|------|---------|
+| saveWorkout.ts | `isFirstWorkout` |
+| saveMeasurement.ts | `isFirstMeasurement` |
+
+### 4.12 聊天历史管理
+
+#### 4.12.1 功能描述
+在聊天页面通过自定义导航栏菜单入口，支持查看和删除聊天历史记录。
+
+#### 4.12.2 入口：自定义导航栏菜单
+- 使用 `navigationStyle: custom` 实现自定义导航栏
+- 导航栏右侧 `⋮` 菜单按钮点击弹出操作菜单
+- 操作菜单选项：历史管理、清空全部记录（危险操作二次确认）
+
+#### 4.12.3 历史管理弹窗
+- 底部弹出式弹窗，消息列表按日期分组（今天/昨天/更早）
+- 每条消息显示：角色标识、时间、消息内容摘要
+- 单条消息可删除
+- 底部"清空全部记录"按钮
+
+#### 4.12.4 文件结构
+| 文件路径 | 说明 |
+|---------|------|
+| `components/history-manager/` | 历史管理组件（JS/WXML/WXSS/JSON） |
+
+#### 4.12.5 后端接口新增
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/chat/revoke/all` | POST | 清空用户全部聊天记录 |
 
 ---
 
@@ -360,6 +437,7 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
 | GET | /api/chat/messages | 获取聊天记录 |
 | POST | /api/chat/message | 发送消息 |
 | POST | /api/chat/revoke/:id | 撤销消息 |
+| POST | /api/chat/revoke/all | 清空全部聊天记录 |
 
 ### 7.3 记录模块
 | 方法 | 路径 | 说明 |
@@ -416,9 +494,12 @@ AI: "✅ 训练记录已保存！卧推 80kg x 3组 x 7次"
 ### A. 文档版本历史
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| 1.0 | 2026-05-02 | 初始版本，微信小程序 PRD |
-| 1.1 | 2026-05-07 | 新增围度记录Inline Edit功能；修复API端点（delete改用DELETE方法）；更新围度模块API |
+| 1.5 | 2026-05-13 | 新增聊天历史管理功能，支持自定义导航栏菜单、历史记录弹窗、单条删除和清空全部 |
+| 1.4 | 2026-05-13 | 新增成就庆祝弹窗(celebration)功能，支持首次训练/围度、PR突破、徽章、里程碑的队列式弹窗展示 |
+| 1.3 | 2026-05-12 | 新增设置页(settings)详细功能说明，包含个人信息编辑、身体数据入口 |
 | 1.2 | 2026-05-12 | 优化文件命名规范，页面和组件文件名改为与文件夹同名，避免使用index命名 |
+| 1.1 | 2026-05-07 | 新增围度记录Inline Edit功能；修复API端点（delete改用DELETE方法）；更新围度模块API |
+| 1.0 | 2026-05-02 | 初始版本，微信小程序 PRD |
 
 ### B. 相关文档
 | 文档 | 路径 |

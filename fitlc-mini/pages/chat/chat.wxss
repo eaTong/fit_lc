@@ -5,6 +5,72 @@
   background-color: var(--color-bg-primary);
 }
 
+/* 自定义导航栏 */
+.custom-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32rpx;
+  padding-top: calc(var(--status-bar-height) + 20rpx);
+  height: calc(88rpx + var(--status-bar-height));
+  background-color: var(--color-bg-primary);
+  flex-shrink: 0;
+}
+
+.navbar-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.menu-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  color: #FFFFFF;
+}
+
+/* 操作菜单 */
+.action-menu {
+  position: fixed;
+  top: calc(88rpx + var(--status-bar-height) + 20rpx);
+  right: 20rpx;
+  width: 280rpx;
+  background-color: #1A1A1A;
+  border: 2rpx solid #333;
+  border-radius: 8rpx;
+  z-index: 1001;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3);
+}
+
+.menu-item {
+  padding: 24rpx 32rpx;
+  border-bottom: 1px solid #333;
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item.danger {
+  color: #DC143C;
+}
+
+.menu-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .chat-header {
   display: flex;
   justify-content: space-between;

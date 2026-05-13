@@ -49,6 +49,11 @@ const chatActions = {
   // 撤销消息
   revokeMessage(messageId) {
     return post(`/chat/revoke/${messageId}`).then(res => res.success);
+  },
+
+  // 清空全部消息
+  clearAllMessages() {
+    return post('/chat/revoke/all').then(res => res.success);
   }
 };
 

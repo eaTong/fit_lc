@@ -1,4 +1,5 @@
 {
+  "navigationStyle": "custom",
   "navigationBarTitleText": "首页",
   "navigationBarBackgroundColor": "#0A0A0A",
   "usingComponents": {
@@ -8,6 +9,8 @@
     "measurement-query-card": "/components/chat/measurement-query-card/index",
     "plan-card": "/components/chat/plan-card/index",
     "adjustment-card": "/components/chat/adjustment-card/index",
-    "analysis-card": "/components/chat/analysis-card/index"
+    "analysis-card": "/components/chat/analysis-card/index",
+    "celebration": "/components/celebration/celebration",
+    "history-manager": "/components/history-manager/history-manager"
   }
 }

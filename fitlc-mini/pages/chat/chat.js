@@ -13,7 +13,12 @@ Page({
     inputMode: 'text',  // 'text' | 'voice'
     scrollTop: 0,
     user: null,
-    pendingImages: []  // 待发送的图片列表
+    pendingImages: [],  // 待发送的图片列表
+    celebrationQueue: [],    // 待展示的成就队列
+    currentCelebration: null, // 当前展示的成就
+    showCelebration: false,  // 是否显示庆祝弹窗
+    showMenu: false,         // 菜单是否显示
+    showHistoryManager: false // 历史管理弹窗是否显示
   },
 
   onLoad() {
@@ -186,13 +191,18 @@ Page({
 
     this.setData({ isLoading: true });
 
+    const sendFn = (uploadedUrls) => {
+      return chatActions.sendMessage(message, uploadedUrls);
+    };
+
     // 如果有待发送的图片，先上传
     if (pendingImages.length > 0) {
       this.uploadPendingImages().then(uploadedUrls => {
-        return chatActions.sendMessage(message, uploadedUrls);
-      }).then(() => {
+        return sendFn(uploadedUrls);
+      }).then((newMessages) => {
         this.setData({ inputValue: '', pendingImages: [], isLoading: false });
         this.scrollToBottom();
+        this.handleAchievements(newMessages);
       }).catch(err => {
         console.error('send message failed:', err);
         this.setData({ isLoading: false });
@@ -200,9 +210,10 @@ Page({
       });
     } else {
       // 没有图片，直接发送文字
-      chatActions.sendMessage(message).then(() => {
+      sendFn([]).then((newMessages) => {
         this.setData({ inputValue: '', isLoading: false });
         this.scrollToBottom();
+        this.handleAchievements(newMessages);
       }).catch(err => {
         console.error('send message failed:', err);
         this.setData({ isLoading: false });
@@ -210,6 +221,125 @@ Page({
       });
     }
   },
+
+  // 处理成就弹窗
+  handleAchievements(newMessages) {
+    // 查找包含 toolData 的 assistant 消息
+    const assistantMsg = newMessages.find(m => m.role === 'assistant' && m.toolData);
+    if (!assistantMsg) return;
+
+    const { toolData } = assistantMsg;
+    const result = toolData.result || {};
+    const achievements = result.achievements || {};
+
+    const queue = [];
+
+    // 检查首次训练/围度
+    if (result.isFirstWorkout) {
+      queue.push({ type: 'first_workout', data: {} });
+    }
+    if (result.isFirstMeasurement) {
+      queue.push({ type: 'first_measurement', data: {} });
+    }
+    // 检查 PR 突破（仅训练）
+    if (achievements.isNewPR) {
+      queue.push({ type: 'pr_break', data: achievements });
+    }
+    // 检查徽章
+    if (achievements.badges && achievements.badges.length > 0) {
+      achievements.badges.forEach(badge => {
+        queue.push({ type: 'badge', data: { name: badge } });
+      });
+    }
+    // 检查里程碑
+    if (achievements.milestones && achievements.milestones.length > 0) {
+      achievements.milestones.forEach(milestone => {
+        queue.push({ type: 'milestone', data: { name: milestone } });
+      });
+    }
+
+    if (queue.length > 0) {
+      console.log('Achievements detected, adding to queue:', queue);
+      this.setData({ celebrationQueue: queue });
+      this.showNextCelebration();
+    }
+  },
+
+  // 展示下一个成就弹窗
+  showNextCelebration() {
+    const queue = this.data.celebrationQueue;
+    if (queue.length === 0) {
+      this.setData({ showCelebration: false, currentCelebration: null });
+      return;
+    }
+
+    const current = queue.shift();
+    this.setData({
+      currentCelebration: current,
+      celebrationQueue: queue,
+      showCelebration: true
+    });
+  },
+
+  // 成就弹窗播放完成回调
+  onCelebrationComplete() {
+    this.setData({ showCelebration: false });
+    // 300ms 后展示下一个
+    setTimeout(() => this.showNextCelebration(), 300);
+  },
+
+  // 右上角菜单点击
+  onMenuTap() {
+    this.setData({ showMenu: !this.data.showMenu });
+  },
+
+  // 关闭菜单
+  onCloseMenu() {
+    this.setData({ showMenu: false });
+  },
+
+  // 打开历史管理弹窗
+  onShowHistoryManager() {
+    this.setData({ showMenu: false, showHistoryManager: true });
+  },
+
+  // 关闭历史管理弹窗
+  onCloseHistoryManager() {
+    this.setData({ showHistoryManager: false });
+  },
+
+  // 删除单条消息
+  onDeleteMessage(e) {
+    const messageId = e.detail.messageId;
+    chatActions.revokeMessage(messageId).then(() => {
+      // 从消息列表中移除
+      const messages = this.data.messages.filter(m => m.id !== messageId);
+      this.setData({ messages });
+      wx.showToast({ title: '已删除', icon: 'success' });
+    }).catch(err => {
+      console.error('delete message failed:', err);
+      wx.showToast({ title: '删除失败', icon: 'none' });
+    });
+  },
+
+  // 清空全部消息
+  onClearAllMessages() {
+    wx.showModal({
+      title: '确认清空',
+      content: '确定要清空全部聊天记录吗？此操作不可恢复。',
+      success: (res) => {
+        if (res.confirm) {
+          chatActions.clearAllMessages().then(() => {
+            this.setData({ messages: [], showMenu: false, showHistoryManager: false });
+            wx.showToast({ title: '已清空', icon: 'success' });
+          }).catch(err => {
+            console.error('clear all messages failed:', err);
+            wx.showToast({ title: '清空失败', icon: 'none' });
+          });
+        }
+      }
+    });
+  }
 
   // 上传所有待发送的图片
   uploadPendingImages() {

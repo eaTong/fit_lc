@@ -1,0 +1,88 @@
+<view wx:if="{{show}}" class="history-manager-overlay">
+  <view class="history-manager-mask" bindtap="onClose"></view>
+  <view class="history-manager-content">
+    <!-- Header -->
+    <view class="history-header">
+      <text class="history-title">历史管理</text>
+      <text class="history-close" bindtap="onClose">✕</text>
+    </view>
+
+    <!-- Message List -->
+    <scroll-view class="message-list" scroll-y>
+      <!-- Today Section -->
+      <view wx:if="{{groupedMessages.today.length > 0}}" class="date-section">
+        <view class="date-header">
+          <text class="date-label">今天</text>
+        </view>
+        <view
+          wx:for="{{groupedMessages.today}}"
+          wx:key="id"
+          class="message-item"
+        >
+          <view class="message-row">
+            <text class="message-role {{item.role}}">{{item.role === 'user' ? '你' : 'AI'}}</text>
+            <text class="message-time">{{item.timeStr}}</text>
+          </view>
+          <text class="message-content">{{item.content}}</text>
+          <view class="message-actions">
+            <text class="delete-btn" data-id="{{item.id}}" bindtap="onDeleteMessage">删除</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Yesterday Section -->
+      <view wx:if="{{groupedMessages.yesterday.length > 0}}" class="date-section">
+        <view class="date-header">
+          <text class="date-label">昨天</text>
+        </view>
+        <view
+          wx:for="{{groupedMessages.yesterday}}"
+          wx:key="id"
+          class="message-item"
+        >
+          <view class="message-row">
+            <text class="message-role {{item.role}}">{{item.role === 'user' ? '你' : 'AI'}}</text>
+            <text class="message-time">{{item.timeStr}}</text>
+          </view>
+          <text class="message-content">{{item.content}}</text>
+          <view class="message-actions">
+            <text class="delete-btn" data-id="{{item.id}}" bindtap="onDeleteMessage">删除</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Earlier Section -->
+      <view wx:if="{{groupedMessages.earlier.length > 0}}" class="date-section">
+        <view class="date-header">
+          <text class="date-label">更早</text>
+        </view>
+        <view
+          wx:for="{{groupedMessages.earlier}}"
+          wx:key="id"
+          class="message-item"
+        >
+          <view class="message-row">
+            <text class="message-role {{item.role}}">{{item.role === 'user' ? '你' : 'AI'}}</text>
+            <text class="message-time">{{item.timeStr}}</text>
+          </view>
+          <text class="message-content">{{item.content}}</text>
+          <view class="message-actions">
+            <text class="delete-btn" data-id="{{item.id}}" bindtap="onDeleteMessage">删除</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Empty State -->
+      <view wx:if="{{groupedMessages.today.length === 0 && groupedMessages.yesterday.length === 0 && groupedMessages.earlier.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无聊天记录</text>
+      </view>
+    </scroll-view>
+
+    <!-- Footer -->
+    <view class="history-footer">
+      <view class="clear-all-btn" bindtap="onClearAll">
+        <text>清空全部记录</text>
+      </view>
+    </view>
+  </view>
+</view>

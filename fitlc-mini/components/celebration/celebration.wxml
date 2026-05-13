@@ -1,0 +1,49 @@
+<view wx:if="{{visible}}" class="celebration-overlay" bindtap="onTap">
+  <view class="celebration-content" animation="{{animation}}">
+    <!-- first_workout -->
+    <block wx:if="{{type === 'first_workout'}}">
+      <view class="emoji-large">🎉</view>
+      <view class="title">恭喜完成首次训练！</view>
+      <view class="subtitle">坚持记录，你就是最棒的！</view>
+    </block>
+
+    <!-- first_measurement -->
+    <block wx:if="{{type === 'first_measurement'}}">
+      <view class="emoji-large">📏</view>
+      <view class="title">恭喜完成首次围度记录！</view>
+      <view class="subtitle">了解身体变化，从今天开始！</view>
+    </block>
+
+    <!-- pr_break -->
+    <block wx:if="{{type === 'pr_break'}}">
+      <view class="emoji-large">🏆</view>
+      <view class="title">新纪录诞生！</view>
+      <view class="pr-detail">
+        <text class="pr-name">{{data.prRecords[0].exerciseName}}</text>
+        <text class="pr-type">{{data.prRecords[0].recordType === 'max_weight' ? '重量' : data.prRecords[0].recordType === 'max_volume' ? '容量' : data.prRecords[0].recordType === 'max_distance' ? '距离' : '时长'}}</text>
+      </view>
+      <view class="pr-change">
+        {{data.prRecords[0].oldValue}} → {{data.prRecords[0].newValue}}
+        <text class="pr-unit">{{data.prRecords[0].recordType === 'max_weight' || data.prRecords[0].recordType === 'max_volume' ? 'kg' : data.prRecords[0].recordType === 'max_distance' ? 'km' : 'min'}}</text>
+      </view>
+    </block>
+
+    <!-- badge -->
+    <block wx:if="{{type === 'badge'}}">
+      <view class="emoji-large">🎖️</view>
+      <view class="title">获得徽章！</view>
+      <view class="badge-list">
+        <text class="badge-item">{{data.name}}</text>
+      </view>
+    </block>
+
+    <!-- milestone -->
+    <block wx:if="{{type === 'milestone'}}">
+      <view class="emoji-large">⭐</view>
+      <view class="title">达成里程碑！</view>
+      <view class="milestone-list">
+        <text class="milestone-item">{{data.name}}</text>
+      </view>
+    </block>
+  </view>
+</view>

@@ -1,4 +1,12 @@
 <view class="chat-page">
+  <!-- 自定义导航栏 -->
+  <view class="custom-navbar">
+    <text class="navbar-title">首页</text>
+    <view class="menu-btn" bindtap="onMenuTap">
+      <text>⋮</text>
+    </view>
+  </view>
+
   <!-- Messages -->
   <scroll-view
     class="messages-container"
@@ -67,6 +75,36 @@
   <view wx:if="{{isLoading}}" class="loading-indicator">
     <text>AI 处理中...</text>
   </view>
+
+  <!-- 成就庆祝弹窗 -->
+  <celebration
+    show="{{showCelebration}}"
+    type="{{currentCelebration.type}}"
+    data="{{currentCelebration.data}}"
+    bind:complete="onCelebrationComplete"
+  />
+
+  <!-- 操作菜单 -->
+  <view wx:if="{{showMenu}}" class="action-menu">
+    <view class="menu-item" bindtap="onShowHistoryManager">
+      <text>历史管理</text>
+    </view>
+    <view class="menu-item danger" bindtap="onClearAllMessages">
+      <text>清空全部记录</text>
+    </view>
+  </view>
+
+  <!-- 遮罩层 -->
+  <view wx:if="{{showMenu}}" class="menu-mask" bindtap="onCloseMenu"></view>
+
+  <!-- 历史管理弹窗 -->
+  <history-manager
+    show="{{showHistoryManager}}"
+    messages="{{messages}}"
+    bind:delete="onDeleteMessage"
+    bind:clearall="onClearAllMessages"
+    bind:close="onCloseHistoryManager"
+  />
 
   <!-- Input Area -->
   <view class="input-area">

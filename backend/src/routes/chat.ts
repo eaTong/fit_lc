@@ -263,4 +263,25 @@ router.post('/revoke/:messageId', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @route POST /chat/revoke/all
+ * @desc 清空用户全部聊天记录
+ * @access private
+ */
+router.post('/revoke/all', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // 删除该用户的所有消息
+    await prisma.chatMessage.deleteMany({
+      where: { userId },
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Clear all messages error:', err);
+    res.status(500).json({ error: 'Failed to clear all messages' });
+  }
+});
+
 export default router;

@@ -99,6 +99,12 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       // 生成 AI 即时反馈（不影响数据一致性，在事务外）
       const feedback = await generateWorkoutFeedback(userId, result.id);
 
+      // 检查是否首次训练（在保存之前查询）
+      const workoutCountBefore = await prisma.workout.count({
+        where: { userId, deletedAt: null }
+      });
+      const isFirstWorkout = workoutCountBefore === 0;
+
       // 在事务外检查 PR（不会影响训练记录的创建）
       const prResults = [];
       for (const exercise of exercises) {
@@ -198,6 +204,7 @@ export const saveWorkoutTool = new DynamicStructuredTool({
           feedback: {
             personalized_comment: feedback.personalized_comment
           },
+          isFirstWorkout,
           achievements: prResults.length > 0 || achievements.length > 0 || milestones.length > 0 ? {
             isNewPR: prResults.length > 0,
             prRecords: prResults,

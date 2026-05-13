@@ -116,6 +116,12 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       // 更新累计统计（在独立事务中）
       await statsService.updateAggregatedStats(userId);
 
+      // 检查是否首次围度记录（在保存之前查询）
+      const measurementCountBefore = await prisma.bodyMeasurement.count({
+        where: { userId, deletedAt: null }
+      });
+      const isFirstMeasurement = measurementCountBefore === 0;
+
       // 检查徽章和里程碑
       const achievements = await achievementService.checkBadges(userId, { type: 'measurement' });
       const milestones = achievements.length > 0 ? await achievementService.checkMilestones(userId) : [];
@@ -140,6 +146,7 @@ export const saveMeasurementTool = new DynamicStructuredTool({
           id: result.id,
           date: finalDate,
           measurements: result.measurements,
+          isFirstMeasurement,
           achievements: achievements.length > 0 || milestones.length > 0 ? {
             badges: achievements.map(b => b.name),
             milestones: milestones.map(m => m.name)
