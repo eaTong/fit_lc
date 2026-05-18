@@ -146,7 +146,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     const userContext = await userContextService.getOrCreateContext(userId);
 
     // Call agent with context, history and optional images
-    const { reply, toolData } = await runAgent(
+    const { reply, toolData, visionError } = await runAgent(
       userId,
       message,
       userContext,
@@ -198,11 +198,32 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       userContextService.refreshContextWithLock(userId, dialogue);
     });
 
-    res.json({ reply, toolData });
+    res.json({ reply, toolData, visionError });
   } catch (err) {
     console.error('Chat error:', err);
     // Log error details server-side but return generic message to client
     res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+/**
+ * @route POST /chat/revoke/all
+ * @desc 清空用户全部聊天记录
+ * @access private
+ */
+router.post('/revoke/all', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // 删除该用户的所有消息
+    await prisma.chatMessage.deleteMany({
+      where: { userId },
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Clear all messages error:', err);
+    res.status(500).json({ error: 'Failed to clear all messages' });
   }
 });
 
@@ -239,10 +260,16 @@ router.post('/revoke/:messageId', async (req: Request, res: Response) => {
       return res.json({ success: true, message: '临时消息已忽略' });
     }
 
+    // 验证 messageId 是数字
+    const parsedId = parseInt(messageId, 10);
+    if (isNaN(parsedId)) {
+      return res.status(400).json({ error: '无效的消息ID' });
+    }
+
     // 查询真实消息
     const message = await prisma.chatMessage.findFirst({
       where: {
-        id: parseInt(messageId),
+        id: parsedId,
         userId,
       },
     });
@@ -260,27 +287,6 @@ router.post('/revoke/:messageId', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Revoke message error:', err);
     res.status(500).json({ error: 'Failed to revoke message' });
-  }
-});
-
-/**
- * @route POST /chat/revoke/all
- * @desc 清空用户全部聊天记录
- * @access private
- */
-router.post('/revoke/all', async (req: Request, res: Response) => {
-  try {
-    const userId = req.user!.id;
-
-    // 删除该用户的所有消息
-    await prisma.chatMessage.deleteMany({
-      where: { userId },
-    });
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Clear all messages error:', err);
-    res.status(500).json({ error: 'Failed to clear all messages' });
   }
 });
 

@@ -18,6 +18,15 @@ function request(options) {
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
+        } else if (res.statusCode === 401) {
+          // Token 无效，跳转登录
+          wx.removeStorageSync('fitlc_token');
+          wx.removeStorageSync('fitlc_user');
+          wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+          setTimeout(() => {
+            wx.redirectTo({ url: '/pages/login/login' });
+          }, 1500);
+          reject(new Error('登录已过期'));
         } else {
           reject(new Error(res.data?.message || 'Request failed'));
         }

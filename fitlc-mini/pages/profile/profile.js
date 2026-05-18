@@ -178,5 +178,24 @@ Page({
 
   goToSettings() {
     wx.navigateTo({ url: '/pages/settings/settings' });
+  },
+
+  showAboutAuthor() {
+    wx.showModal({
+      title: '关于作者',
+      content: 'Eason Tong\n七练小程序开发者\n热爱健身与编程\n\n微信：eatong_cn',
+      confirmText: '复制微信号',
+      cancelText: '关闭',
+      success: (res) => {
+        if (res.confirm) {
+          wx.setClipboardData({
+            data: 'eatong_cn',
+            success: () => {
+              wx.showToast({ title: '微信号已复制', icon: 'success' });
+            }
+          });
+        }
+      }
+    });
   }
 });

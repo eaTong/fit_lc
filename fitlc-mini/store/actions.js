@@ -245,10 +245,9 @@ const chatActionsExtended = {
     const store = getStore();
     store.setState({ isLoading: true });
     return chatActions.sendMessage(content, imageUrls)
-      .then(newMessages => {
-        const messages = [...store.getState().chatMessages, ...newMessages];
-        store.setState({ chatMessages: messages, isLoading: false });
-        return newMessages;
+      .then(result => {
+        store.setState({ isLoading: false });
+        return result;
       })
       .catch(err => {
         store.setState({ isLoading: false });

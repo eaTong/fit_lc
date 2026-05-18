@@ -71,13 +71,36 @@ export async function runAgentV2(
   errors?: string[];
   clarificationEnded?: boolean;
   needsClarification?: boolean;
+  visionError?: string;
 }> {
   console.log('[FitnessAgentV2] Starting agent with message:', message.substring(0, 100));
 
   // 1. Vision 预处理
   console.log('[Step 1] Vision preprocessing...');
-  let processedMessage = (await preprocessVision(message, imageUrls)).message;
+  const visionResult = await preprocessVision(message, imageUrls);
+  let processedMessage = visionResult.message;
+  let visionError = visionResult.error || undefined;
   console.log('[Step 1] Processed message:', processedMessage.substring(0, 200));
+
+  // 如果 vision 报错，直接返回错误，不继续执行后续流程
+  if (visionError) {
+    console.log('[FitnessAgentV2] Vision preprocessing failed, returning error early');
+    return {
+      reply: `图片解析失败了：${visionError}\n\nAI无法分析这张图片，你可以换个图片试试，或者直接描述你的健身需求。`,
+      toolData: null,
+      visionError
+    };
+  }
+
+  // 如果 vision 成功并且有直接返回的 reply，直接返回，不再调用主模型
+  if (visionResult.reply) {
+    console.log('[FitnessAgentV2] Vision preprocessing succeeded with direct reply, returning early');
+    return {
+      reply: visionResult.reply,
+      toolData: visionResult.toolData || null,
+      visionError: undefined
+    };
+  }
 
   // 1.5 历史消息压缩（如果需要）
   console.log('[Step 1.5] Compressing history, original messages:', historyMessages.length);
@@ -300,7 +323,8 @@ export async function runAgentV2(
   return {
     reply,
     toolData,
-    errors: executionResult.errors.length > 0 ? executionResult.errors : undefined
+    errors: executionResult.errors.length > 0 ? executionResult.errors : undefined,
+    visionError
   };
 }
 

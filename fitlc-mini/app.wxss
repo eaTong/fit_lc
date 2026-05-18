@@ -16,6 +16,7 @@ page {
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #888888;
   --color-border: #333333;
+  --status-bar-height: 20px;
 }
 
 /* 全局重置 */

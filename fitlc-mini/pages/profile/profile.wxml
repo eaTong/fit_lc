@@ -90,6 +90,16 @@
       </view>
   </view>
 
+  <!-- About Author -->
+  <view class="section">
+    <view class="item" bindtap="showAboutAuthor">
+      <text class="item-label">关于作者</text>
+      <view class="item-value">
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+
   <!-- Logout Button -->
   <view class="logout-section">
     <button class="logout-btn" bindtap="onLogout">退出登录</button>

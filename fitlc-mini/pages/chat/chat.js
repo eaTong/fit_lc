@@ -18,10 +18,20 @@ Page({
     currentCelebration: null, // 当前展示的成就
     showCelebration: false,  // 是否显示庆祝弹窗
     showMenu: false,         // 菜单是否显示
-    showHistoryManager: false // 历史管理弹窗是否显示
+    showHistoryManager: false, // 历史管理弹窗是否显示
+    statusBarHeight: 20,       // 状态栏高度
+    safeAreaTop: 0             // 安全区域顶部 inset
   },
 
   onLoad() {
+    // 获取安全区域和状态栏高度
+    const systemInfo = wx.getSystemInfoSync();
+    const safeArea = systemInfo.safeArea;
+    const statusBarHeight = systemInfo.statusBarHeight || 20;
+    const safeAreaTop = safeArea ? (safeArea.top - statusBarHeight) : 0;
+    // navbar 总高度 = 状态栏 + 固定 88rpx
+    const navbarHeight = statusBarHeight + 88;
+    this.setData({ statusBarHeight, safeAreaTop, navbarHeight });
     // 检查登录
     authActions.checkAuth().then(isAuth => {
       if (!isAuth) {
@@ -164,11 +174,36 @@ Page({
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: (res) => {
-        // 将选择的图片临时保存到 pendingImages
+        // 将选择的图片添加到 pendingImages 先显示
         const newImages = res.tempFilePaths.map(path => ({ path, uploaded: false, url: '' }));
-        this.setData({
-          pendingImages: [...this.data.pendingImages, ...newImages]
-        });
+        const currentImages = this.data.pendingImages;
+        const allImages = [...currentImages, ...newImages];
+        this.setData({ pendingImages: allImages });
+
+        // 立即上传所有未上传的图片
+        const toUpload = allImages.filter(img => !img.uploaded);
+        if (toUpload.length > 0) {
+          const { upload } = require('../../api/client');
+          const uploadPromises = toUpload.map(img => {
+            return upload('/upload/image', img.path, 'file').then(res => ({
+              path: img.path,
+              uploaded: true,
+              url: res.url
+            }));
+          });
+
+          Promise.all(uploadPromises).then(uploadedImages => {
+            // 更新 pendingImages 中的上传状态
+            const updatedImages = allImages.map(img => {
+              const uploaded = uploadedImages.find(u => u.path === img.path);
+              return uploaded || img;
+            });
+            this.setData({ pendingImages: updatedImages });
+          }).catch(err => {
+            console.error('Upload images failed:', err);
+            wx.showToast({ title: '图片上传失败', icon: 'none' });
+          });
+        }
       }
     });
   },
@@ -184,12 +219,35 @@ Page({
   // 发送消息（包含文字和所有待发送图片）
   onSend() {
     const message = this.data.inputValue.trim();
-    const { pendingImages } = this.data;
+    const pendingImages = this.data.pendingImages;
+    const messages = this.data.messages;
 
     if (!message && pendingImages.length === 0) return;
     if (this.data.isLoading) return;
 
-    this.setData({ isLoading: true });
+    // 生成临时ID用于后续替换
+    const tempId = `temp-${Date.now()}-user`;
+
+    // 先立即显示用户消息（使用已上传的URL）
+    const uploadedImageUrls = pendingImages.filter(img => img.uploaded && img.url).map(img => img.url);
+    const userMessage = {
+      id: tempId,
+      role: 'user',
+      content: message,
+      imageUrls: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    // 更新 page data 和 store
+    const updatedMessages = [...messages, userMessage];
+    this.setData({
+      isLoading: true,
+      inputValue: '',
+      messages: updatedMessages
+    });
+    // 同时更新 store，保持一致性
+    getApp().store.setState({ chatMessages: updatedMessages });
+    this.scrollToBottom();
 
     const sendFn = (uploadedUrls) => {
       return chatActions.sendMessage(message, uploadedUrls);
@@ -198,35 +256,89 @@ Page({
     // 如果有待发送的图片，先上传
     if (pendingImages.length > 0) {
       this.uploadPendingImages().then(uploadedUrls => {
+        this.setData({ pendingImages: [] });
         return sendFn(uploadedUrls);
-      }).then((newMessages) => {
-        this.setData({ inputValue: '', pendingImages: [], isLoading: false });
-        this.scrollToBottom();
-        this.handleAchievements(newMessages);
+      }).then((result) => {
+        this.handleSendResult(result, tempId);
       }).catch(err => {
-        console.error('send message failed:', err);
-        this.setData({ isLoading: false });
-        wx.showToast({ title: '发送失败', icon: 'none' });
+        this.handleSendError(err, tempId);
       });
     } else {
       // 没有图片，直接发送文字
-      sendFn([]).then((newMessages) => {
-        this.setData({ inputValue: '', isLoading: false });
-        this.scrollToBottom();
-        this.handleAchievements(newMessages);
+      sendFn([]).then((result) => {
+        this.handleSendResult(result, tempId);
       }).catch(err => {
-        console.error('send message failed:', err);
-        this.setData({ isLoading: false });
-        wx.showToast({ title: '发送失败', icon: 'none' });
+        this.handleSendError(err, tempId);
       });
     }
   },
 
+  // 处理发送结果
+  handleSendResult(result, tempId) {
+    const { assistantMsg, error } = result;
+    const messages = this.data.messages;
+
+    if (error) {
+      // 图片解析失败，创建错误消息
+      const errorMsg = {
+        id: `temp-${Date.now()}-error`,
+        role: 'assistant',
+        content: `图片解析失败了：${error}\n\nAI无法分析这张图片，你可以换个图片试试，或者直接描述你的健身需求。`,
+        createdAt: new Date().toISOString()
+      };
+      const newMessages = [...messages, errorMsg];
+      this.setMessages(newMessages);
+    } else if (assistantMsg) {
+      // 用真实ID替换临时用户消息ID
+      const realId = `msg-${Date.now()}`;
+      const realUserMsg = { ...messages.find(m => m.id === tempId), id: realId };
+      const newMessages = messages.map(m => m.id === tempId ? realUserMsg : m);
+      newMessages.push({ ...assistantMsg, id: realId + '-assistant' });
+      this.setMessages(newMessages);
+    }
+
+    this.setData({ isLoading: false });
+    if (assistantMsg && assistantMsg.toolData) {
+      this.handleAchievements(assistantMsg);
+    }
+  },
+
+  // 处理发送错误
+  handleSendError(err, tempId) {
+    console.error('send message failed:', err);
+    this.setData({ isLoading: false });
+    // 用真实ID替换临时ID
+    const messages = this.data.messages;
+    const tempMsg = messages.find(m => m.id === tempId);
+    if (tempMsg) {
+      const realId = `msg-${Date.now()}`;
+      const realUserMsg = { ...tempMsg, id: realId };
+      const newMessages = messages.map(m => m.id === tempId ? realUserMsg : m);
+      this.setMessages(newMessages);
+    }
+    this.setData({ inputValue: this.data.messages.find(m => m.id === tempId)?.content || '' });
+    wx.showToast({ title: '发送失败', icon: 'none' });
+  },
+
+  // 统一设置消息并同步到store
+  setMessages(messages) {
+    this.setData({ messages });
+    getApp().store.setState({ chatMessages: messages });
+    this.scrollToBottom();
+  },
+
+  // 替换临时消息
+  replaceMessage(tempId, newMsg) {
+    if (!newMsg) return;
+    const { messages } = this.data;
+    const newMessages = messages.map(m => m.id === tempId ? newMsg : m);
+    this.setData({ messages: newMessages });
+    this.scrollToBottom();
+  },
+
   // 处理成就弹窗
-  handleAchievements(newMessages) {
-    // 查找包含 toolData 的 assistant 消息
-    const assistantMsg = newMessages.find(m => m.role === 'assistant' && m.toolData);
-    if (!assistantMsg) return;
+  handleAchievements(assistantMsg) {
+    if (!assistantMsg || !assistantMsg.toolData) return;
 
     const { toolData } = assistantMsg;
     const result = toolData.result || {};
@@ -339,18 +451,39 @@ Page({
         }
       }
     });
-  }
+  },
 
   // 上传所有待发送的图片
   uploadPendingImages() {
     const { pendingImages } = this.data;
+    console.log('[Chat] uploadPendingImages called, pendingImages:', JSON.stringify(pendingImages));
+    // 如果已有上传过的图片，直接返回URLs
+    const uploadedUrls = pendingImages.filter(img => img.uploaded && img.url).map(img => img.url);
+    console.log('[Chat] Already uploaded URLs:', uploadedUrls);
+    const toUpload = pendingImages.filter(img => !img.uploaded);
+    console.log('[Chat] Images to upload:', toUpload.length);
+
+    if (toUpload.length === 0) {
+      console.log('[Chat] All images already uploaded, returning:', uploadedUrls);
+      return Promise.resolve(uploadedUrls);
+    }
+
     const { upload } = require('../../api/client');
 
-    const uploadPromises = pendingImages.map(img => {
-      return upload('/upload/image', img.path, 'file').then(res => res.url);
+    return Promise.all(toUpload.map(img => {
+      console.log('[Chat] Uploading:', img.path);
+      return upload('/upload/image', img.path, 'file').then(res => {
+        console.log('[Chat] Upload success:', res.url);
+        return res.url;
+      }).catch(err => {
+        console.error('[Chat] Upload failed:', err);
+        throw err;
+      });
+    })).then(urls => {
+      console.log('[Chat] All uploads complete, URLs:', urls);
+      // 合并已上传和新上传的URL
+      return [...uploadedUrls, ...urls];
     });
-
-    return Promise.all(uploadPromises);
   },
 
   onMessageTap(e) {

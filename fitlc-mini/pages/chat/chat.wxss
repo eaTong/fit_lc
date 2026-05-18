@@ -11,8 +11,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 32rpx;
-  padding-top: calc(var(--status-bar-height) + 20rpx);
-  height: calc(88rpx + var(--status-bar-height));
+  height: 88rpx;
   background-color: var(--color-bg-primary);
   flex-shrink: 0;
 }
@@ -21,6 +20,17 @@
   font-size: 34rpx;
   font-weight: bold;
   color: #FFFFFF;
+}
+
+.navbar-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.navbar-logo {
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .menu-btn {
@@ -33,11 +43,18 @@
   color: #FFFFFF;
 }
 
+.menu-btn.left {
+  margin-right: auto;
+}
+
+.menu-btn.right {
+  margin-left: auto;
+}
+
 /* 操作菜单 */
 .action-menu {
   position: fixed;
-  top: calc(88rpx + var(--status-bar-height) + 20rpx);
-  right: 20rpx;
+  left: 20rpx;
   width: 280rpx;
   background-color: #1A1A1A;
   border: 2rpx solid #333;
@@ -66,7 +83,7 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: env(safe-area-inset-bottom, 0);
   z-index: 1000;
   background-color: rgba(0, 0, 0, 0.5);
 }

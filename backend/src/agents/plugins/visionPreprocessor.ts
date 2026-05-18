@@ -10,6 +10,9 @@ import { createZhipuVisionChat } from '../chatZhipu';
 export interface VisionPreprocessorResult {
   message: string;
   imageAnalysis: string | null;
+  reply?: string;      // 直接可返回给用户的回复
+  toolData?: any;      // 可选的 tool 数据
+  error?: string;
 }
 
 export async function preprocessVision(
@@ -26,17 +29,26 @@ export async function preprocessVision(
 
   try {
     const zhipuChat = createZhipuVisionChat();
-    console.log('[VisionPreprocessor] Zhipu chat created, model should be glm-4v-flash');
+    console.log('[VisionPreprocessor] Zhipu chat created, model: glm-4v-flash');
 
-    const analysisPrompt = `你是一位专业的健身教练，请分析这张图片中人物的身体状况：
+    // 统一的 prompt 描述 - 与主模型使用相同的健身教练 persona
+    // 但不需要 tools，只需要图片分析描述
+    const analysisPrompt = `你是一位专业的健身教练，具备丰富的运动科学和营养学知识。请分析用户发送的图片：
 
-1. 体脂率估算（根据肌肉线条和体态）
-2. 体态评估（是否含胸、圆肩、骨盆前倾、驼背等）
-3. 肌肉线条评估（主要肌群是否明显）
-4. 整体评分（1-10分）
-5. 改进建议
+1. **身体状况评估**
+   - 体脂率估算（根据肌肉线条和体态）
+   - 体态分析（是否含胸、圆肩、骨盆前倾、驼背等）
 
-请用中文回答，语言专业但通俗易懂。格式简洁。`;
+2. **肌肉线条评估**
+   - 主要肌群线条是否明显
+   - 整体肌肉发展是否均衡
+
+3. **评分与建议**
+   - 整体评分（1-10分）
+   - 具体改进建议（针对发现的问题）
+   - 训练方向建议
+
+请用专业但通俗易懂的中文回答，格式清晰有条理。`;
 
     console.log('[VisionPreprocessor] Calling Zhipu API...');
     const result = await zhipuChat.sendMessage(
@@ -52,42 +64,51 @@ export async function preprocessVision(
     // Validate result
     if (!result || typeof result.content !== 'string' || !result.content.trim()) {
       console.error('[VisionPreprocessor] Invalid result from Zhipu API:', result);
-      return { message, imageAnalysis: null };
+      return { message, imageAnalysis: null, error: '图片解析失败' };
     }
 
-    console.log(`[VisionPreprocessor] Analysis complete, length: ${result.content.length}`);
-    console.log(`[VisionPreprocessor] Analysis preview: ${result.content.substring(0, 100)}...`);
+    const imageAnalysis = result.content;
+    console.log(`[VisionPreprocessor] Analysis complete, length: ${imageAnalysis.length}`);
 
-    // Inject analysis result into message as prefix
-    const enrichedMessage = `【图片解析结果】\n${result.content}\n\n用户原始消息：${message}`;
+    // 构建直接可返回的 reply - 健身教练视角的分析回复
+    const reply = `📸 **图片分析结果**\n\n${imageAnalysis}\n\n---\n💡 如果你想基于这张图片制定训练计划或记录身体围度，请直接告诉我。`;
+
+    // 同时把分析结果注入到消息中，供后续参考
+    const enrichedMessage = `【图片解析结果】\n${imageAnalysis}\n\n用户原始消息：${message}`;
 
     return {
       message: enrichedMessage,
-      imageAnalysis: result.content
+      imageAnalysis,
+      reply,      // 直接可返回的回复
+      toolData: {
+        aiReply: reply,
+        dataType: 'image_analysis',
+        result: { imageAnalysis }
+      }
     };
   } catch (error) {
     console.error('[VisionPreprocessor] Failed with error:', error);
     console.error('[VisionPreprocessor] Error message:', error instanceof Error ? error.message : 'Unknown error');
-    console.error('[VisionPreprocessor] Error stack:', error instanceof Error ? error.stack : 'No stack');
-    // 区分错误类型
+
+    let errorMsg = '图片解析失败';
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       const data = error.response?.data;
       console.error(`[VisionPreprocessor] Axios error: ${status}`, data);
       if (status === 400) {
-        console.error('[VisionPreprocessor] Image URL may be inaccessible or format not supported');
+        const msg = data?.error?.message || data?.contentFilter?.[0]?.message;
+        errorMsg = msg ? `图片解析失败：${msg}` : '图片解析失败：内容可能被系统过滤';
       } else if (status === 401) {
-        console.error('[VisionPreprocessor] Invalid API key');
+        errorMsg = '图片解析失败：API密钥无效';
       } else if (status === 429) {
-        console.error('[VisionPreprocessor] Rate limit exceeded');
+        errorMsg = '图片解析失败：请求过于频繁';
       }
-    } else {
-      console.error('[VisionPreprocessor] Error:', error);
     }
-    // On error, still pass through the original message but log the error
+
     return {
       message,
-      imageAnalysis: null
+      imageAnalysis: null,
+      error: errorMsg
     };
   }
 }

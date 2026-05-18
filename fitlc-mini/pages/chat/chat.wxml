@@ -1,8 +1,14 @@
 <view class="chat-page">
   <!-- 自定义导航栏 -->
-  <view class="custom-navbar">
-    <text class="navbar-title">首页</text>
-    <view class="menu-btn" bindtap="onMenuTap">
+  <view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: calc(88rpx + {{statusBarHeight}}px);">
+    <view class="menu-btn left" bindtap="onMenuTap">
+      <text>⋮</text>
+    </view>
+    <view class="navbar-title-wrap">
+      <image class="navbar-logo" src="/assets/logo.png" mode="aspectFit" />
+      <text class="navbar-title">七练</text>
+    </view>
+    <view class="menu-btn right" bindtap="onMenuTap">
       <text>⋮</text>
     </view>
   </view>
@@ -85,7 +91,7 @@
   />
 
   <!-- 操作菜单 -->
-  <view wx:if="{{showMenu}}" class="action-menu">
+  <view wx:if="{{showMenu}}" class="action-menu" style="top: {{navbarHeight}}px;">
     <view class="menu-item" bindtap="onShowHistoryManager">
       <text>历史管理</text>
     </view>

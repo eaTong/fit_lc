@@ -3,13 +3,13 @@
   "navigationBarTitleText": "首页",
   "navigationBarBackgroundColor": "#0A0A0A",
   "usingComponents": {
-    "workout-card": "/components/chat/workout-card/index",
-    "measurement-card": "/components/chat/measurement-card/index",
-    "workout-query-card": "/components/chat/workout-query-card/index",
-    "measurement-query-card": "/components/chat/measurement-query-card/index",
-    "plan-card": "/components/chat/plan-card/index",
-    "adjustment-card": "/components/chat/adjustment-card/index",
-    "analysis-card": "/components/chat/analysis-card/index",
+    "workout-card": "/components/chat/workout-card/workout-card",
+    "measurement-card": "/components/chat/measurement-card/measurement-card",
+    "workout-query-card": "/components/chat/workout-query-card/workout-query-card",
+    "measurement-query-card": "/components/chat/measurement-query-card/measurement-query-card",
+    "plan-card": "/components/chat/plan-card/plan-card",
+    "adjustment-card": "/components/chat/adjustment-card/adjustment-card",
+    "analysis-card": "/components/chat/analysis-card/analysis-card",
     "celebration": "/components/celebration/celebration",
     "history-manager": "/components/history-manager/history-manager"
   }
