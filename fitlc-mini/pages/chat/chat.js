@@ -3,6 +3,7 @@ const { recordActions } = require('../../store/actions');
 const { authActions } = require('../../store/actions');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const markdown = require('../../utils/markdown');
 
 Page({
   data: {
@@ -20,7 +21,8 @@ Page({
     showMenu: false,         // 菜单是否显示
     showHistoryManager: false, // 历史管理弹窗是否显示
     statusBarHeight: 20,       // 状态栏高度
-    safeAreaTop: 0             // 安全区域顶部 inset
+    safeAreaTop: 0,            // 安全区域顶部 inset
+    markdown: markdown         // 将 markdown 工具暴露到模板用于 rich-text
   },
 
   onLoad() {
@@ -74,7 +76,10 @@ Page({
     console.log('Loading messages...');
     chatActions.loadMessages(50)
       .then(messages => {
-        console.log('Messages loaded:', messages.length, messages);
+        console.log('[Chat] Messages loaded:', messages.length);
+        messages.forEach((m, i) => {
+          console.log(`[Chat] Msg ${i}: role=${m.role}, content=${(m.content || '').substring(0, 50)}, toolData=${!!m.toolData}, aiReply=${m.toolData?.aiReply?.substring(0, 50)}`);
+        });
       })
       .catch(err => {
         console.error('load messages failed:', err);
@@ -189,6 +194,10 @@ Page({
               path: img.path,
               uploaded: true,
               url: res.url
+            })).catch(err => ({
+              path: img.path,
+              uploaded: false,
+              error: err
             }));
           });
 
@@ -199,6 +208,15 @@ Page({
               return uploaded || img;
             });
             this.setData({ pendingImages: updatedImages });
+            // 检查是否有上传失败的图片
+            const failedImages = uploadedImages.filter(img => img.error);
+            if (failedImages.length > 0) {
+              wx.showToast({ title: `${failedImages.length}张图片上传失败`, icon: 'none' });
+              // 移除上传失败的图片
+              const successPaths = uploadedImages.filter(img => !img.error).map(img => img.path);
+              const remainingImages = allImages.filter(img => successPaths.includes(img.path));
+              this.setData({ pendingImages: remainingImages });
+            }
           }).catch(err => {
             console.error('Upload images failed:', err);
             wx.showToast({ title: '图片上传失败', icon: 'none' });
@@ -225,8 +243,11 @@ Page({
     if (!message && pendingImages.length === 0) return;
     if (this.data.isLoading) return;
 
-    // 生成临时ID用于后续替换
-    const tempId = `temp-${Date.now()}-user`;
+    // 生成临时ID用于后续替换（使用计数器避免时间戳冲突）
+    const timestamp = Date.now();
+    const counter = (this._messageCounter || 0) + 1;
+    this._messageCounter = counter;
+    const tempId = `temp-${timestamp}-${counter}`;
 
     // 先立即显示用户消息（使用已上传的URL）
     const uploadedImageUrls = pendingImages.filter(img => img.uploaded && img.url).map(img => img.url);
@@ -306,7 +327,8 @@ Page({
   // 处理发送错误
   handleSendError(err, tempId) {
     console.error('send message failed:', err);
-    this.setData({ isLoading: false });
+    // 清空待发送图片，避免重新发送
+    this.setData({ isLoading: false, pendingImages: [] });
     // 用真实ID替换临时ID
     const messages = this.data.messages;
     const tempMsg = messages.find(m => m.id === tempId);
@@ -512,5 +534,42 @@ Page({
 
   formatTime(timestamp) {
     return format.formatRelativeTime(timestamp);
+  },
+
+  // 解析 Markdown 格式文本为可显示格式
+  parseMarkdown(text) {
+    if (!text) return '';
+    let result = text;
+
+    // 代码块：```code``` -> 「代码」
+    result = result.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+      return `「代码」${code.trim()}「/代码」`;
+    });
+
+    // 行内代码：`code` -> 『code』
+    result = result.replace(/`([^`]+)`/g, '『$1』');
+
+    // 加粗：**text** 或 __text__ -> 【text】
+    result = result.replace(/\*\*([^*]+)\*\*/g, '【$1】');
+    result = result.replace(/__([^_]+)__/g, '【$1】');
+
+    // 斜体：*text* 或 _text_ -> _$1_
+    result = result.replace(/\*([^*]+)\*/g, '_$1_');
+    result = result.replace(/_([^_]+)_/g, '_$1_');
+
+    // 标题：# title -> 【标题】
+    result = result.replace(/^### (.+)$/gm, '【副标题】$1');
+    result = result.replace(/^## (.+)$/gm, '【小标题】$1');
+    result = result.replace(/^# (.+)$/gm, '【标题】$1');
+
+    // 分隔线：--- -> ───
+    result = result.replace(/^---$/gm, '──────────');
+
+    // 列表：- item -> • item
+    result = result.replace(/^[•\-\*] (.+)$/gm, '• $1');
+    // 有序列表：1. item
+    result = result.replace(/^\d+\. (.+)$/gm, '$1.');
+
+    return result;
   }
 });

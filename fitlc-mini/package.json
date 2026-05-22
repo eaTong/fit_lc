@@ -12,6 +12,7 @@
     "miniprogram-automator": "^0.12.1"
   },
   "dependencies": {
+    "@babel/runtime": "^7.29.2",
     "sharp": "^0.34.5"
   }
 }

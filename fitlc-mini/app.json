@@ -3,8 +3,15 @@
     "pages/chat/chat",
     "pages/login/login",
     "pages/exercises/exercises",
+    "pages/tools/tools",
     "pages/profile/profile",
-    "pages/settings/settings"
+    "pages/settings/settings",
+    "pages/tools-detail-10x10/tools-detail-10x10",
+    "pages/tools-detail-counter/tools-detail-counter",
+    "pages/tools-detail-timer/tools-detail-timer",
+    "pages/tools-history-10x10/tools-history-10x10",
+    "pages/tools-history-counter/tools-history-counter",
+    "pages/tools-history-timer/tools-history-timer"
   ],
   "window": {
     "backgroundTextStyle": "dark",
@@ -23,6 +30,12 @@
         "text": "对话",
         "iconPath": "assets/tabbar/home.png",
         "selectedIconPath": "assets/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/tools/tools",
+        "text": "工具",
+        "iconPath": "assets/tabbar/tools.png",
+        "selectedIconPath": "assets/tabbar/tools-active.png"
       },
       {
         "pagePath": "pages/exercises/exercises",

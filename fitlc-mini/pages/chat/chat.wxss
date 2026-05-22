@@ -200,6 +200,51 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
 
+/* rich-text 内部样式 */
+.message-text strong {
+  color: #FF4500;
+  font-weight: bold;
+}
+
+.message-text em {
+  font-style: italic;
+  color: #FFD700;
+}
+
+.message-text .inline-code {
+  background-color: #252525;
+  padding: 4rpx 8rpx;
+  border-radius: 4rpx;
+  font-family: monospace;
+  color: #00FF00;
+}
+
+.message-text .code-block {
+  background-color: #1A1A1A;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  margin: 8rpx 0;
+  font-family: monospace;
+  white-space: pre-wrap;
+  color: #00FF00;
+  border: 1px solid #333;
+}
+
+.message-text h1, .message-text h2, .message-text h3, .message-text h4 {
+  color: #FF4500;
+  margin: 8rpx 0;
+}
+
+.message-text hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 16rpx 0;
+}
+
+.message-text li {
+  margin-left: 32rpx;
+}
+
 /* 工具卡片包装器 */
 .tool-card-wrapper {
   margin-bottom: 12rpx;
@@ -398,4 +443,10 @@
   font-size: 26rpx;
   color: #FFA500;
   font-weight: 500;
+}
+
+/* Markdown 格式化样式 */
+.message-text {
+  /* 行内代码 */
+  /* 『code』格式 */
 }
