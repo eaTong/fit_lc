@@ -1,0 +1,243 @@
+.container {
+  min-height: 100vh;
+  background-color: #0A0A0A;
+  padding: 24rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.tab {
+  font-size: 32rpx;
+  color: #888888;
+  padding-bottom: 8rpx;
+}
+
+.tab.active {
+  color: #FFFFFF;
+  border-bottom: 2px solid #FF4500;
+}
+
+.history-btn {
+  font-size: 28rpx;
+  color: #FF4500;
+}
+
+/* 配置阶段 */
+.config {
+  padding-top: 40rpx;
+}
+
+.quick-options {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 40rpx;
+}
+
+.option-btn {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #888888;
+  background-color: #1A1A1A;
+  border-radius: 4px;
+  border: 2px solid transparent;
+}
+
+.option-btn.active {
+  color: #FF4500;
+  border-color: #FF4500;
+}
+
+.custom-input {
+  display: flex;
+  align-items: center;
+  background-color: #1A1A1A;
+  padding: 24rpx;
+  margin-bottom: 40rpx;
+  border-radius: 4px;
+}
+
+.custom-label {
+  font-size: 28rpx;
+  color: #888888;
+  width: 100rpx;
+}
+
+.custom-field {
+  flex: 1;
+  font-size: 32rpx;
+  color: #FFFFFF;
+  background: transparent;
+  text-align: center;
+}
+
+.custom-unit {
+  font-size: 28rpx;
+  color: #888888;
+  width: 60rpx;
+}
+
+.start-btn {
+  width: 100%;
+  height: 120rpx;
+  background-color: #FF4500;
+  color: #FFFFFF;
+  font-size: 36rpx;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+}
+
+.start-btn[disabled] {
+  background-color: #333333;
+  color: #666666;
+}
+
+.start-btn::after {
+  border: none;
+}
+
+/* 计时阶段 */
+.timing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 80rpx;
+}
+
+.countdown-display {
+  margin-bottom: 60rpx;
+}
+
+.countdown-value {
+  font-size: 160rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-ring {
+  position: relative;
+  width: 400rpx;
+  height: 400rpx;
+  margin-bottom: 80rpx;
+}
+
+.ring-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8rpx solid #1A1A1A;
+}
+
+.ring-progress {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8rpx solid transparent;
+  border-top-color: #FF4500;
+  transform: rotate(-90deg);
+}
+
+.timing-actions {
+  display: flex;
+  gap: 20rpx;
+  width: 100%;
+}
+
+.action-btn {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 2px solid #FF4500;
+}
+
+.action-btn.pause,
+.action-btn.resume {
+  color: #FF4500;
+}
+
+.action-btn.stop {
+  color: #888888;
+  border-color: #888888;
+}
+
+/* 完成阶段 */
+.complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120rpx;
+}
+
+.complete-hint {
+  font-size: 64rpx;
+  font-weight: bold;
+  color: #FF4500;
+  margin-bottom: 80rpx;
+}
+
+.complete-actions {
+  display: flex;
+  gap: 20rpx;
+  width: 100%;
+}
+
+.complete-btn {
+  flex: 1;
+  height: 100rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 4px;
+  border: none;
+}
+
+.complete-btn.again {
+  background-color: #FF4500;
+  color: #FFFFFF;
+}
+
+.complete-btn.finish {
+  background-color: transparent;
+  color: #888888;
+  border: 2px solid #888888;
+}
+
+.complete-btn::after {
+  border: none;
+}
+
+/* 暂停遮罩 */
+.pause-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pause-text {
+  font-size: 64rpx;
+  font-weight: bold;
+  color: #FF4500;
+}

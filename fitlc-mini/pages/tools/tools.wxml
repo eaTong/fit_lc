@@ -1,0 +1,46 @@
+<view class="container">
+  <!-- 工具卡片列表 -->
+  <view class="tools-grid">
+    <!-- 10*10 训练 -->
+    <view class="tool-card" bindtap="onCardTap" data-type="10x10">
+      <view class="card-icon">
+        <image src="/assets/tools/workout.png" mode="aspectFit" />
+      </view>
+      <view class="card-content">
+        <text class="card-title">10*10训练</text>
+        <text class="card-desc">10组×10次，组间休息</text>
+      </view>
+      <view class="card-arrow">
+        <text class="arrow-text">▶</text>
+      </view>
+    </view>
+
+    <!-- 计数器 -->
+    <view class="tool-card" bindtap="onCardTap" data-type="counter">
+      <view class="card-icon">
+        <image src="/assets/tools/counter.png" mode="aspectFit" />
+      </view>
+      <view class="card-content">
+        <text class="card-title">计数模式</text>
+        <text class="card-desc">目标次数，震动提醒</text>
+      </view>
+      <view class="card-arrow">
+        <text class="arrow-text">▶</text>
+      </view>
+    </view>
+
+    <!-- 计时器 -->
+    <view class="tool-card" bindtap="onCardTap" data-type="timer">
+      <view class="card-icon">
+        <image src="/assets/tools/timer.png" mode="aspectFit" />
+      </view>
+      <view class="card-content">
+        <text class="card-title">计时器</text>
+        <text class="card-desc">倒计时，专注训练</text>
+      </view>
+      <view class="card-arrow">
+        <text class="arrow-text">▶</text>
+      </view>
+    </view>
+  </view>
+</view>

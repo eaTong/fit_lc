@@ -1,0 +1,59 @@
+<view class="container">
+  <!-- 顶部 Tab + 历史入口 -->
+  <view class="header">
+    <view class="tab active">计时</view>
+    <view class="history-btn" bindtap="onHistoryTap">历史记录 ></view>
+  </view>
+
+  <!-- 配置阶段 -->
+  <view class="phase config" wx:if="{{phase === 'config'}}">
+    <view class="quick-options">
+      <view class="option-btn {{selectedDuration === 30 ? 'active' : ''}}" bindtap="onSelectDuration" data-duration="30">30秒</view>
+      <view class="option-btn {{selectedDuration === 60 ? 'active' : ''}}" bindtap="onSelectDuration" data-duration="60">60秒</view>
+      <view class="option-btn {{selectedDuration === 90 ? 'active' : ''}}" bindtap="onSelectDuration" data-duration="90">90秒</view>
+      <view class="option-btn {{selectedDuration === 120 ? 'active' : ''}}" bindtap="onSelectDuration" data-duration="120">120秒</view>
+    </view>
+
+    <view class="custom-input">
+      <text class="custom-label">自定义</text>
+      <input class="custom-field" type="number" value="{{customDuration}}" bindinput="onCustomInput" placeholder="输入秒数" />
+      <text class="custom-unit">秒</text>
+    </view>
+
+    <button class="start-btn" bindtap="onStart" disabled="{{!canStart}}">开始计时</button>
+  </view>
+
+  <!-- 计时阶段 -->
+  <view class="phase timing" wx:if="{{phase === 'timing'}}">
+    <view class="countdown-display">
+      <text class="countdown-value">{{displayTime}}</text>
+    </view>
+
+    <view class="progress-ring">
+      <view class="ring-bg"></view>
+      <view class="ring-progress" style="{{progressStyle}}"></view>
+    </view>
+
+    <view class="timing-actions">
+      <view class="action-btn {{isPaused ? 'resume' : 'pause'}}" bindtap="onPauseTap">
+        {{isPaused ? '继续' : '暂停'}}
+      </view>
+      <view class="action-btn stop" bindtap="onStop">停止</view>
+    </view>
+  </view>
+
+  <!-- 完成阶段 -->
+  <view class="phase complete" wx:if="{{phase === 'complete'}}">
+    <view class="complete-hint">时间到！</view>
+
+    <view class="complete-actions">
+      <button class="complete-btn again" bindtap="onAgain">再来一次</button>
+      <button class="complete-btn finish" bindtap="onFinish">完成</button>
+    </view>
+  </view>
+
+  <!-- 暂停遮罩 -->
+  <view class="pause-overlay" wx:if="{{isPaused && phase === 'timing'}}">
+    <text class="pause-text">已暂停</text>
+  </view>
+</view>

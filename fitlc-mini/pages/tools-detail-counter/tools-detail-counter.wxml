@@ -1,0 +1,74 @@
+<view class="container">
+  <!-- 顶部 Tab + 历史入口 -->
+  <view class="header">
+    <view class="tab active">计数</view>
+    <view class="history-btn" bindtap="onHistoryTap">历史记录 ></view>
+  </view>
+
+  <!-- 配置阶段 -->
+  <view class="phase config" wx:if="{{phase === 'config'}}">
+    <view class="config-form">
+      <view class="form-item">
+        <text class="form-label">动作类型</text>
+        <view class="exercise-picker">
+          <picker mode="selector" range="{{exercises}}" value="{{exerciseIndex}}" bindchange="onExerciseChange">
+            <view class="picker-value">{{exercises[exerciseIndex]}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">目标次数</text>
+        <input class="form-input" type="number" value="{{targetReps}}" bindinput="onTargetInput" />
+        <text class="form-unit">次</text>
+      </view>
+
+      <button class="start-btn" bindtap="onStart">开始计数</button>
+    </view>
+  </view>
+
+  <!-- 计数阶段 -->
+  <view class="phase counting" wx:if="{{phase === 'counting'}}">
+    <view class="count-info">
+      <text class="exercise-name">{{exerciseName}}</text>
+      <text class="target-hint">目标 {{targetReps}} 次</text>
+    </view>
+
+    <view class="count-display">
+      <text class="count-value">{{currentCount}}</text>
+    </view>
+
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{progressWidth}}%"></view>
+    </view>
+
+    <button class="count-btn" bindtap="onCount">计数 +1</button>
+
+    <view class="bottom-actions">
+      <view class="action-btn {{isPaused ? 'resume' : 'pause'}}" bindtap="onPauseTap">
+        {{isPaused ? '继续' : '暂停'}}
+      </view>
+      <view class="action-btn end" bindtap="onEnd">结束</view>
+    </view>
+  </view>
+
+  <!-- 完成阶段 -->
+  <view class="phase complete" wx:if="{{phase === 'complete'}}">
+    <view class="summary">
+      <text class="summary-title">计数完成</text>
+      <text class="summary-count">完成 {{totalCount}} 次 {{exerciseName}}</text>
+    </view>
+
+    <view class="save-dialog">
+      <view class="dialog-buttons">
+        <button class="dialog-btn save" bindtap="onSave">保存记录</button>
+        <button class="dialog-btn cancel" bindtap="onDiscard">不保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 暂停遮罩 -->
+  <view class="pause-overlay" wx:if="{{isPaused && phase === 'counting'}}">
+    <text class="pause-text">已暂停</text>
+  </view>
+</view>

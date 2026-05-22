@@ -1,0 +1,29 @@
+<view class="container">
+  <!-- 时间筛选 -->
+  <view class="filter-tabs">
+    <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="all">全部</view>
+    <view class="filter-tab {{filter === 'week' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="week">本周</view>
+    <view class="filter-tab {{filter === 'month' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="month">本月</view>
+  </view>
+
+  <!-- 历史列表 -->
+  <view class="history-list">
+    <block wx:for="{{filteredHistory}}" wx:key="id">
+      <view class="history-item" bindtap="onItemTap" data-id="{{item.id}}">
+        <view class="item-main">
+          <view class="item-left">
+            <text class="item-duration">{{item.durationText}}</text>
+            <text class="item-count">使用 {{item.usedCount}} 次</text>
+          </view>
+          <view class="item-right">
+            <text class="item-date">{{item.dateText}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty" wx:if="{{filteredHistory.length === 0}}">
+      <text class="empty-text">暂无记录</text>
+    </view>
+  </view>
+</view>
