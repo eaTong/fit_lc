@@ -1,0 +1,158 @@
+<view class="container">
+  <!-- 顶部 Tab + 历史入口 -->
+  <view class="header">
+    <view class="tab active">训练</view>
+    <view class="history-btn" bindtap="onHistoryTap">历史记录 ></view>
+  </view>
+
+  <!-- 配置阶段 -->
+  <view class="phase config" wx:if="{{phase === 'config'}}">
+    <view class="config-form">
+      <view class="form-item">
+        <text class="form-label">动作名称</text>
+        <view class="exercise-input-wrap">
+          <input
+            class="exercise-input"
+            type="text"
+            value="{{exerciseInput}}"
+            placeholder="搜索动作名称..."
+            bindinput="onExerciseInput"
+            bindfocus="onExerciseFocus"
+            bindblur="onExerciseBlur"
+          />
+          <view class="exercise-loading" wx:if="{{isSearching}}">
+            <text class="loading-icon">⟳</text>
+          </view>
+        </view>
+
+        <!-- 搜索结果列表 -->
+        <view class="exercise-list {{showExerciseList ? 'show' : ''}}" wx:if="{{showExerciseList}}">
+          <block wx:if="{{exerciseResults.length > 0}}">
+            <view
+              class="exercise-item"
+              wx:for="{{exerciseResults}}"
+              wx:key="id"
+              bindtap="onExerciseSelect"
+              data-exercise="{{item}}"
+            >
+              <text class="exercise-name">{{item.name}}</text>
+              <text class="exercise-tags">{{item.category}} / {{item.equipment}}</text>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="exercise-empty">
+              <text wx:if="{{isSearching}}">搜索中...</text>
+              <text wx:elif="{{exerciseInput.trim()}}">未找到匹配动作</text>
+              <text wx:else>请输入动作名称搜索</text>
+            </view>
+          </block>
+        </view>
+
+        <!-- 选中动作标签 -->
+        <view class="selected-exercise-tag" wx:if="{{selectedExercise && !showExerciseList}}">
+          <text class="tag-text">{{selectedExercise.category}} / {{selectedExercise.equipment}}</text>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">单次 PR</text>
+        <input class="form-input" type="digit" value="{{pr}}" bindinput="onPrInput" placeholder="自动获取" />
+        <text class="form-unit">kg</text>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">建议重量</text>
+        <view class="weight-display">
+          <text class="weight-value">{{suggestedWeight}}</text>
+          <text class="weight-unit">kg</text>
+        </view>
+        <text class="form-hint">PR 的 65%</text>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">组间休息</text>
+        <view class="rest-picker">
+          <picker mode="selector" range="{{restOptions}}" value="{{restIndex}}" bindchange="onRestChange">
+            <view class="picker-value">{{restOptions[restIndex]}}s</view>
+          </picker>
+        </view>
+        <text class="form-hint">根据训练时长自动建议</text>
+      </view>
+
+      <button class="start-btn" bindtap="onStart">开始训练</button>
+    </view>
+  </view>
+
+  <!-- 训练阶段 -->
+  <view class="phase training" wx:if="{{phase === 'training'}}">
+    <view class="progress-info">
+      <text class="progress-text">第 {{currentSet}} 组 / 10 组</text>
+    </view>
+
+    <view class="weight-info">
+      <text class="weight-label">重量：</text>
+      <text class="weight-value">{{weight}}kg</text>
+    </view>
+
+    <view class="reps-control">
+      <text class="reps-label">次数</text>
+      <view class="reps-display">
+        <text class="reps-value">{{currentReps}}</text>
+      </view>
+      <view class="reps-buttons">
+        <view class="reps-btn minus" bindtap="onRepsMinus">-1</view>
+        <view class="reps-btn plus" bindtap="onRepsPlus">+1</view>
+      </view>
+    </view>
+
+    <button class="complete-btn" bindtap="onCompleteSet">完成一组</button>
+
+    <view class="bottom-actions">
+      <view class="action-btn {{isPaused ? 'resume' : 'pause'}}" bindtap="onPauseTap">
+        {{isPaused ? '继续' : '暂停'}}
+      </view>
+      <view class="action-btn end" bindtap="onEnd">结束训练</view>
+    </view>
+  </view>
+
+  <!-- 休息阶段 -->
+  <view class="phase rest" wx:if="{{phase === 'rest'}}">
+    <view class="rest-hint">休息一下</view>
+    <view class="rest-countdown">
+      <text class="countdown-value">{{restCountdown}}</text>
+    </view>
+    <button class="skip-btn" bindtap="onSkipRest">跳过休息</button>
+
+    <view class="bottom-actions">
+      <view class="action-btn {{isPaused ? 'resume' : 'pause'}}" bindtap="onPauseTap">
+        {{isPaused ? '继续' : '暂停'}}
+      </view>
+      <view class="action-btn end" bindtap="onEnd">结束训练</view>
+    </view>
+  </view>
+
+  <!-- 完成阶段 -->
+  <view class="phase complete" wx:if="{{phase === 'complete'}}">
+    <view class="summary">
+      <text class="summary-title">训练完成</text>
+      <view class="summary-stats">
+        <text class="stat-item">完成 {{completedSets}} 组</text>
+        <text class="stat-item">共 {{totalReps}} 次</text>
+        <text class="stat-item">总时长 {{totalDurationText}}</text>
+      </view>
+    </view>
+
+    <view class="save-dialog">
+      <text class="dialog-content">已完成了 {{completedSets}} 组，共 {{totalReps}} 次俯卧撑，是否保存到训练记录？</text>
+      <view class="dialog-buttons">
+        <button class="dialog-btn save" bindtap="onSave">保存</button>
+        <button class="dialog-btn cancel" bindtap="onDiscard">不保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 暂停遮罩 -->
+  <view class="pause-overlay" wx:if="{{isPaused && (phase === 'training' || phase === 'rest')}}">
+    <text class="pause-text">已暂停</text>
+  </view>
+</view>
