@@ -1,0 +1,477 @@
+.container {
+  min-height: 100vh;
+  background-color: #0A0A0A;
+  padding: 24rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.tab {
+  font-size: 32rpx;
+  color: #888888;
+  padding-bottom: 8rpx;
+}
+
+.tab.active {
+  color: #FFFFFF;
+  border-bottom: 2px solid #FF4500;
+}
+
+.history-btn {
+  font-size: 28rpx;
+  color: #FF4500;
+}
+
+/* 配置阶段 */
+.config {
+  padding: 0 16rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  background-color: #1A1A1A;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border-radius: 4px;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #888888;
+  width: 160rpx;
+}
+
+.form-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  background: transparent;
+  text-align: right;
+}
+
+.form-unit {
+  font-size: 28rpx;
+  color: #888888;
+  margin-left: 8rpx;
+}
+
+.form-hint {
+  font-size: 24rpx;
+  color: #666666;
+  margin-left: 16rpx;
+}
+
+.picker-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  text-align: right;
+}
+
+.weight-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.weight-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #FF4500;
+}
+
+.weight-unit {
+  font-size: 28rpx;
+  color: #888888;
+  margin-left: 8rpx;
+}
+
+.start-btn {
+  width: 100%;
+  height: 120rpx;
+  background-color: #FF4500;
+  color: #FFFFFF;
+  font-size: 36rpx;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  margin-top: 40rpx;
+}
+
+.start-btn::after {
+  border: none;
+}
+
+/* 训练阶段 */
+.training {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60rpx;
+}
+
+.progress-info {
+  margin-bottom: 24rpx;
+}
+
+.progress-text {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.weight-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.weight-info .weight-label {
+  font-size: 32rpx;
+  color: #888888;
+}
+
+.weight-info .weight-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FF4500;
+}
+
+.reps-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60rpx;
+}
+
+.reps-label {
+  font-size: 28rpx;
+  color: #888888;
+  margin-bottom: 16rpx;
+}
+
+.reps-display {
+  margin-bottom: 24rpx;
+}
+
+.reps-value {
+  font-size: 160rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.reps-buttons {
+  display: flex;
+  gap: 40rpx;
+}
+
+.reps-btn {
+  width: 120rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 2px solid #FF4500;
+}
+
+.reps-btn.minus {
+  color: #FF4500;
+}
+
+.reps-btn.plus {
+  color: #FF4500;
+}
+
+.complete-btn {
+  width: 100%;
+  height: 120rpx;
+  background-color: #FF4500;
+  color: #FFFFFF;
+  font-size: 36rpx;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+}
+
+.complete-btn::after {
+  border: none;
+}
+
+/* 底部操作栏 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 24rpx;
+  background-color: #0A0A0A;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 2px solid #FF4500;
+}
+
+.action-btn.pause,
+.action-btn.resume {
+  color: #FF4500;
+}
+
+.action-btn.end {
+  color: #888888;
+  border-color: #888888;
+}
+
+/* 休息阶段 */
+.rest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100rpx;
+}
+
+.rest-hint {
+  font-size: 36rpx;
+  color: #888888;
+  margin-bottom: 40rpx;
+}
+
+.rest-countdown {
+  margin-bottom: 60rpx;
+}
+
+.countdown-value {
+  font-size: 200rpx;
+  font-weight: bold;
+  color: #FF4500;
+}
+
+.skip-btn {
+  width: 300rpx;
+  height: 100rpx;
+  background-color: transparent;
+  color: #888888;
+  font-size: 32rpx;
+  border: 2px solid #888888;
+  border-radius: 4px;
+}
+
+.skip-btn::after {
+  border: none;
+}
+
+/* 完成阶段 */
+.complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 80rpx;
+}
+
+.summary {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.summary-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 32rpx;
+}
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.stat-item {
+  font-size: 32rpx;
+  color: #888888;
+}
+
+.save-dialog {
+  width: 100%;
+  background-color: #1A1A1A;
+  border-radius: 4px;
+  padding: 40rpx;
+}
+
+.dialog-content {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  line-height: 1.6;
+  text-align: center;
+  display: block;
+  margin-bottom: 40rpx;
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.dialog-btn {
+  flex: 1;
+  height: 100rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 4px;
+  border: none;
+}
+
+.dialog-btn.save {
+  background-color: #FF4500;
+  color: #FFFFFF;
+}
+
+.dialog-btn.cancel {
+  background-color: transparent;
+  color: #888888;
+  border: 2px solid #888888;
+}
+
+.dialog-btn::after {
+  border: none;
+}
+
+/* 暂停遮罩 */
+.pause-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pause-text {
+  font-size: 64rpx;
+  font-weight: bold;
+  color: #FF4500;
+}
+
+/* 动作搜索输入框 */
+.exercise-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.exercise-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 30rpx;
+  background: #252525;
+  border: 2px solid #333333;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+
+.exercise-input:focus {
+  border-color: #FF4500;
+}
+
+.exercise-loading {
+  position: absolute;
+  right: 30rpx;
+  display: flex;
+  align-items: center;
+}
+
+.loading-icon {
+  font-size: 32rpx;
+  color: #888888;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 搜索结果列表 */
+.exercise-list {
+  display: none;
+  margin-top: 10rpx;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #1A1A1A;
+  border: 2px solid #333333;
+  border-radius: 4px;
+}
+
+.exercise-list.show {
+  display: block;
+}
+
+.exercise-item {
+  display: flex;
+  flex-direction: column;
+  padding: 20rpx 30rpx;
+  border-bottom: 1px solid #252525;
+}
+
+.exercise-item:last-child {
+  border-bottom: none;
+}
+
+.exercise-item:active {
+  background: #252525;
+}
+
+.exercise-name {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  margin-bottom: 6rpx;
+}
+
+.exercise-tags {
+  font-size: 22rpx;
+  color: #888888;
+}
+
+.exercise-empty {
+  padding: 40rpx 30rpx;
+  text-align: center;
+  color: #888888;
+  font-size: 26rpx;
+}
+
+/* 选中动作标签 */
+.selected-exercise-tag {
+  margin-top: 10rpx;
+}
+
+.tag-text {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  background: #252525;
+  border-radius: 4px;
+  color: #FF4500;
+  font-size: 22rpx;
+}
