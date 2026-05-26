@@ -6,7 +6,7 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: '七练 API',
       version: '1.0.0',
-      description: 'AI健身记录 SaaS 系统 API 文档',
+      description: 'AI专属私教 SaaS 系统 API 文档',
     },
     servers: [
       {

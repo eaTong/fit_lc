@@ -180,7 +180,7 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FITLC - AI健身记录</title>
+    <title>FITLC - AI专属私教</title>
   </head>
   <body>
     <div id="root"></div>

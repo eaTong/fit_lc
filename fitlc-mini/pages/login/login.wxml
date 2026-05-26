@@ -2,7 +2,7 @@
   <view class="logo-section">
     <image class="logo" src="/assets/logo.png" mode="aspectFit" />
     <text class="app-name">七练</text>
-    <text class="app-desc">AI 健身记录助手</text>
+    <text class="app-desc">AI 专属私教</text>
   </view>
 
   <view class="login-section">
