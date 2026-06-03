@@ -48,3 +48,6 @@ view, text, scroll-view, textarea, input, button {
 .text-accent { color: #FF4500; }
 .bg-secondary { background-color: #1A1A1A; }
 .bg-tertiary { background-color: #252525; }
+
+/* tdesign 暗色主题覆盖 */
+@import "./styles/tdesign-theme.wxss";

@@ -1,0 +1,613 @@
+/* ============================================
+ * tdesign-miniprogram 深色主题覆盖
+ * 复用 app.wxss 中已定义的 CSS 变量
+ * ============================================ */
+
+/* tdesign 前缀 */
+page {
+  --td-brand-color: var(--color-accent);
+  --td-brand-color-light: var(--color-accent);
+  --td-brand-color-disabled: var(--color-border);
+  --td-text-color-primary: var(--color-text-primary);
+  --td-text-color-secondary: var(--color-text-secondary);
+  --td-text-color-disabled: var(--color-text-secondary);
+  --td-text-color-anti: var(--color-text-primary);
+  --td-bg-color-container: var(--color-bg-secondary);
+  --td-bg-color-secondarycontainer: var(--color-bg-tertiary);
+  --td-bg-color-component: var(--color-bg-tertiary);
+  --td-component-stroke: var(--color-border);
+  --td-border-level-1: var(--color-border);
+  --td-border-level-2: var(--color-border);
+}
+
+/* ===== t-cell / t-cell-group ===== */
+.t-cell-group {
+  background-color: var(--color-bg-secondary);
+  border-top: 2rpx solid var(--color-border);
+  border-bottom: 2rpx solid var(--color-border);
+}
+
+.t-cell {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-bottom: 2rpx solid var(--color-border);
+  padding: 24rpx 32rpx;
+  transition: background-color 150ms ease;
+}
+
+.t-cell:last-child {
+  border-bottom: none;
+}
+
+.t-cell--hover {
+  background-color: var(--color-bg-tertiary) !important;
+}
+
+.t-cell__title {
+  color: var(--color-text-primary) !important;
+  font-size: 30rpx;
+}
+
+.t-cell__description {
+  color: var(--color-text-secondary) !important;
+  font-size: 26rpx;
+}
+
+.t-cell__note {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-cell__left-icon,
+.t-cell__right-icon {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-cell-group__title {
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-bg-primary) !important;
+  padding: 16rpx 32rpx !important;
+  font-size: 24rpx !important;
+}
+
+/* ===== t-button ===== */
+.t-button {
+  border-radius: 4rpx !important;
+  font-weight: 500 !important;
+  transition: all 150ms ease !important;
+  border: 2rpx solid transparent !important;
+}
+
+.t-button--theme-primary {
+  background-color: var(--color-accent) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-accent) !important;
+}
+
+.t-button--theme-primary.t-button--variant-outline {
+  background-color: transparent !important;
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.t-button--theme-danger {
+  background-color: var(--color-accent-red) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-accent-red) !important;
+}
+
+.t-button--theme-default {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.t-button--theme-default.t-button--variant-outline {
+  background-color: transparent !important;
+  border-color: var(--color-border) !important;
+}
+
+.t-button--theme-text {
+  background-color: transparent !important;
+  color: var(--color-accent) !important;
+  border-color: transparent !important;
+}
+
+.t-button--size-large {
+  height: 96rpx !important;
+  font-size: 32rpx !important;
+}
+
+.t-button--size-medium {
+  height: 80rpx !important;
+  font-size: 30rpx !important;
+}
+
+.t-button--size-small {
+  height: 64rpx !important;
+  font-size: 26rpx !important;
+}
+
+.t-button--shape-round {
+  border-radius: 999px !important;
+}
+
+.t-button--disabled,
+.t-button--theme-primary.t-button--disabled {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border) !important;
+  opacity: 0.6;
+}
+
+/* ===== t-tag ===== */
+.t-tag {
+  border-radius: 4rpx !important;
+  border: 2rpx solid transparent !important;
+  padding: 0 16rpx !important;
+  height: 40rpx !important;
+  line-height: 36rpx !important;
+  font-size: 22rpx !important;
+}
+
+.t-tag--theme-primary {
+  color: var(--color-accent) !important;
+  background-color: rgba(255, 69, 0, 0.15) !important;
+  border-color: rgba(255, 69, 0, 0.3) !important;
+}
+
+.t-tag--theme-success {
+  color: #2BA471 !important;
+  background-color: rgba(43, 164, 113, 0.15) !important;
+  border-color: rgba(43, 164, 113, 0.3) !important;
+}
+
+.t-tag--theme-warning {
+  color: #E37318 !important;
+  background-color: rgba(227, 115, 24, 0.15) !important;
+  border-color: rgba(227, 115, 24, 0.3) !important;
+}
+
+.t-tag--theme-danger {
+  color: var(--color-accent-red) !important;
+  background-color: rgba(220, 20, 60, 0.15) !important;
+  border-color: rgba(220, 20, 60, 0.3) !important;
+}
+
+.t-tag--theme-default {
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-bg-tertiary) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* ===== t-tabs ===== */
+.t-tabs__nav {
+  background-color: var(--color-bg-primary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-tabs__nav-item {
+  color: var(--color-text-secondary) !important;
+  font-size: 28rpx !important;
+}
+
+.t-tabs__nav-item--active {
+  color: var(--color-accent) !important;
+}
+
+.t-tabs__nav-item--active::after,
+.t-tabs__nav-item::after {
+  background-color: var(--color-accent) !important;
+}
+
+.t-tabs__content {
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* ===== t-dialog / t-action-sheet ===== */
+.t-dialog {
+  --td-dialog-bg-color: var(--color-bg-secondary);
+}
+
+.t-dialog__content {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: 8rpx !important;
+}
+
+.t-dialog__header {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-dialog__body {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.t-dialog__footer {
+  background-color: var(--color-bg-secondary) !important;
+  border-top: 2rpx solid var(--color-border) !important;
+}
+
+.t-dialog__footer .t-button {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border-right: 2rpx solid var(--color-border) !important;
+}
+
+.t-dialog__footer .t-button:last-child {
+  border-right: none !important;
+  color: var(--color-accent) !important;
+}
+
+.t-overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.t-action-sheet {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.t-action-sheet__header {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-action-sheet__item {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-action-sheet__item--active {
+  color: var(--color-accent) !important;
+}
+
+.t-action-sheet__footer {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* ===== t-toast ===== */
+.t-toast {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 8rpx !important;
+}
+
+.t-toast__text {
+  color: var(--color-text-primary) !important;
+}
+
+/* ===== t-empty ===== */
+.t-empty {
+  padding: 96rpx 32rpx !important;
+}
+
+.t-empty__description {
+  color: var(--color-text-secondary) !important;
+  font-size: 26rpx !important;
+}
+
+/* ===== t-loading ===== */
+.t-loading {
+  color: var(--color-accent) !important;
+}
+
+.t-loading__text {
+  color: var(--color-text-secondary) !important;
+}
+
+/* ===== t-input / t-textarea ===== */
+.t-input,
+.t-textarea {
+  color: var(--color-text-primary) !important;
+  background-color: transparent !important;
+}
+
+.t-input__wrap {
+  background-color: var(--color-bg-tertiary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 4rpx !important;
+  padding: 0 24rpx !important;
+}
+
+.t-input__wrap--focused {
+  border-color: var(--color-accent) !important;
+}
+
+.t-input__placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-textarea__wrap {
+  background-color: var(--color-bg-tertiary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 4rpx !important;
+  padding: 16rpx 24rpx !important;
+}
+
+.t-textarea__wrap--focused {
+  border-color: var(--color-accent) !important;
+}
+
+.t-input__label,
+.t-textarea__label {
+  color: var(--color-text-primary) !important;
+}
+
+/* ===== t-stepper / t-switch / t-checkbox / t-radio ===== */
+.t-stepper {
+  background-color: var(--color-bg-tertiary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 4rpx !important;
+}
+
+.t-stepper__minus,
+.t-stepper__plus {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-tertiary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.t-stepper__input {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.t-switch {
+  background-color: var(--color-bg-tertiary) !important;
+  border: 2rpx solid var(--color-border) !important;
+}
+
+.t-switch--checked {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.t-checkbox,
+.t-radio {
+  color: var(--color-text-primary) !important;
+}
+
+.t-checkbox--checked .t-checkbox__icon,
+.t-radio--checked .t-radio__icon {
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.t-checkbox__icon,
+.t-radio__icon {
+  border-color: var(--color-border) !important;
+  background-color: var(--color-bg-tertiary) !important;
+}
+
+.t-checkbox__icon .t-icon,
+.t-radio__icon .t-icon {
+  color: #FFFFFF !important;
+}
+
+/* ===== t-search ===== */
+.t-search {
+  background-color: var(--color-bg-primary) !important;
+  padding: 16rpx 32rpx !important;
+}
+
+.t-search__input {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 4rpx !important;
+}
+
+.t-search__input .t-input__placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-search__icon-search {
+  color: var(--color-text-secondary) !important;
+}
+
+/* ===== t-progress ===== */
+.t-progress {
+  background-color: var(--color-bg-tertiary) !important;
+  border-radius: 4rpx !important;
+}
+
+.t-progress__bar {
+  background-color: var(--color-accent) !important;
+}
+
+/* ===== t-check-tag ===== */
+.t-check-tag {
+  background-color: transparent !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+  border-radius: 4rpx !important;
+  padding: 0 24rpx !important;
+  height: 64rpx !important;
+  line-height: 60rpx !important;
+  font-size: 26rpx !important;
+  transition: all 150ms ease !important;
+}
+
+.t-check-tag--checked {
+  background-color: var(--color-accent) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* ===== t-grid ===== */
+.t-grid {
+  background-color: var(--color-bg-secondary) !important;
+  border-top: 2rpx solid var(--color-border) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-grid-item {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+  border-right: 2rpx solid var(--color-border) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+  padding: 32rpx 16rpx !important;
+}
+
+.t-grid-item__text {
+  color: var(--color-text-primary) !important;
+  font-size: 26rpx !important;
+}
+
+.t-grid-item__description {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-grid-item--hover {
+  background-color: var(--color-bg-tertiary) !important;
+}
+
+/* ===== t-navbar ===== */
+.t-navbar {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-navbar__title {
+  color: var(--color-text-primary) !important;
+}
+
+.t-navbar__left-arrow {
+  color: var(--color-text-primary) !important;
+}
+
+.t-navbar__capsule {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+}
+
+/* ===== t-divider ===== */
+.t-divider {
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.t-divider__line {
+  background-color: var(--color-border) !important;
+}
+
+.t-divider__content {
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* ===== t-avatar ===== */
+.t-avatar {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+}
+
+.t-avatar--shape-round {
+  border-radius: 999px !important;
+}
+
+.t-avatar--shape-circle {
+  border-radius: 4rpx !important;
+}
+
+/* ===== t-steps / t-step-item ===== */
+.t-steps {
+  background-color: var(--color-bg-primary) !important;
+  padding: 32rpx !important;
+}
+
+.t-step-item {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-step-item--finish .t-step-item__circle {
+  background-color: var(--color-accent) !important;
+  color: #FFFFFF !important;
+}
+
+.t-step-item--process .t-step-item__circle {
+  background-color: var(--color-accent) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-accent) !important;
+}
+
+.t-step-item__title {
+  color: var(--color-text-primary) !important;
+}
+
+.t-step-item__description {
+  color: var(--color-text-secondary) !important;
+}
+
+.t-step-item__line {
+  background-color: var(--color-border) !important;
+}
+
+/* ===== t-picker ===== */
+.t-picker {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.t-picker__title {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-picker__item {
+  color: var(--color-text-primary) !important;
+}
+
+.t-picker__indicator {
+  background-color: var(--color-bg-tertiary) !important;
+  border-top: 2rpx solid var(--color-border) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+/* ===== t-link ===== */
+.t-link {
+  color: var(--color-accent) !important;
+}
+
+/* ===== t-message ===== */
+.t-message {
+  background-color: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  border: 2rpx solid var(--color-border) !important;
+}
+
+.t-message--theme-info {
+  border-left: 6rpx solid var(--color-accent) !important;
+}
+
+/* ===== t-side-bar ===== */
+.t-side-bar {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.t-side-bar-item {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 2rpx solid var(--color-border) !important;
+}
+
+.t-side-bar-item--active {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-accent) !important;
+}
+
+.t-side-bar-item--active::before {
+  background-color: var(--color-accent) !important;
+}
