@@ -1,0 +1,15 @@
+{
+  "navigationBarTitleText": "执行训练",
+  "navigationBarBackgroundColor": "#0A0A0A",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-empty": "tdesign-miniprogram/empty/empty",
+    "t-input": "tdesign-miniprogram/input/input",
+    "t-checkbox": "tdesign-miniprogram/checkbox/checkbox",
+    "t-check-tag": "tdesign-miniprogram/check-tag/check-tag",
+    "t-dialog": "tdesign-miniprogram/dialog/dialog",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-tag": "tdesign-miniprogram/tag/tag"
+  }
+}

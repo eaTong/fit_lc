@@ -1,8 +1,8 @@
-/* pages/plan-execute/index.wxss - Plan Execute Page Styles */
+/* pages/plan-execute/plan-execute.wxss */
 
 .page-container {
   min-height: 100vh;
-  background-color: #0A0A0A;
+  background-color: var(--color-bg-primary);
   padding: 20rpx;
   padding-bottom: 160rpx;
 }
@@ -15,11 +15,6 @@
   padding: 150rpx 0;
 }
 
-.loading-text {
-  color: #888888;
-  font-size: 28rpx;
-}
-
 /* Error */
 .error-container {
   display: flex;
@@ -29,11 +24,10 @@
 }
 
 .error-text {
-  color: #FF4500;
+  color: var(--color-accent);
   font-size: 28rpx;
 }
 
-/* Execution Content */
 .execution-content {
   padding-bottom: 100rpx;
 }
@@ -61,21 +55,21 @@
 }
 
 .progress-count {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 36rpx;
   font-weight: bold;
 }
 
 .progress-label {
-  color: #888888;
+  color: var(--color-text-secondary);
   font-size: 24rpx;
   margin-top: 4rpx;
 }
 
 /* Date Card */
 .date-card {
-  background-color: #1A1A1A;
-  border: 2px solid #FF4500;
+  background-color: var(--color-bg-secondary);
+  border: 2rpx solid var(--color-accent);
   border-radius: 4rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
@@ -86,39 +80,38 @@
 }
 
 .date-label {
-  color: #FF4500;
+  color: var(--color-accent);
   font-size: 30rpx;
   font-weight: bold;
 }
 
 .date-value {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 32rpx;
   font-weight: 600;
 }
 
 /* Plan Name Card */
 .plan-name-card {
-  background-color: #252525;
-  border: 2px solid #333333;
+  background-color: var(--color-bg-tertiary);
+  border: 2rpx solid var(--color-border);
   border-radius: 4rpx;
   padding: 20rpx 24rpx;
   margin-bottom: 30rpx;
 }
 
 .plan-name {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 30rpx;
   font-weight: 600;
 }
 
-/* Exercises Section */
 .exercises-section {
   margin-top: 20rpx;
 }
 
 .section-title {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 32rpx;
   font-weight: bold;
   margin-bottom: 24rpx;
@@ -131,10 +124,9 @@
   gap: 20rpx;
 }
 
-/* Exercise Card */
 .exercise-card {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
+  background-color: var(--color-bg-secondary);
+  border: 2rpx solid var(--color-border);
   border-radius: 4rpx;
   padding: 24rpx;
 }
@@ -145,22 +137,14 @@
   align-items: center;
   margin-bottom: 20rpx;
   padding-bottom: 16rpx;
-  border-bottom: 1px solid #252525;
+  border-bottom: 2rpx solid var(--color-bg-tertiary);
 }
 
 .exercise-name {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 30rpx;
   font-weight: bold;
   flex: 1;
-}
-
-.exercise-target {
-  color: #FF4500;
-  font-size: 26rpx;
-  background-color: #252525;
-  padding: 8rpx 16rpx;
-  border-radius: 4rpx;
 }
 
 /* Sets Table */
@@ -173,12 +157,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 12rpx 0;
-  border-bottom: 1px solid #333333;
+  border-bottom: 2rpx solid var(--color-border);
   margin-bottom: 8rpx;
 }
 
 .sets-header text {
-  color: #888888;
+  color: var(--color-text-secondary);
   font-size: 24rpx;
   text-align: center;
 }
@@ -188,7 +172,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12rpx 0;
-  border-bottom: 1px solid #252525;
+  border-bottom: 2rpx solid var(--color-bg-tertiary);
 }
 
 .set-row:last-child {
@@ -196,7 +180,7 @@
 }
 
 .set-row text {
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 28rpx;
   text-align: center;
 }
@@ -222,34 +206,29 @@
 }
 
 .input-field {
-  background-color: #252525;
-  border: 1px solid #333333;
+  background-color: var(--color-bg-tertiary);
+  border: 2rpx solid var(--color-border);
   border-radius: 4rpx;
   padding: 12rpx 8rpx;
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 28rpx;
   text-align: center;
   margin: 0 8rpx;
 }
 
-.checkbox {
-  transform: scale(0.8);
-}
-
 /* Exercise Actions */
 .exercise-actions {
   padding: 16rpx 0;
-  border-bottom: 1px solid #252525;
+  border-bottom: 2rpx solid var(--color-bg-tertiary);
   margin-bottom: 16rpx;
 }
 
 .edit-btn {
-  color: #FF4500;
+  color: var(--color-accent);
   font-size: 26rpx;
   text-align: right;
 }
 
-/* Exercise Notes */
 .exercise-notes {
   display: flex;
   align-items: center;
@@ -258,43 +237,17 @@
 }
 
 .notes-label {
-  color: #888888;
+  color: var(--color-text-secondary);
   font-size: 26rpx;
 }
 
 .notes-input {
   flex: 1;
-  background-color: #252525;
-  border: 1px solid #333333;
+  background-color: var(--color-bg-tertiary);
+  border: 2rpx solid var(--color-border);
   border-radius: 4rpx;
   padding: 12rpx 16rpx;
-  color: #FFFFFF;
-  font-size: 28rpx;
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 150rpx 0;
-}
-
-.empty-icon {
-  font-size: 80rpx;
-  margin-bottom: 30rpx;
-}
-
-.empty-title {
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 16rpx;
-}
-
-.empty-desc {
-  color: #888888;
+  color: var(--color-text-primary);
   font-size: 28rpx;
 }
 
@@ -304,73 +257,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: #0A0A0A;
+  background-color: var(--color-bg-primary);
   padding: 20rpx 30rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  border-top: 2px solid #333333;
+  border-top: 2rpx solid var(--color-border);
 }
 
-.checkin-btn {
-  background-color: #FF4500;
-  padding: 24rpx 0;
-  border-radius: 4rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
-}
-
-.checkin-btn.disabled {
-  background-color: #666666;
-  box-shadow: none;
-}
-
-.checkin-btn:active:not(.disabled) {
-  background-color: #e03e00;
-}
-
-.checkin-btn-text {
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: bold;
-}
-
-/* Edit Modal */
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  width: 600rpx;
-  max-height: 80vh;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 30rpx;
-  border-bottom: 1px solid #333333;
-}
-
-.modal-title {
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: bold;
-}
-
-.modal-body {
-  padding: 30rpx;
+/* Dialog content */
+.dialog-content {
+  padding: 16rpx 0;
 }
 
 .edit-row {
@@ -378,69 +273,14 @@
 }
 
 .edit-label {
-  color: #888888;
+  color: var(--color-text-secondary);
   font-size: 28rpx;
   margin-bottom: 16rpx;
   display: block;
 }
 
-.edit-input {
-  background-color: #252525;
-  border: 2px solid #333333;
-  border-radius: 4rpx;
-  padding: 20rpx 24rpx;
-  color: #FFFFFF;
-  font-size: 32rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .sets-selector {
   display: flex;
   gap: 16rpx;
-}
-
-.sets-option {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #252525;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  color: #FFFFFF;
-  font-size: 32rpx;
-}
-
-.sets-option.selected {
-  border-color: #FF4500;
-  background-color: rgba(255, 69, 0, 0.2);
-  color: #FF4500;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 20rpx;
-  padding: 20rpx 30rpx;
-  border-top: 1px solid #333333;
-}
-
-.modal-btn {
-  flex: 1;
-  padding: 20rpx 0;
-  border-radius: 4rpx;
-  font-size: 30rpx;
-  font-weight: bold;
-  text-align: center;
-}
-
-.modal-btn.cancel {
-  background-color: #333333;
-  color: #FFFFFF;
-}
-
-.modal-btn.confirm {
-  background-color: #FF4500;
-  color: #FFFFFF;
+  flex-wrap: wrap;
 }

@@ -1,4 +1,5 @@
 const { planActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -60,7 +61,7 @@ Component({
         this.prepareExercises(plan);
         this.drawProgressRing();
       }).catch(err => {
-        console.error('fetchPlan failed:', err);
+        logger.error('fetchPlan failed:', err);
         this.setData({ isLoading: false, error: err.message || '加载失败' });
       });
     },
@@ -79,7 +80,7 @@ Component({
           .map(pe => ({
             id: pe.exercise_id,
             name: pe.exercise?.name || pe.name || '未知动作',
-            targetSets: pe.targetSets ?? pe.sets || 3,
+            targetSets: pe.targetSets ?? pe.sets ?? 3,
             targetReps: pe.targetReps ?? pe.reps ?? pe.repetitions ?? '8-12',
             targetWeight: pe.targetWeight ?? pe.weight ?? null,
             sets: this.initSetsArray(
@@ -192,7 +193,8 @@ Component({
 
     onSetCompletedChange(e) {
       const { exerciseIndex, setIndex } = e.currentTarget.dataset;
-      const completed = e.detail.value;
+      // t-checkbox 通过 bind:change 触发，detail.checked 为布尔值
+      const completed = typeof e.detail.checked === 'boolean' ? e.detail.checked : !!e.detail.value;
       const exercises = [...this.data.exercises];
       exercises[exerciseIndex].sets[setIndex].completed = completed;
       this.setData({ exercises });
@@ -258,19 +260,23 @@ Component({
     },
 
     onSelectSets(e) {
+      // t-check-tag bind:change 触发，event 不带 dataset.sets
+      // 但 click 事件则从 currentTarget.dataset 读取。这里通过 click 而非 change 调用。
       const sets = e.currentTarget.dataset.sets;
+      if (sets === undefined) return;
       const editingExercise = { ...this.data.editingExercise, tempSets: sets };
       this.setData({ editingExercise });
     },
 
     onEditRepsInput(e) {
-      const reps = e.detail.value;
+      // t-input bind:change 触发，detail.value 为字符串
+      const reps = e.detail.value !== undefined ? e.detail.value : '';
       const editingExercise = { ...this.data.editingExercise, tempReps: reps };
       this.setData({ editingExercise });
     },
 
     onEditWeightInput(e) {
-      const weight = e.detail.value;
+      const weight = e.detail.value !== undefined ? e.detail.value : '';
       const editingExercise = { ...this.data.editingExercise, tempWeight: weight };
       this.setData({ editingExercise });
     },
@@ -362,7 +368,7 @@ Component({
           wx.navigateBack();
         }, 1500);
       }).catch(err => {
-        console.error('recordExecution failed:', err);
+        logger.error('recordExecution failed:', err);
         this.setData({ isSubmitting: false });
         wx.showToast({
           title: err.message || '打卡失败',

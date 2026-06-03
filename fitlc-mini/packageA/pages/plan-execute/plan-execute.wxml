@@ -1,7 +1,7 @@
 <view class="page-container">
   <!-- Loading -->
   <view wx:if="{{isLoading}}" class="loading-container">
-    <text class="loading-text">加载中...</text>
+    <t-loading theme="circular" size="40rpx" loading />
   </view>
 
   <!-- Error -->
@@ -45,7 +45,7 @@
           <!-- Exercise Header -->
           <view class="exercise-header">
             <text class="exercise-name">{{exercise.name}}</text>
-            <text class="exercise-target">{{exercise.targetSets}}组 x {{exercise.targetReps}}次</text>
+            <t-tag theme="primary" size="small" variant="light">{{exercise.targetSets}}组 x {{exercise.targetReps}}次</t-tag>
           </view>
 
           <!-- Sets Table -->
@@ -82,14 +82,15 @@
                 data-set-index="{{setItem.setIndex - 1}}"
                 bindchange="onSetRepsChange"
               />
-              <checkbox
-                class="col-status checkbox"
-                value="{{setItem.completed}}"
-                checked="{{setItem.completed}}"
-                data-exercise-index="{{index}}"
-                data-set-index="{{setItem.setIndex - 1}}"
-                bindchange="onSetCompletedChange"
-              />
+              <view class="col-status">
+                <t-checkbox
+                  value="{{setItem.completed}}"
+                  checked="{{setItem.completed}}"
+                  data-exercise-index="{{index}}"
+                  data-set-index="{{setItem.setIndex - 1}}"
+                  bind:change="onSetCompletedChange"
+                />
+              </view>
             </view>
           </view>
 
@@ -115,75 +116,67 @@
     </view>
 
     <!-- Empty State -->
-    <view wx:if="{{exercises.length === 0}}" class="empty-state">
-      <text class="empty-icon">🏋️</text>
-      <text class="empty-title">今日无训练安排</text>
-      <text class="empty-desc">该计划今日没有分配训练动作</text>
-    </view>
+    <t-empty
+      wx:if="{{exercises.length === 0}}"
+      icon="info-circle"
+      description="该计划今日没有分配训练动作"
+    />
   </view>
 
   <!-- Bottom Action -->
   <view wx:if="{{plan && !isLoading}}" class="bottom-action">
-    <view
-      class="checkin-btn {{isSubmitting ? 'disabled' : ''}}"
-      bindtap="onCompleteCheckin"
-    >
-      <text wx:if="{{!isSubmitting}}" class="checkin-btn-text">完成打卡</text>
-      <text wx:if="{{isSubmitting}}" class="checkin-btn-text">提交中...</text>
-    </view>
+    <t-button
+      theme="primary"
+      size="large"
+      block
+      loading="{{isSubmitting}}"
+      disabled="{{isSubmitting}}"
+      bind:tap="onCompleteCheckin"
+    >{{isSubmitting ? '提交中...' : '完成打卡'}}</t-button>
   </view>
 
-  <!-- Exercise Editor Modal -->
-  <view wx:if="{{showEditModal}}" class="modal-mask" bindtap="onCloseEditModal">
-    <view class="modal-content" catchtap="noop">
-      <view class="modal-header">
-        <text class="modal-title">编辑动作 - {{editingExercise.name}}</text>
-      </view>
-
-      <view class="modal-body">
-        <!-- Sets Selector -->
-        <view class="edit-row">
-          <text class="edit-label">组数</text>
-          <view class="sets-selector">
-            <text
-              wx:for="{{[3, 4, 5, 6]}}"
-              wx:key="*this"
-              class="sets-option {{editingExercise.tempSets === item ? 'selected' : ''}}"
-              data-sets="{{item}}"
-              bindtap="onSelectSets"
-            >{{item}}</text>
-          </view>
-        </view>
-
-        <!-- Reps Input -->
-        <view class="edit-row">
-          <text class="edit-label">每组次数</text>
-          <input
-            class="edit-input"
-            type="number"
-            placeholder="如 8-12"
-            value="{{editingExercise.tempReps}}"
-            bindinput="onEditRepsInput"
-          />
-        </view>
-
-        <!-- Weight Input -->
-        <view class="edit-row">
-          <text class="edit-label">重量 (kg)</text>
-          <input
-            class="edit-input"
-            type="digit"
-            placeholder="如 60"
-            value="{{editingExercise.tempWeight}}"
-            bindinput="onEditWeightInput"
-          />
+  <!-- Exercise Editor Dialog -->
+  <t-dialog
+    visible="{{showEditModal}}"
+    title="编辑动作 - {{editingExercise.name}}"
+    confirm-btn="确认完成"
+    cancel-btn="取消"
+    bind:close="onCloseEditModal"
+    bind:confirm="onConfirmEdit"
+  >
+    <view class="dialog-content">
+      <view class="edit-row">
+        <text class="edit-label">组数</text>
+        <view class="sets-selector">
+          <t-check-tag
+            wx:for="{{[3, 4, 5, 6]}}"
+            wx:key="*this"
+            checked="{{editingExercise.tempSets === item}}"
+            data-sets="{{item}}"
+            bind:click="onSelectSets"
+          >{{item}}</t-check-tag>
         </view>
       </view>
 
-      <view class="modal-footer">
-        <button class="modal-btn cancel" bindtap="onCloseEditModal">取消</button>
-        <button class="modal-btn confirm" bindtap="onConfirmEdit">确认完成</button>
+      <view class="edit-row">
+        <text class="edit-label">每组次数</text>
+        <t-input
+          type="number"
+          placeholder="如 8-12"
+          value="{{editingExercise.tempReps}}"
+          bind:change="onEditRepsInput"
+        />
+      </view>
+
+      <view class="edit-row">
+        <text class="edit-label">重量 (kg)</text>
+        <t-input
+          type="digit"
+          placeholder="如 60"
+          value="{{editingExercise.tempWeight}}"
+          bind:change="onEditWeightInput"
+        />
       </view>
     </view>
-  </view>
+  </t-dialog>
 </view>
