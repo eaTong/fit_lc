@@ -184,7 +184,66 @@ export const saveWorkoutTool = new DynamicStructuredTool({
         // 不影响主流程
       }
 
-      const aiReply = `已保存：${exercises.map(e => e.name).join('、')}\n\n${feedbackMsg}${achievementMsg}`;
+      // F-019: 构建给 AI 的丰富数据上下文（用于二次 LLM 调用生成个性化反馈）
+      const richCtx = feedback.rich_context;
+      let richContextSummary = '';
+      if (richCtx) {
+        const parts: string[] = [];
+
+        // 连续记录天数
+        if (richCtx.streak > 1) {
+          parts.push(`连续记录${richCtx.streak}天`);
+        }
+
+        // 本月训练次数
+        if (richCtx.totalWorkoutsThisMonth > 0) {
+          parts.push(`本月已训练${richCtx.totalWorkoutsThisMonth}次`);
+        }
+
+        // 周训练频率对比
+        if (richCtx.weeklyFrequencyChange) {
+          const { thisWeek, lastWeek } = richCtx.weeklyFrequencyChange;
+          if (thisWeek > 0 || lastWeek > 0) {
+            parts.push(`本周${thisWeek}次 vs 上周${lastWeek}次`);
+          }
+        }
+
+        // 每个动作的逐项对比
+        const comparisons = richCtx.exerciseComparisons
+          .filter(c => c.lastWeekAvgSets !== undefined || c.lastWeekAvgWeight !== undefined || c.isNewPR)
+          .map(c => {
+            const items: string[] = [`${c.name}`];
+            if (c.currentWeight) items.push(`${c.currentWeight}kg`);
+            if (c.currentSets && c.currentReps) items.push(`${c.currentSets}组×${c.currentReps}次`);
+            else if (c.currentSets) items.push(`${c.currentSets}组`);
+
+            if (c.isNewPR) {
+              items.push(`[新PR!历史最高${c.historyMaxWeight}kg]`);
+            } else {
+              if (c.weightDelta !== undefined && c.weightDelta !== 0) {
+                items.push(`[重量${c.weightDelta > 0 ? '+' : ''}${c.weightDelta}kg vs上周]`);
+              }
+              if (c.setsDelta !== undefined && c.setsDelta !== 0) {
+                items.push(`[组数${c.setsDelta > 0 ? '+' : ''}${c.setsDelta} vs上周]`);
+              }
+            }
+            return items.join(' ');
+          });
+
+        if (comparisons.length > 0) {
+          parts.push('动作对比：' + comparisons.join('；'));
+        }
+
+        if (richCtx.bestMoment) {
+          parts.push(`本次亮点：${richCtx.bestMoment}`);
+        }
+
+        richContextSummary = parts.length > 0
+          ? `\n\n[训练数据摘要供参考: ${parts.join('，')}]`
+          : '';
+      }
+
+      const aiReply = `已保存：${exercises.map(e => e.name).join('、')}\n\n${feedbackMsg}${achievementMsg}${richContextSummary}`;
 
       return JSON.stringify({
         aiReply,
@@ -202,7 +261,8 @@ export const saveWorkoutTool = new DynamicStructuredTool({
             distance: e.distance
           })),
           feedback: {
-            personalized_comment: feedback.personalized_comment
+            personalized_comment: feedback.personalized_comment,
+            rich_context: feedback.rich_context
           },
           isFirstWorkout,
           achievements: prResults.length > 0 || achievements.length > 0 || milestones.length > 0 ? {
