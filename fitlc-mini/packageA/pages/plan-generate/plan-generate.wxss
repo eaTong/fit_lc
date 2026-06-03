@@ -1,77 +1,11 @@
-/* pages/plan-generate/index.wxss - Plan Generate 3-Step Wizard Styles */
+/* pages/plan-generate/plan-generate.wxss */
 
 .page-container {
   min-height: 100vh;
-  background-color: #0A0A0A;
+  background-color: var(--color-bg-primary);
   padding: 20rpx;
 }
 
-/* Progress Bar */
-.progress-bar {
-  padding: 30rpx 20rpx;
-}
-
-.progress-steps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.progress-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.step-circle {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background-color: #252525;
-  border: 2px solid #333333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #888888;
-  font-size: 24rpx;
-  font-weight: bold;
-}
-
-.progress-step.active .step-circle {
-  background-color: #FF4500;
-  border-color: #FF4500;
-  color: #FFFFFF;
-}
-
-.progress-step.completed .step-circle {
-  background-color: #4CAF50;
-  border-color: #4CAF50;
-  color: #FFFFFF;
-}
-
-.step-label {
-  margin-top: 10rpx;
-  font-size: 22rpx;
-  color: #888888;
-}
-
-.progress-step.active .step-label {
-  color: #FFFFFF;
-}
-
-.progress-line {
-  width: 80rpx;
-  height: 2px;
-  background-color: #333333;
-  margin: 0 10rpx;
-  margin-bottom: 30rpx;
-}
-
-.progress-line.active {
-  background-color: #FF4500;
-}
-
-/* Step Content */
 .step-content {
   padding: 20rpx;
 }
@@ -79,147 +13,66 @@
 .step-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   margin-bottom: 30rpx;
 }
 
 .step-subtitle {
   font-size: 26rpx;
-  color: #888888;
+  color: var(--color-text-secondary);
   margin-bottom: 16rpx;
   margin-top: 24rpx;
 }
 
-/* Goal Grid */
-.goal-grid {
-  display: flex;
-  gap: 20rpx;
-  height: 240rpx;
-}
-
-.goal-card {
-  flex: 1;
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 24rpx 16rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.goal-card.selected {
-  border-color: #FF4500;
-  background-color: rgba(255, 69, 0, 0.1);
-}
-
 .goal-icon {
-  font-size: 40rpx;
-  margin-bottom: 12rpx;
-  pointer-events: none;
-}
-
-.goal-label {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  margin-bottom: 6rpx;
-  pointer-events: none;
+  font-size: 48rpx;
+  line-height: 1;
 }
 
 .goal-desc {
-  font-size: 20rpx;
-  color: #888888;
-  pointer-events: none;
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
 }
 
-/* Cycle Row */
 .cycle-row {
   display: flex;
   gap: 20rpx;
+  flex-wrap: wrap;
 }
 
-.cycle-btn {
-  flex: 1;
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 24rpx 0;
-  text-align: center;
-  color: #FFFFFF;
-  font-size: 28rpx;
-  position: relative;
-}
-
-.cycle-btn.selected {
-  border-color: #FF4500;
-  background-color: #FF4500;
-}
-
-/* Picker Box */
 .picker-box {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
+  background-color: var(--color-bg-secondary);
+  border: 2rpx solid var(--color-border);
+  border-radius: 4rpx;
   padding: 30rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #FFFFFF;
+  color: var(--color-text-primary);
   font-size: 28rpx;
 }
 
 .picker-arrow {
-  color: #888888;
+  color: var(--color-text-secondary);
   font-size: 36rpx;
 }
 
-/* Equipment Grid */
 .equipment-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
 }
 
-.equipment-btn {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 20rpx 28rpx;
-  color: #FFFFFF;
-  font-size: 26rpx;
-}
-
-.equipment-btn.selected {
-  border-color: #FF4500;
-  background-color: #FF4500;
-}
-
-/* Experience Row */
 .experience-row {
   display: flex;
+  flex-direction: column;
   gap: 20rpx;
+  background-color: var(--color-bg-secondary);
+  border-radius: 4rpx;
+  padding: 20rpx;
+  border: 2rpx solid var(--color-border);
 }
 
-.exp-btn {
-  flex: 1;
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 24rpx 0;
-  text-align: center;
-  color: #FFFFFF;
-  font-size: 28rpx;
-}
-
-.exp-btn.selected {
-  border-color: #FF4500;
-  background-color: #FF4500;
-}
-
-/* Input Row */
 .input-row {
   display: flex;
   gap: 20rpx;
@@ -229,40 +82,6 @@
   flex: 1;
 }
 
-.input-label {
-  display: block;
-  font-size: 24rpx;
-  color: #888888;
-  margin-bottom: 12rpx;
-}
-
-.input-box {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 24rpx;
-  color: #FFFFFF;
-  font-size: 28rpx;
-}
-
-.input-box.full {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.textarea-box {
-  background-color: #1A1A1A;
-  border: 2px solid #333333;
-  border-radius: 8rpx;
-  padding: 24rpx;
-  color: #FFFFFF;
-  font-size: 28rpx;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 120rpx;
-}
-
-/* Bottom Buttons */
 .bottom-btn {
   margin-top: 60rpx;
 }
@@ -273,50 +92,12 @@
   gap: 20rpx;
 }
 
-.primary-btn {
+.bottom-btns .t-button {
   flex: 1;
-  background-color: #FF4500;
-  padding: 28rpx 0;
-  border-radius: 8rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: bold;
-  box-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
 }
 
-.primary-btn.loading {
-  background-color: #666666;
-  box-shadow: none;
-}
-
-.primary-btn:active {
-  background-color: #e03e00;
-}
-
-.outline-btn {
-  flex: 1;
-  background-color: transparent;
-  border: 2px solid #333333;
-  padding: 28rpx 0;
-  border-radius: 8rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #888888;
-  font-size: 32rpx;
-}
-
-.outline-btn:active {
-  border-color: #FF4500;
-  color: #FF4500;
-}
-
-/* Error Text */
 .error-text {
-  color: #FF4500;
+  color: var(--color-accent);
   font-size: 28rpx;
   text-align: center;
   padding: 20rpx 0;

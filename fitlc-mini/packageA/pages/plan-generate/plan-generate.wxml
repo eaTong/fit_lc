@@ -1,109 +1,91 @@
 <view class="page-container">
   <!-- Progress Indicator -->
-  <view class="progress-bar">
-    <view class="progress-steps">
-      <view class="progress-step {{currentStep >= 1 ? 'active' : ''}} {{currentStep > 1 ? 'completed' : ''}}">
-        <view class="step-circle">{{currentStep > 1 ? '✓' : '1'}}</view>
-        <text class="step-label">目标</text>
-      </view>
-      <view class="progress-line {{currentStep > 1 ? 'active' : ''}}"></view>
-      <view class="progress-step {{currentStep >= 2 ? 'active' : ''}} {{currentStep > 2 ? 'completed' : ''}}">
-        <view class="step-circle">{{currentStep > 2 ? '✓' : '2'}}</view>
-        <text class="step-label">训练</text>
-      </view>
-      <view class="progress-line {{currentStep > 2 ? 'active' : ''}}"></view>
-      <view class="progress-step {{currentStep >= 3 ? 'active' : ''}}">
-        <view class="step-circle">3</view>
-        <text class="step-label">身体数据</text>
-      </view>
-    </view>
-  </view>
+  <t-steps
+    current="{{currentStep - 1}}"
+    theme="default"
+  >
+    <t-step-item title="目标" />
+    <t-step-item title="训练" />
+    <t-step-item title="身体数据" />
+  </t-steps>
 
   <!-- Step 1: Goal & Cycle -->
   <view class="step-content" wx:if="{{currentStep === 1}}">
     <view class="step-title">选择您的训练目标</view>
 
     <!-- Goal Selection -->
-    <view class="goal-grid">
-      <view class="goal-card" bindtap="onGoalSelect" data-value="bulk">
-        <text class="goal-icon">💪</text>
-        <text class="goal-label">增肌</text>
-        <text class="goal-desc">+肌肉量</text>
-      </view>
-      <view class="goal-card" bindtap="onGoalSelect" data-value="cut">
-        <text class="goal-icon">🔥</text>
-        <text class="goal-label">减脂</text>
-        <text class="goal-desc">-体脂率</text>
-      </view>
-      <view class="goal-card" bindtap="onGoalSelect" data-value="maintain">
-        <text class="goal-icon">⚖️</text>
-        <text class="goal-label">维持</text>
-        <text class="goal-desc">保持现状</text>
-      </view>
-    </view>
+    <t-grid col="{{3}}" border="{{false}}">
+      <t-grid-item
+        wx:for="{{goalOptions}}"
+        wx:key="value"
+        text="{{item.label}}"
+        data-value="{{item.value}}"
+        bind:click="onGoalSelect"
+      >
+        <view slot="image" class="goal-icon">{{item.icon}}</view>
+        <view slot="description" class="goal-desc">{{item.desc}}</view>
+      </t-grid-item>
+    </t-grid>
 
     <view class="step-title" style="margin-top: 40rpx;">计划周期</view>
     <view class="cycle-row">
-      <view
+      <t-check-tag
         wx:for="{{cycleOptions}}"
         wx:key="*this"
-        class="cycle-btn {{isCycleSelected(item) ? 'selected' : ''}}"
+        checked="{{formData.duration_weeks === item}}"
         data-weeks="{{item}}"
-        bindtap="onCycleSelect"
-      >
-        {{item}}周
-      </view>
+        bind:click="onCycleSelect"
+      >{{item}}周</t-check-tag>
     </view>
 
     <view class="bottom-btn">
-      <view class="primary-btn" bindtap="onStep1Next">下一步 →</view>
+      <t-button theme="primary" size="large" block bind:tap="onStep1Next">下一步 →</t-button>
     </view>
   </view>
 
   <!-- Step 2: Frequency & Equipment -->
   <view class="step-content" wx:if="{{currentStep === 2}}">
     <view class="step-title">每周训练几次？</view>
-    <picker
-      mode="selector"
-      range="{{['2天', '3天', '4天', '5天', '6天']}}"
-      value="{{formData.frequency - 2}}"
-      bindchange="onFrequencyChange"
+    <t-picker
+      value="{{[formData.frequency - 2]}}"
+      data-key="frequency"
+      bind:change="onPickerChange"
     >
       <view class="picker-box">
         <text>{{formData.frequency}}天/周</text>
         <text class="picker-arrow">›</text>
       </view>
-    </picker>
+    </t-picker>
 
     <view class="step-title" style="margin-top: 40rpx;">可用器械（多选）</view>
     <view class="equipment-grid">
-      <view
+      <t-check-tag
         wx:for="{{equipmentOptions}}"
         wx:key="*this"
-        class="equipment-btn {{isEquipmentSelected(item) ? 'selected' : ''}}"
+        checked="{{isEquipmentSelected(item)}}"
         data-eq="{{item}}"
-        bindtap="onEquipmentToggle"
-      >
-        {{item}}
-      </view>
+        bind:click="onEquipmentToggle"
+      >{{item}}</t-check-tag>
     </view>
 
     <view class="step-title" style="margin-top: 40rpx;">训练经验</view>
-    <view class="experience-row">
-      <view
-        wx:for="{{experienceOptions}}"
-        wx:key="value"
-        class="exp-btn {{isExperienceSelected(item.value) ? 'selected' : ''}}"
-        data-value="{{item.value}}"
-        bindtap="onExperienceSelect"
-      >
-        {{item.label}}
+    <t-radio-group
+      value="{{formData.experience}}"
+      bind:change="onExperienceChange"
+    >
+      <view class="experience-row">
+        <t-radio
+          wx:for="{{experienceOptions}}"
+          wx:key="value"
+          value="{{item.value}}"
+          label="{{item.label}}"
+        />
       </view>
-    </view>
+    </t-radio-group>
 
     <view class="bottom-btns">
-      <view class="outline-btn" bindtap="onStep2Back">← 上一步</view>
-      <view class="primary-btn" bindtap="onStep2Next">下一步 →</view>
+      <t-button theme="default" variant="outline" block bind:tap="onStep2Back">← 上一步</t-button>
+      <t-button theme="primary" block bind:tap="onStep2Next">下一步 →</t-button>
     </view>
   </view>
 
@@ -113,49 +95,53 @@
 
     <view class="input-row">
       <view class="input-item">
-        <text class="input-label">身高 (cm)</text>
-        <input
+        <t-input
+          label="身高 (cm)"
           type="number"
-          class="input-box"
           placeholder="175"
           value="{{formData.height}}"
-          bindinput="onHeightInput"
+          data-key="height"
+          bind:change="onFormInput"
         />
       </view>
       <view class="input-item">
-        <text class="input-label">体重 (kg)</text>
-        <input
+        <t-input
+          label="体重 (kg)"
           type="number"
-          class="input-box"
           placeholder="70"
           value="{{formData.body_weight}}"
-          bindinput="onWeightInput"
+          data-key="body_weight"
+          bind:change="onFormInput"
         />
       </view>
     </view>
 
     <view class="step-subtitle">体脂率（可选）</view>
-    <input
+    <t-input
       type="digit"
-      class="input-box full"
       placeholder="18.5"
       value="{{formData.body_fat}}"
-      bindinput="onBodyFatInput"
+      data-key="body_fat"
+      bind:change="onFormInput"
     />
 
     <view class="step-subtitle">伤病/身体状况（可选）</view>
-    <textarea
-      class="textarea-box"
+    <t-textarea
       placeholder="如有伤病或身体状况请在此说明"
       value="{{formData.conditions}}"
-      bindinput="onConditionsInput"
+      data-key="conditions"
+      bind:change="onFormInput"
     />
 
     <view class="bottom-btns">
-      <view class="outline-btn" bindtap="onStep3Back">← 上一步</view>
-      <view class="primary-btn {{isLoading ? 'loading' : ''}}" bindtap="onSubmit">
-        {{isLoading ? '生成中...' : '生成计划'}}
-      </view>
+      <t-button theme="default" variant="outline" block bind:tap="onStep3Back">← 上一步</t-button>
+      <t-button
+        theme="primary"
+        block
+        loading="{{isLoading}}"
+        disabled="{{isLoading}}"
+        bind:tap="onSubmit"
+      >{{isLoading ? '生成中...' : '生成计划'}}</t-button>
     </view>
   </view>
 

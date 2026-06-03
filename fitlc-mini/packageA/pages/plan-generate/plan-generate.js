@@ -1,5 +1,6 @@
 const { planActions } = require('../../../store/actions');
 const { checkAuth } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -47,7 +48,7 @@ Component({
   methods: {
     // Step 1: Goal & Cycle
     onGoalSelect(e) {
-      console.log('[DEBUG] onGoalSelect called', e);
+      logger.log('[DEBUG] onGoalSelect called', e);
       const value = e.currentTarget.dataset.value;
       this.setData({ 'formData.goal': value });
     },
@@ -62,14 +63,20 @@ Component({
     },
 
     // Step 2: Frequency & Equipment
-    onFrequencyChange(e) {
-      const frequency = parseInt(e.detail.value) + 1;
-      this.setData({ 'formData.frequency': frequency });
+    onPickerChange(e) {
+      // t-picker bind:change 触发，detail.value 为选中索引数组
+      const key = e.currentTarget.dataset.key;
+      const selectedIndex = Array.isArray(e.detail.value) ? e.detail.value[0] : 0;
+      if (key === 'frequency') {
+        const frequency = selectedIndex + 2;
+        this.setData({ 'formData.frequency': frequency });
+      }
     },
 
     onEquipmentToggle(e) {
       const eq = e.currentTarget.dataset.eq;
-      const selected = this.data.selectedEquipment;
+      if (eq === undefined) return;
+      const selected = [...this.data.selectedEquipment];
       const index = selected.indexOf(eq);
       if (index > -1) {
         selected.splice(index, 1);
@@ -79,9 +86,12 @@ Component({
       this.setData({ selectedEquipment: selected });
     },
 
-    onExperienceSelect(e) {
-      const exp = e.currentTarget.dataset.value;
-      this.setData({ 'formData.experience': exp });
+    onExperienceChange(e) {
+      // t-radio-group bind:change 触发，detail.value 为选中值
+      const value = e.detail.value;
+      if (value) {
+        this.setData({ 'formData.experience': value });
+      }
     },
 
     onStep2Next() {
@@ -100,20 +110,13 @@ Component({
     },
 
     // Step 3: Body Data
-    onHeightInput(e) {
-      this.setData({ 'formData.height': e.detail.value });
-    },
-
-    onWeightInput(e) {
-      this.setData({ 'formData.body_weight': e.detail.value });
-    },
-
-    onBodyFatInput(e) {
-      this.setData({ 'formData.body_fat': e.detail.value });
-    },
-
-    onConditionsInput(e) {
-      this.setData({ 'formData.conditions': e.detail.value });
+    onFormInput(e) {
+      // 通用 t-input / t-textarea 输入处理
+      const key = e.currentTarget.dataset.key;
+      const value = e.detail.value !== undefined ? e.detail.value : '';
+      if (key) {
+        this.setData({ [`formData.${key}`]: value });
+      }
     },
 
     onStep3Back() {
@@ -150,7 +153,7 @@ Component({
           });
         }, 1500);
       }).catch(err => {
-        console.error('generatePlan failed:', err);
+        logger.error('generatePlan failed:', err);
         this.setData({
           isLoading: false,
           error: err.message || '生成失败，请重试'
