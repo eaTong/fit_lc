@@ -1,7 +1,7 @@
 # FitLC L1 功能实施进度
 
 **创建时间：** 2026-04-26
-**最后更新：** 2026-04-26
+**最后更新：** 2026-05-29
 
 ---
 
@@ -16,6 +16,7 @@
 | F-012 智能总结先行 | 待开发 | 前端 + D-004 |
 | F-013 重点变化Highlight | 待开发 | 前端组件 |
 | F-017 你可能想提示 | 待开发 | 前端组件 |
+| F-019 AI丰富回复 | ✅ 已实现 | 后端：coachFeedbackService + saveWorkout + promptBuilder |
 
 ---
 
@@ -93,3 +94,28 @@
 - [x] AppTipBanner 组件
 - [x] 判断逻辑（今日建议 vs 欢迎回来）
 - [x] 频率控制（localStorage）
+
+---
+
+## 阶段 4：AI 丰富回复（F-019）
+
+**状态：** ✅ 完成
+**日期：** 2026-05-29
+
+### 后端
+
+- [x] `coachFeedbackService.ts` — 新增 `buildRichFeedbackContext()`，并行查5类数据
+  - 上周同动作对比（重量差、组数差）
+  - 历史最大重量 → 精确判定新 PR
+  - 本月训练次数
+  - 本周 vs 上周频率对比
+  - `pickBestMoment()` 亮点提取（新PR > 重量增长 > 组数增长）
+- [x] `saveWorkout.ts` — 将 `rich_context` 格式化为自然语言摘要附加到 `aiReply`
+- [x] `promptBuilder.ts` — 新增「F-019 丰富回复规范」prompt 段落
+
+### 性能优化
+
+- [x] 所有新增查询并行执行（Promise.all），不增加串行等待
+- [x] `rich_context` 为可选字段，不影响已有代码路径
+- [x] 消除 `buildRichFeedbackContext` 内部的重复 `calculateStreak` 调用，由外层注入
+- [x] 修复 `setDate` 副作用问题（周计算使用独立 Date 对象）

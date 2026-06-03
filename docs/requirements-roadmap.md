@@ -1,7 +1,7 @@
 # 七练需求规划路线图
 
 **创建时间：** 2026-04-26
-**版本：** v1.0
+**版本：** v1.1
 **状态：** 规划中
 
 ---
@@ -169,3 +169,4 @@ D-004 (累计统计) → F-012/F-013 (趋势基础) → F-026 (趋势预测)
 | 日期 | 版本 | 更新内容 |
 |------|------|---------|
 | 2026-04-26 | v1.0 | 初始创建，基于 complete-optimization-checklist.md 整理的需求规划路线图 |
+| 2026-05-29 | v1.1 | F-019 AI丰富回复标记为已实现（后端：coachFeedbackService.buildRichFeedbackContext + saveWorkout注入摘要 + promptBuilder规范） |
