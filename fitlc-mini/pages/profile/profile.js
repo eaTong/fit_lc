@@ -2,6 +2,7 @@ const { authActions } = require('../../store/actions');
 const { recordActions } = require('../../store/actions');
 const { achievementActions } = require('../../store/actions');
 const { userActions } = require('../../store/actions');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -17,36 +18,45 @@ Page({
     weight: null,
     bodyFat: null,
     bmi: null,
-    loading: false
+    loading: false,
+    quickAccess: [
+      { icon: '📋', label: '训练记录', url: '/packageB/pages/calendar/calendar' },
+      { icon: '📏', label: '围度记录', url: '/packageB/pages/measurements/measurements' },
+      { icon: '📅', label: '训练计划', url: '/packageA/pages/plans/plans' },
+      { icon: '🏆', label: '徽章墙', url: '/packageC/pages/badges/badges' },
+      { icon: '📷', label: '相册', url: '/packageC/pages/gallery/gallery' }
+    ]
   },
 
   onLoad() {
-    if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/login' });
-      return;
-    }
+    authActions.checkAuth().then(isAuth => {
+      if (!isAuth) {
+        wx.redirectTo({ url: '/pages/login/login' });
+        return;
+      }
 
-    const app = getApp();
-    const user = app.store.getState().user;
-    this.setData({
-      user,
-      displayName: user?.nickname || user?.email || '默认用户',
-      avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
-      avatarUrl: user?.avatar || ''
-    });
-
-    this.unsubscribe = app.store.subscribe(state => {
-      const user = state.user;
+      const app = getApp();
+      const user = app.store.getState().user;
       this.setData({
         user,
         displayName: user?.nickname || user?.email || '默认用户',
         avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
-        avatarUrl: user?.avatar || '',
-        latestMeasurement: state.latestMeasurement
+        avatarUrl: user?.avatar || ''
       });
-    });
 
-    this.loadData();
+      this.unsubscribe = app.store.subscribe(state => {
+        const user = state.user;
+        this.setData({
+          user,
+          displayName: user?.nickname || user?.email || '默认用户',
+          avatarText: user?.email ? user.email[0].toUpperCase() : '👤',
+          avatarUrl: user?.avatar || '',
+          latestMeasurement: state.latestMeasurement
+        });
+      });
+
+      this.loadData();
+    });
   },
 
   onShow() {
@@ -138,7 +148,7 @@ Page({
       });
     }).catch(err => {
       this.setData({ loading: false });
-      console.error('load profile data failed:', err);
+      logger.error('load profile data failed:', err);
     });
   },
 
@@ -178,6 +188,14 @@ Page({
 
   goToSettings() {
     wx.navigateTo({ url: '/pages/settings/settings' });
+  },
+
+  onQuickAccess(e) {
+    const index = e.currentTarget.dataset.index;
+    const target = this.data.quickAccess[index];
+    if (target && target.url) {
+      wx.navigateTo({ url: target.url });
+    }
   },
 
   showAboutAuthor() {

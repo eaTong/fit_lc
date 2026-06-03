@@ -66,42 +66,29 @@
   <!-- Quick Access Grid -->
   <view class="quick-access">
     <view class="section-title">快捷入口</view>
-    <view class="access-grid">
-      <view class="access-item" bindtap="goToCalendar">
-        <text class="access-icon">📋</text>
-        <text class="access-label">训练记录</text>
-      </view>
-      <view class="access-item" bindtap="goToMeasurements">
-        <text class="access-icon">📏</text>
-        <text class="access-label">围度记录</text>
-      </view>
-      <view class="access-item" bindtap="goToPlans">
-        <text class="access-icon">📅</text>
-        <text class="access-label">训练计划</text>
-      </view>
-      <view class="access-item" bindtap="goToBadges">
-        <text class="access-icon">🏆</text>
-        <text class="access-label">徽章墙</text>
-      </view>
-      <view class="access-item" bindtap="goToGallery">
-        <text class="access-icon">📷</text>
-        <text class="access-label">相册</text>
-      </view>
-      </view>
+    <t-grid col="{{5}}" border="{{false}}">
+      <t-grid-item
+        wx:for="{{quickAccess}}"
+        wx:key="label"
+        text="{{item.label}}"
+        data-index="{{index}}"
+        bind:click="onQuickAccess"
+      >
+        <view slot="image" class="quick-access-icon">{{item.icon}}</view>
+      </t-grid-item>
+    </t-grid>
   </view>
 
-  <!-- About Author -->
-  <view class="section">
-    <view class="item" bindtap="showAboutAuthor">
-      <text class="item-label">关于作者</text>
-      <view class="item-value">
-        <text class="arrow">›</text>
-      </view>
-    </view>
-  </view>
+  <!-- Navigation List - using t-cell -->
+  <t-cell-group>
+    <t-cell title="关于作者" arrow hover bindtap="showAboutAuthor" />
+  </t-cell-group>
 
   <!-- Logout Button -->
   <view class="logout-section">
-    <button class="logout-btn" bindtap="onLogout">退出登录</button>
+    <t-button theme="danger" variant="outline" size="large" block bind:tap="onLogout">退出登录</t-button>
   </view>
+
+  <!-- Toast -->
+  <t-toast id="t-toast" />
 </view>
