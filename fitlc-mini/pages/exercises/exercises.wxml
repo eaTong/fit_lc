@@ -1,58 +1,89 @@
 <view class="exercises-page">
   <!-- Header with Filters -->
   <view class="exercises-header">
-    <input
-      class="search-input"
-      placeholder="搜索动作..."
+    <t-search
       value="{{searchKeyword}}"
-      bindinput="onSearch"
+      placeholder="搜索动作..."
+      bind:change="onSearch"
     />
     <view class="filter-row">
       <view class="filter-group">
         <text class="filter-label">器械:</text>
-        <text
-          class="filter-tag {{filters.equipment === 'barbell' ? 'active' : ''}}"
+        <t-tag
+          variant="light"
+          theme="{{filters.equipment === 'barbell' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.equipment === 'barbell'}}"
           data-value="barbell"
-          bindtap="onFilterEquipment"
-        >杠铃</text>
-        <text
-          class="filter-tag {{filters.equipment === 'dumbbell' ? 'active' : ''}}"
+          bind:change="onFilterEquipment"
+        >杠铃</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.equipment === 'dumbbell' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.equipment === 'dumbbell'}}"
           data-value="dumbbell"
-          bindtap="onFilterEquipment"
-        >哑铃</text>
-        <text
-          class="filter-tag {{filters.equipment === 'cable' ? 'active' : ''}}"
+          bind:change="onFilterEquipment"
+        >哑铃</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.equipment === 'cable' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.equipment === 'cable'}}"
           data-value="cable"
-          bindtap="onFilterEquipment"
-        >绳索</text>
-        <text
-          class="filter-tag {{filters.equipment === 'machine' ? 'active' : ''}}"
+          bind:change="onFilterEquipment"
+        >绳索</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.equipment === 'machine' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.equipment === 'machine'}}"
           data-value="machine"
-          bindtap="onFilterEquipment"
-        >器械</text>
-        <text
-          class="filter-tag {{filters.equipment === 'bodyweight' ? 'active' : ''}}"
+          bind:change="onFilterEquipment"
+        >器械</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.equipment === 'bodyweight' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.equipment === 'bodyweight'}}"
           data-value="bodyweight"
-          bindtap="onFilterEquipment"
-        >自重</text>
+          bind:change="onFilterEquipment"
+        >自重</t-tag>
       </view>
       <view class="filter-group">
         <text class="filter-label">难度:</text>
-        <text
-          class="filter-tag {{filters.difficulty === 'beginner' ? 'active' : ''}}"
+        <t-tag
+          variant="light"
+          theme="{{filters.difficulty === 'beginner' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.difficulty === 'beginner'}}"
           data-value="beginner"
-          bindtap="onFilterDifficulty"
-        >初级</text>
-        <text
-          class="filter-tag {{filters.difficulty === 'intermediate' ? 'active' : ''}}"
+          bind:change="onFilterDifficulty"
+        >初级</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.difficulty === 'intermediate' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.difficulty === 'intermediate'}}"
           data-value="intermediate"
-          bindtap="onFilterDifficulty"
-        >中级</text>
-        <text
-          class="filter-tag {{filters.difficulty === 'advanced' ? 'active' : ''}}"
+          bind:change="onFilterDifficulty"
+        >中级</t-tag>
+        <t-tag
+          variant="light"
+          theme="{{filters.difficulty === 'advanced' ? 'primary' : 'default'}}"
+          size="medium"
+          checkable
+          checked="{{filters.difficulty === 'advanced'}}"
           data-value="advanced"
-          bindtap="onFilterDifficulty"
-        >高级</text>
+          bind:change="onFilterDifficulty"
+        >高级</t-tag>
       </view>
     </view>
   </view>
@@ -133,18 +164,16 @@
             <view class="exercise-content">
               <text class="exercise-name">{{item.name}}</text>
               <view class="exercise-tags">
-                <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+                <t-tag wx:for="{{item.tags}}" wx:key="*this" variant="light" size="small" theme="primary">{{item}}</t-tag>
               </view>
               <text class="exercise-desc">{{item.steps}}</text>
             </view>
             <text class="arrow">›</text>
           </view>
         </view>
-        <view wx:if="{{loading}}" class="loading">加载中...</view>
-        <view wx:if="{{loadingMore}}" class="loading-more">加载更多...</view>
-        <view wx:if="{{!loading && !loadingMore && exercises.length === 0}}" class="empty">
-          暂无动作
-        </view>
+        <t-loading wx:if="{{loading}}" theme="circular" size="medium" text="加载中..." />
+        <t-loading wx:if="{{loadingMore}}" theme="circular" size="small" text="加载更多..." />
+        <t-empty wx:if="{{!loading && !loadingMore && exercises.length === 0}}" icon="search" description="暂无动作" />
         <view wx:if="{{!hasMore && exercises.length > 0}}" class="no-more">
           没有更多了
         </view>

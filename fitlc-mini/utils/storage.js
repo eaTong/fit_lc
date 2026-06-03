@@ -1,4 +1,5 @@
 // fitlc-mini/utils/storage.js
+const logger = require('./logger');
 
 const CACHE_KEY = 'fitlc_messages';
 
@@ -17,7 +18,7 @@ function getCachedMessages() {
     const data = wx.getStorageSync(CACHE_KEY);
     return data ? JSON.parse(data) : [];
   } catch (e) {
-    console.error('getCachedMessages failed:', e);
+    logger.error('getCachedMessages failed:', e);
     return null;
   }
 }
@@ -32,7 +33,7 @@ function setCachedMessages(messages) {
     wx.setStorageSync(CACHE_KEY, JSON.stringify(messages));
     return true;
   } catch (e) {
-    console.error('setCachedMessages failed:', e);
+    logger.error('setCachedMessages failed:', e);
     return false;
   }
 }
@@ -48,7 +49,7 @@ function getToolsHistory(toolType) {
     const data = wx.getStorageSync(key);
     return data ? JSON.parse(data) : [];
   } catch (e) {
-    console.error('getToolsHistory failed:', e);
+    logger.error('getToolsHistory failed:', e);
     return [];
   }
 }
@@ -65,7 +66,7 @@ function saveToolsHistory(toolType, history) {
     wx.setStorageSync(key, JSON.stringify(history));
     return true;
   } catch (e) {
-    console.error('saveToolsHistory failed:', e);
+    logger.error('saveToolsHistory failed:', e);
     return false;
   }
 }
@@ -79,7 +80,7 @@ function getRecentExercises() {
     const data = wx.getStorageSync(RECENT_EXERCISES_KEY);
     return data ? JSON.parse(data) : [];
   } catch (e) {
-    console.error('getRecentExercises failed:', e);
+    logger.error('getRecentExercises failed:', e);
     return [];
   }
 }
@@ -96,7 +97,7 @@ function saveRecentExercises(exercises) {
     wx.setStorageSync(RECENT_EXERCISES_KEY, JSON.stringify(trimmed));
     return true;
   } catch (e) {
-    console.error('saveRecentExercises failed:', e);
+    logger.error('saveRecentExercises failed:', e);
     return false;
   }
 }

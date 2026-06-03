@@ -1,5 +1,6 @@
 const { recordActions } = require('../../../store/actions');
 const { authActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -98,21 +99,23 @@ Component({
     },
 
     fetchRecords() {
-      if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/login' });
-        return;
-      }
+      authActions.checkAuth().then(isAuth => {
+        if (!isAuth) {
+          wx.redirectTo({ url: '/pages/login/login' });
+          return;
+        }
 
-      Promise.all([
-        recordActions.fetchWorkouts(),
-        recordActions.fetchMeasurements()
-      ]).then(([workouts, measurements]) => {
-        this.buildAllRecords(workouts, measurements);
-        this.setData({ loading: false });
-      }).catch(err => {
-        this.setData({ loading: false });
-        console.error('fetch records failed:', err);
-        wx.showToast({ title: '加载失败', icon: 'none' });
+        Promise.all([
+          recordActions.fetchWorkouts(),
+          recordActions.fetchMeasurements()
+        ]).then(([workouts, measurements]) => {
+          this.buildAllRecords(workouts, measurements);
+          this.setData({ loading: false });
+        }).catch(err => {
+          this.setData({ loading: false });
+          logger.error('fetch records failed:', err);
+          wx.showToast({ title: '加载失败', icon: 'none' });
+        });
       });
     },
 
@@ -291,7 +294,7 @@ Component({
       ]).then(([workouts, measurements]) => {
         this.buildAllRecords(workouts, measurements);
       }).catch(err => {
-        console.error('fetch records failed:', err);
+        logger.error('fetch records failed:', err);
       });
     },
 

@@ -1,4 +1,5 @@
 const { planActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -63,7 +64,7 @@ Component({
         }
         this.initCalendar();
       }).catch(err => {
-        console.error('fetchPlan failed:', err);
+        logger.error('fetchPlan failed:', err);
         this.setData({ isLoading: false, error: err.message || '加载失败' });
       });
     },
@@ -73,7 +74,7 @@ Component({
         this.setData({ analysis });
         this.buildCalendarData();
       }).catch(err => {
-        console.error('analyzeExecution failed:', err);
+        logger.error('analyzeExecution failed:', err);
       });
     },
 
@@ -100,7 +101,7 @@ Component({
         this.fetchPlanDetail(planId);
       }).catch(err => {
         wx.hideLoading();
-        console.error('activatePlan failed:', err);
+        logger.error('activatePlan failed:', err);
         wx.showToast({ title: err.message || '激活失败', icon: 'none' });
       });
     },

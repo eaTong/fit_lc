@@ -1,5 +1,6 @@
 const { achievementActions } = require('../../../store/actions');
 const { authActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -36,25 +37,27 @@ Component({
     },
 
     fetchAllBadges() {
-      if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/login' });
-        return;
-      }
+      authActions.checkAuth().then(isAuth => {
+        if (!isAuth) {
+          wx.redirectTo({ url: '/pages/login/login' });
+          return;
+        }
 
-      achievementActions.fetchAllBadges().then(badges => {
-        const categoryList = this.buildCategoryList(badges);
-        const earnedCount = badges.filter(b => b.earned).length;
-        this.setData({
-          badges,
-          categoryList,
-          earnedCount,
-          totalCount: badges.length,
-          loading: false
+        achievementActions.fetchAllBadges().then(badges => {
+          const categoryList = this.buildCategoryList(badges);
+          const earnedCount = badges.filter(b => b.earned).length;
+          this.setData({
+            badges,
+            categoryList,
+            earnedCount,
+            totalCount: badges.length,
+            loading: false
+          });
+        }).catch(err => {
+          this.setData({ loading: false });
+          logger.error('fetch badges failed:', err);
+          wx.showToast({ title: '加载失败', icon: 'none' });
         });
-      }).catch(err => {
-        this.setData({ loading: false });
-        console.error('fetch badges failed:', err);
-        wx.showToast({ title: '加载失败', icon: 'none' });
       });
     },
 

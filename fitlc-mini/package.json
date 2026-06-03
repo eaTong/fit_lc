@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.29.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "tdesign-miniprogram": "^1.15.0"
   }
 }

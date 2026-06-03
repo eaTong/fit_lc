@@ -1,4 +1,5 @@
 const { exerciseActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -59,7 +60,7 @@ Component({
         }
         this.loadRelatedExercises(exercise);
       }).catch(err => {
-        console.error('fetchExercise failed:', err);
+        logger.error('fetchExercise failed:', err);
         this.setData({ isLoading: false, error: err.message || '加载失败' });
       });
     },
@@ -82,7 +83,7 @@ Component({
 
         this.setData({ relatedExercises: related });
       }).catch(err => {
-        console.error('fetch related exercises failed:', err);
+        logger.error('fetch related exercises failed:', err);
       });
     },
 

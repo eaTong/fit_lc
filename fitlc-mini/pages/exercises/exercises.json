@@ -1,4 +1,10 @@
 {
   "navigationBarTitleText": "动作",
-  "navigationBarBackgroundColor": "#0A0A0A"
+  "navigationBarBackgroundColor": "#0A0A0A",
+  "usingComponents": {
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-empty": "tdesign-miniprogram/empty/empty",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-search": "tdesign-miniprogram/search/search"
+  }
 }

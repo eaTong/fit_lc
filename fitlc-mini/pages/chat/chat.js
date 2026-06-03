@@ -3,7 +3,8 @@ const { recordActions } = require('../../store/actions');
 const { authActions } = require('../../store/actions');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
-const markdown = require('../../utils/markdown');
+const { parseToHtml, parseToText } = require('../../utils/markdown');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -12,7 +13,8 @@ Page({
     isLoading: false,
     isRecording: false,
     inputMode: 'text',  // 'text' | 'voice'
-    scrollTop: 0,
+    scrollToId: '',
+    recorderManager: null,
     user: null,
     pendingImages: [],  // 待发送的图片列表
     celebrationQueue: [],    // 待展示的成就队列
@@ -22,10 +24,22 @@ Page({
     showHistoryManager: false, // 历史管理弹窗是否显示
     statusBarHeight: 20,       // 状态栏高度
     safeAreaTop: 0,            // 安全区域顶部 inset
-    markdown: markdown         // 将 markdown 工具暴露到模板用于 rich-text
+    parseToHtml: parseToHtml   // 将 markdown 工具暴露到模板用于 rich-text
   },
 
   onLoad() {
+    // 创建录制管理器
+    const recorderManager = wx.getRecorderManager();
+    recorderManager.onStop((res) => {
+      this.tempRecorderPath = res.tempFilePath;
+    });
+    recorderManager.onError((err) => {
+      logger.error('recorder error:', err);
+      this.setData({ isRecording: false });
+      this.showToast('录音失败', 'error');
+    });
+    this.setData({ recorderManager });
+
     // 获取安全区域和状态栏高度
     const systemInfo = wx.getSystemInfoSync();
     const safeArea = systemInfo.safeArea;
@@ -70,19 +84,24 @@ Page({
     if (this.unsubscribe) {
       this.unsubscribe();
     }
+    // 停止录音（如果正在录音）
+    if (this.data.isRecording && this.data.recorderManager) {
+      this.data.recorderManager.stop();
+    }
+    if (this.recordingTimer) {
+      clearTimeout(this.recordingTimer);
+      this.recordingTimer = null;
+    }
   },
 
   loadMessages() {
-    console.log('Loading messages...');
+    logger.log('Loading messages...');
     chatActions.loadMessages(50)
       .then(messages => {
-        console.log('[Chat] Messages loaded:', messages.length);
-        messages.forEach((m, i) => {
-          console.log(`[Chat] Msg ${i}: role=${m.role}, content=${(m.content || '').substring(0, 50)}, toolData=${!!m.toolData}, aiReply=${m.toolData?.aiReply?.substring(0, 50)}`);
-        });
+        logger.log('[Chat] Messages loaded:', messages.length);
       })
       .catch(err => {
-        console.error('load messages failed:', err);
+        logger.error('load messages failed:', err);
       });
   },
 
@@ -113,12 +132,12 @@ Page({
 
   sendVoiceMessage() {
     if (!this.tempRecorderPath) {
-      wx.showToast({ title: '录音文件不存在', icon: 'none' });
+      this.showToast('录音文件不存在', 'error');
       return;
     }
 
     this.setData({ isLoading: true });
-    wx.showToast({ title: '语音上传中...', icon: 'loading' });
+    this.showToast('语音上传中...', 'loading');
 
     const { upload } = require('../../api/client');
     upload('/upload/audio', this.tempRecorderPath, 'file').then(uploadRes => {
@@ -128,27 +147,27 @@ Page({
         this.scrollToBottom();
       }).catch(err => {
         this.setData({ isLoading: false });
-        wx.showToast({ title: '发送失败', icon: 'none' });
+        this.showToast('发送失败', 'error');
       });
     }).catch(err => {
-      console.error('upload voice failed:', err);
+      logger.error('upload voice failed:', err);
       this.setData({ isLoading: false });
-      wx.showToast({ title: '语音上传失败', icon: 'none' });
+      this.showToast('语音上传失败', 'error');
     });
   },
 
   startRecording() {
     this.tempRecorderPath = null;
-    wx.startRecord({
-      success: (res) => {
-        this.tempRecorderPath = res.tempFilePath;
-        this.setData({ isRecording: true });
-      },
-      fail: (err) => {
-        console.error('start record failed:', err);
-        wx.showToast({ title: '录音失败', icon: 'none' });
-      }
+    const recorderManager = this.data.recorderManager;
+    if (!recorderManager) {
+      this.showToast('录音功能不可用', 'error');
+      return;
+    }
+    recorderManager.start({
+      format: 'mp3',
+      duration: 60000
     });
+    this.setData({ isRecording: true });
 
     this.recordingTimer = setTimeout(() => {
       this.stopRecording();
@@ -156,16 +175,10 @@ Page({
   },
 
   stopRecording() {
-    wx.stopRecord({
-      success: (res) => {
-        if (!this.tempRecorderPath) {
-          this.tempRecorderPath = res.tempFilePath;
-        }
-      },
-      fail: (err) => {
-        console.error('stop record failed:', err);
-      }
-    });
+    const recorderManager = this.data.recorderManager;
+    if (recorderManager) {
+      recorderManager.stop();
+    }
     this.setData({ isRecording: false });
     if (this.recordingTimer) {
       clearTimeout(this.recordingTimer);
@@ -211,15 +224,15 @@ Page({
             // 检查是否有上传失败的图片
             const failedImages = uploadedImages.filter(img => img.error);
             if (failedImages.length > 0) {
-              wx.showToast({ title: `${failedImages.length}张图片上传失败`, icon: 'none' });
+              this.showToast(`${failedImages.length}张图片上传失败`, 'error');
               // 移除上传失败的图片
               const successPaths = uploadedImages.filter(img => !img.error).map(img => img.path);
               const remainingImages = allImages.filter(img => successPaths.includes(img.path));
               this.setData({ pendingImages: remainingImages });
             }
           }).catch(err => {
-            console.error('Upload images failed:', err);
-            wx.showToast({ title: '图片上传失败', icon: 'none' });
+            logger.error('Upload images failed:', err);
+            this.showToast('图片上传失败', 'error');
           });
         }
       }
@@ -326,7 +339,7 @@ Page({
 
   // 处理发送错误
   handleSendError(err, tempId) {
-    console.error('send message failed:', err);
+    logger.error('send message failed:', err);
     // 清空待发送图片，避免重新发送
     this.setData({ isLoading: false, pendingImages: [] });
     // 用真实ID替换临时ID
@@ -339,7 +352,7 @@ Page({
       this.setMessages(newMessages);
     }
     this.setData({ inputValue: this.data.messages.find(m => m.id === tempId)?.content || '' });
-    wx.showToast({ title: '发送失败', icon: 'none' });
+    this.showToast('发送失败', 'error');
   },
 
   // 统一设置消息并同步到store
@@ -393,7 +406,7 @@ Page({
     }
 
     if (queue.length > 0) {
-      console.log('Achievements detected, adding to queue:', queue);
+      logger.log('Achievements detected, adding to queue:', queue);
       this.setData({ celebrationQueue: queue });
       this.showNextCelebration();
     }
@@ -422,9 +435,26 @@ Page({
     setTimeout(() => this.showNextCelebration(), 300);
   },
 
-  // 右上角菜单点击
+  // 右上角菜单点击 - 使用 t-action-sheet
   onMenuTap() {
-    this.setData({ showMenu: !this.data.showMenu });
+    this.setData({ showMenu: true });
+    this.selectComponent('#t-action-sheet').show({
+      items: [
+        { label: '历史管理', value: 'history' },
+        { label: '清空全部记录', value: 'clearall', color: '#e34d59' }
+      ]
+    });
+  },
+
+  // t-action-sheet 选择回调
+  onActionSheetSelect(e) {
+    const { value } = e.detail;
+    this.setData({ showMenu: false });
+    if (value === 'history') {
+      this.onShowHistoryManager();
+    } else if (value === 'clearall') {
+      this.onClearAllMessages();
+    }
   },
 
   // 关闭菜单
@@ -449,10 +479,10 @@ Page({
       // 从消息列表中移除
       const messages = this.data.messages.filter(m => m.id !== messageId);
       this.setData({ messages });
-      wx.showToast({ title: '已删除', icon: 'success' });
+      this.showToast('已删除', 'success');
     }).catch(err => {
-      console.error('delete message failed:', err);
-      wx.showToast({ title: '删除失败', icon: 'none' });
+      logger.error('delete message failed:', err);
+      this.showToast('删除失败', 'error');
     });
   },
 
@@ -465,10 +495,10 @@ Page({
         if (res.confirm) {
           chatActions.clearAllMessages().then(() => {
             this.setData({ messages: [], showMenu: false, showHistoryManager: false });
-            wx.showToast({ title: '已清空', icon: 'success' });
+            this.showToast('已清空', 'success');
           }).catch(err => {
-            console.error('clear all messages failed:', err);
-            wx.showToast({ title: '清空失败', icon: 'none' });
+            logger.error('clear all messages failed:', err);
+            this.showToast('清空失败', 'error');
           });
         }
       }
@@ -478,31 +508,31 @@ Page({
   // 上传所有待发送的图片
   uploadPendingImages() {
     const { pendingImages } = this.data;
-    console.log('[Chat] uploadPendingImages called, pendingImages:', JSON.stringify(pendingImages));
+    logger.log('[Chat] uploadPendingImages called, pendingImages:', JSON.stringify(pendingImages));
     // 如果已有上传过的图片，直接返回URLs
     const uploadedUrls = pendingImages.filter(img => img.uploaded && img.url).map(img => img.url);
-    console.log('[Chat] Already uploaded URLs:', uploadedUrls);
+    logger.log('[Chat] Already uploaded URLs:', uploadedUrls);
     const toUpload = pendingImages.filter(img => !img.uploaded);
-    console.log('[Chat] Images to upload:', toUpload.length);
+    logger.log('[Chat] Images to upload:', toUpload.length);
 
     if (toUpload.length === 0) {
-      console.log('[Chat] All images already uploaded, returning:', uploadedUrls);
+      logger.log('[Chat] All images already uploaded, returning:', uploadedUrls);
       return Promise.resolve(uploadedUrls);
     }
 
     const { upload } = require('../../api/client');
 
     return Promise.all(toUpload.map(img => {
-      console.log('[Chat] Uploading:', img.path);
+      logger.log('[Chat] Uploading:', img.path);
       return upload('/upload/image', img.path, 'file').then(res => {
-        console.log('[Chat] Upload success:', res.url);
+        logger.log('[Chat] Upload success:', res.url);
         return res.url;
       }).catch(err => {
-        console.error('[Chat] Upload failed:', err);
+        logger.error('[Chat] Upload failed:', err);
         throw err;
       });
     })).then(urls => {
-      console.log('[Chat] All uploads complete, URLs:', urls);
+      logger.log('[Chat] All uploads complete, URLs:', urls);
       // 合并已上传和新上传的URL
       return [...uploadedUrls, ...urls];
     });
@@ -527,8 +557,11 @@ Page({
   },
 
   scrollToBottom() {
+    const messages = this.data.messages;
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
     setTimeout(() => {
-      this.setData({ scrollTop: 999999 });
+      this.setData({ scrollToId: 'msg-' + lastMsg.id });
     }, 100);
   },
 
@@ -536,40 +569,20 @@ Page({
     return format.formatRelativeTime(timestamp);
   },
 
-  // 解析 Markdown 格式文本为可显示格式
-  parseMarkdown(text) {
-    if (!text) return '';
-    let result = text;
+  // 使用统一的 markdown 解析工具
+  parseToHtml(text) {
+    return parseToHtml(text);
+  },
 
-    // 代码块：```code``` -> 「代码」
-    result = result.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-      return `「代码」${code.trim()}「/代码」`;
-    });
+  parseToText(text) {
+    return parseToText(text);
+  },
 
-    // 行内代码：`code` -> 『code』
-    result = result.replace(/`([^`]+)`/g, '『$1』');
-
-    // 加粗：**text** 或 __text__ -> 【text】
-    result = result.replace(/\*\*([^*]+)\*\*/g, '【$1】');
-    result = result.replace(/__([^_]+)__/g, '【$1】');
-
-    // 斜体：*text* 或 _text_ -> _$1_
-    result = result.replace(/\*([^*]+)\*/g, '_$1_');
-    result = result.replace(/_([^_]+)_/g, '_$1_');
-
-    // 标题：# title -> 【标题】
-    result = result.replace(/^### (.+)$/gm, '【副标题】$1');
-    result = result.replace(/^## (.+)$/gm, '【小标题】$1');
-    result = result.replace(/^# (.+)$/gm, '【标题】$1');
-
-    // 分隔线：--- -> ───
-    result = result.replace(/^---$/gm, '──────────');
-
-    // 列表：- item -> • item
-    result = result.replace(/^[•\-\*] (.+)$/gm, '• $1');
-    // 有序列表：1. item
-    result = result.replace(/^\d+\. (.+)$/gm, '$1.');
-
-    return result;
+  // Toast 便捷方法
+  showToast(message, theme) {
+    const toast = this.selectComponent('#t-toast');
+    if (toast) {
+      toast.show({ message, theme: theme || 'none' });
+    }
   }
 });

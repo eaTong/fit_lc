@@ -1,5 +1,6 @@
 const { recordActions } = require('../../store/actions');
 const storage = require('../../utils/storage');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -99,7 +100,7 @@ Page({
       this.saveToLocal({ ...workoutData, savedToServer: true });
       this.goBack();
     }).catch(err => {
-      console.error('save failed:', err);
+      logger.error('save failed:', err);
       this.saveToLocal({ ...workoutData, savedToServer: false });
       this.goBack();
     });

@@ -1,5 +1,6 @@
 // Measurements Page - 围度记录页
 const { recordActions, authActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 // 部位映射
 const PART_MAP = {
@@ -97,38 +98,40 @@ Component({
     },
 
     fetchData() {
-      if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/login' });
-        return;
-      }
-
-      const { dateRange } = this.data;
-      const end = new Date();
-      const start = new Date();
-      start.setDate(start.getDate() - parseInt(dateRange));
-
-      Promise.all([
-        recordActions.fetchMeasurements(),
-        recordActions.fetchLatestMeasurement(),
-        recordActions.fetchWorkouts(
-          start.toISOString().split('T')[0],
-          end.toISOString().split('T')[0]
-        )
-      ]).then(([measurements, latestMeasurement, workouts]) => {
-        this.setData({
-          measurements: measurements || [],
-          latestMeasurement: latestMeasurement || this.getLatestFromList(measurements),
-          workouts: workouts || [],
-          loading: false
-        });
-        this.updateEmptyState();
-        if (this.data.activeTab === 'trend') {
-          this.processTrendData();
+      authActions.checkAuth().then(isAuth => {
+        if (!isAuth) {
+          wx.redirectTo({ url: '/pages/login/login' });
+          return;
         }
-      }).catch(err => {
-        this.setData({ loading: false });
-        console.error('fetch measurements failed:', err);
-        wx.showToast({ title: '加载失败', icon: 'none' });
+
+        const { dateRange } = this.data;
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - parseInt(dateRange));
+
+        Promise.all([
+          recordActions.fetchMeasurements(),
+          recordActions.fetchLatestMeasurement(),
+          recordActions.fetchWorkouts(
+            start.toISOString().split('T')[0],
+            end.toISOString().split('T')[0]
+          )
+        ]).then(([measurements, latestMeasurement, workouts]) => {
+          this.setData({
+            measurements: measurements || [],
+            latestMeasurement: latestMeasurement || this.getLatestFromList(measurements),
+            workouts: workouts || [],
+            loading: false
+          });
+          this.updateEmptyState();
+          if (this.data.activeTab === 'trend') {
+            this.processTrendData();
+          }
+        }).catch(err => {
+          this.setData({ loading: false });
+          logger.error('fetch measurements failed:', err);
+          wx.showToast({ title: '加载失败', icon: 'none' });
+        });
       });
     },
 

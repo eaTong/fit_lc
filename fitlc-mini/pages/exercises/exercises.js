@@ -1,5 +1,6 @@
 const { exerciseActions } = require('../../store/actions');
 const { authActions } = require('../../store/actions');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -21,25 +22,28 @@ Page({
     muscleExpanded: false,
     pageSize: 20,
     page: 1,
-    hasMore: true
+    hasMore: true,
+    searchTimer: null
   },
 
   onLoad() {
-    if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/login' });
-      return;
-    }
-    this.loadData();
+    authActions.checkAuth().then(isAuth => {
+      if (!isAuth) {
+        wx.redirectTo({ url: '/pages/login/login' });
+        return;
+      }
+      this.loadData();
+    });
   },
 
   loadData() {
     this.setData({ loading: true });
-    console.log('[Exercises] Starting to load data...');
+    logger.log('[Exercises] Starting to load data...');
     Promise.all([
       exerciseActions.fetchExercises(1, 20),
       exerciseActions.fetchHierarchy()
     ]).then(([result, hierarchy]) => {
-      console.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
+      logger.log('[Exercises] Data loaded:', { exercisesCount: result?.exercises?.length, total: result?.pagination?.total, hierarchyCount: hierarchy?.length });
       const expandedMuscles = hierarchy.filter(m => m.children && m.children.length > 0).map(m => m.id);
       const exercisesWithTags = this.addExerciseTags(result.exercises);
       this.setData({
@@ -53,7 +57,7 @@ Page({
       });
     }).catch(err => {
       this.setData({ loading: false });
-      console.error('load exercises failed:', err);
+      logger.error('load exercises failed:', err);
     });
   },
 
@@ -153,13 +157,16 @@ Page({
   },
 
   onSearch(e) {
-    const keyword = e.detail.value;
+    const keyword = e.detail.value || e.detail;
     this.setData({ searchKeyword: keyword });
-    this.filterExercises();
+    if (this.data.searchTimer) clearTimeout(this.data.searchTimer);
+    this.setData({ searchTimer: setTimeout(() => {
+      this.filterExercises();
+    }, 300) });
   },
 
   onFilterEquipment(e) {
-    const equipment = e.currentTarget.dataset.value;
+    const equipment = e.currentTarget.dataset.value || e.detail?.value;
     const current = this.data.filters.equipment;
     this.setData({
       filters: { ...this.data.filters, equipment: current === equipment ? '' : equipment }
@@ -168,7 +175,7 @@ Page({
   },
 
   onFilterDifficulty(e) {
-    const difficulty = e.currentTarget.dataset.value;
+    const difficulty = e.currentTarget.dataset.value || e.detail?.value;
     const current = this.data.filters.difficulty;
     this.setData({
       filters: { ...this.data.filters, difficulty: current === difficulty ? '' : difficulty }
@@ -202,7 +209,7 @@ Page({
         loading: false
       });
     }).catch(err => {
-      console.error('filter exercises failed:', err);
+      logger.error('filter exercises failed:', err);
       this.setData({ loading: false });
     });
   },
@@ -233,7 +240,7 @@ Page({
         loadingMore: false
       });
     }).catch(err => {
-      console.error('load more failed:', err);
+      logger.error('load more failed:', err);
       this.setData({ loadingMore: false });
     });
   },

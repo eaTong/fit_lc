@@ -1,4 +1,5 @@
 const { planActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -63,7 +64,7 @@ Component({
     },
 
     onTabChange(e) {
-      const tab = e.currentTarget.dataset.id;
+      const tab = e.detail.value;
       this.setData({ activeTab: tab }, () => {
         this.updateFilteredPlans();
       });

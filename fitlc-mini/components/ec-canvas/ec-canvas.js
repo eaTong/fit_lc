@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 // ECharts for WeChat Mini Program
 // https://github.com/ecomfe/echarts-for-weixin
 
@@ -27,7 +28,7 @@ Component({
   lifetimes: {
     attached() {
       if (!this.data.ec) {
-        console.warn('Set ec property on echarts component to bind data');
+        logger.warn('Set ec property on echarts component to bind data');
         return;
       }
       this.init();
@@ -50,7 +51,7 @@ Component({
       const query = wx.createSelectorQuery().in(this);
       query.select(`#${this.data.canvasId}`).node((res) => {
         if (!res || !res.node) {
-          console.error('Canvas not found');
+          logger.error('Canvas not found');
           return;
         }
 

@@ -5,8 +5,8 @@ Component({
       value: false
     },
     messages: {
-      type: Object,
-      value: {}
+      type: Array,
+      value: []
     }
   },
 

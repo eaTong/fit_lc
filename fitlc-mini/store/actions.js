@@ -4,6 +4,7 @@ const config = require('../config');
 const { get, post, put, upload, del } = require('../api/client');
 const albumActions = require('../api/album');
 const chatActions = require('../api/chat');
+const logger = require('../utils/logger');
 
 // 获取全局 store 实例
 function getStore() {
@@ -39,7 +40,7 @@ const authActions = {
       return true;
     } catch (err) {
       // token 无效，清除并返回 false
-      console.log('[Auth] Token invalid, clearing...');
+      logger.log('[Auth] Token invalid, clearing...');
       wx.removeStorageSync(config.STORAGE_KEY.TOKEN);
       wx.removeStorageSync(config.STORAGE_KEY.USER);
       getStore().setState({ token: null, user: null });
@@ -186,9 +187,9 @@ const planActions = {
 // Exercise Actions
 const exerciseActions = {
   fetchExercises(page = 1, pageSize = 20, filters = {}) {
-    console.log('[ExerciseActions] fetchExercises called, page:', page, 'filters:', filters);
+    logger.log('[ExerciseActions] fetchExercises called, page:', page, 'filters:', filters);
     return get('/exercises', { page, pageSize, ...filters }).then(res => {
-      console.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length, 'total:', res?.pagination?.total);
+      logger.log('[ExerciseActions] fetchExercises result:', res?.exercises?.length, 'total:', res?.pagination?.total);
       return res;
     });
   },
@@ -198,9 +199,9 @@ const exerciseActions = {
   },
 
   fetchHierarchy() {
-    console.log('[ExerciseActions] fetchHierarchy called');
+    logger.log('[ExerciseActions] fetchHierarchy called');
     return get('/muscles/hierarchy').then(res => {
-      console.log('[ExerciseActions] fetchHierarchy result:', res?.hierarchy?.length);
+      logger.log('[ExerciseActions] fetchHierarchy result:', res?.hierarchy?.length);
       return res.hierarchy || [];
     });
   }
@@ -226,16 +227,16 @@ const chatActionsExtended = {
   ...chatActions,
 
   loadMessages(limit = 50) {
-    console.log('[ChatActions] loadMessages called, limit:', limit);
+    logger.log('[ChatActions] loadMessages called, limit:', limit);
     getStore().setState({ isLoading: true });
     return chatActions.fetchMessages(limit)
       .then(messages => {
-        console.log('[ChatActions] messages fetched:', messages.length, JSON.stringify(messages));
+        logger.log('[ChatActions] messages fetched:', messages.length, JSON.stringify(messages));
         getStore().setState({ chatMessages: messages, isLoading: false });
         return messages;
       })
       .catch(err => {
-        console.error('[ChatActions] loadMessages error:', err);
+        logger.error('[ChatActions] loadMessages error:', err);
         getStore().setState({ isLoading: false });
         throw err;
       });

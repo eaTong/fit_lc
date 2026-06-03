@@ -1,5 +1,6 @@
 // Gallery Page - 相册页
 const { albumActions, authActions } = require('../../../store/actions');
+const logger = require('../../../utils/logger');
 
 Component({
   data: {
@@ -48,25 +49,27 @@ Component({
     },
 
     fetchPhotos() {
-      if (!authActions.checkAuth()) {
-        wx.redirectTo({ url: '/pages/login/login' });
-        return;
-      }
+      authActions.checkAuth().then(isAuth => {
+        if (!isAuth) {
+          wx.redirectTo({ url: '/pages/login/login' });
+          return;
+        }
 
-      albumActions.fetchPhotosPaginated(null, 50).then(res => {
-        const groupedPhotos = this.groupPhotosByMonth(res.photos);
-        this.setData({
-          photos: res.photos || [],
-          groupedPhotos,
-          cursor: res.nextCursor,
-          hasMore: res.hasMore,
-          loading: false
+        albumActions.fetchPhotosPaginated(null, 50).then(res => {
+          const groupedPhotos = this.groupPhotosByMonth(res.photos);
+          this.setData({
+            photos: res.photos || [],
+            groupedPhotos,
+            cursor: res.nextCursor,
+            hasMore: res.hasMore,
+            loading: false
+          });
+          this.updateEmptyState();
+        }).catch(err => {
+          this.setData({ loading: false });
+          logger.error('fetch photos failed:', err);
+          wx.showToast({ title: '加载失败', icon: 'none' });
         });
-        this.updateEmptyState();
-      }).catch(err => {
-        this.setData({ loading: false });
-        console.error('fetch photos failed:', err);
-        wx.showToast({ title: '加载失败', icon: 'none' });
       });
     },
 
@@ -87,7 +90,7 @@ Component({
         });
       }).catch(err => {
         this.setData({ loadingMore: false });
-        console.error('fetch more photos failed:', err);
+        logger.error('fetch more photos failed:', err);
       });
     },
 
@@ -147,7 +150,7 @@ Component({
         this.updateEmptyState();
         wx.showToast({ title: '删除成功', icon: 'success' });
       }).catch(err => {
-        console.error('delete photo failed:', err);
+        logger.error('delete photo failed:', err);
         wx.showToast({ title: '删除失败', icon: 'none' });
       });
     },
@@ -174,7 +177,7 @@ Component({
         wx.showToast({ title: '上传成功', icon: 'success' });
       }).catch(err => {
         this.setData({ uploading: false });
-        console.error('upload photo failed:', err);
+        logger.error('upload photo failed:', err);
         wx.showToast({ title: '上传失败', icon: 'none' });
       });
     },

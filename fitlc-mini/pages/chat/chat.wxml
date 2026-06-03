@@ -17,12 +17,13 @@
   <scroll-view
     class="messages-container"
     scroll-y
-    scroll-top="{{scrollTop}}"
+    scroll-into-view="{{scrollToId}}"
   >
     <view
       wx:for="{{messages}}"
       wx:key="id"
       class="message-item {{item.role}}"
+      id="msg-{{item.id}}"
     >
       <view class="message-avatar {{item.role}}">
         <image wx:if="{{item.role === 'user' && user.avatar}}" class="avatar-img" src="{{user.avatar}}" mode="aspectFill" />
@@ -76,12 +77,13 @@
         <text class="message-time">{{formatTime(item.createdAt)}}</text>
       </view>
     </view>
+
+    <!-- 空状态 -->
+    <t-empty wx:if="{{!isLoading && messages.length === 0}}" icon="chat" description="暂无聊天记录，开始对话吧" />
   </scroll-view>
 
   <!-- Loading -->
-  <view wx:if="{{isLoading}}" class="loading-indicator">
-    <text>AI 处理中...</text>
-  </view>
+  <t-loading wx:if="{{isLoading}}" theme="circular" size="medium" text="AI 处理中..." />
 
   <!-- 成就庆祝弹窗 -->
   <celebration
@@ -91,18 +93,8 @@
     bind:complete="onCelebrationComplete"
   />
 
-  <!-- 操作菜单 -->
-  <view wx:if="{{showMenu}}" class="action-menu" style="top: {{navbarHeight}}px;">
-    <view class="menu-item" bindtap="onShowHistoryManager">
-      <text>历史管理</text>
-    </view>
-    <view class="menu-item danger" bindtap="onClearAllMessages">
-      <text>清空全部记录</text>
-    </view>
-  </view>
-
-  <!-- 遮罩层 -->
-  <view wx:if="{{showMenu}}" class="menu-mask" bindtap="onCloseMenu"></view>
+  <!-- 操作菜单 - 使用 t-action-sheet -->
+  <t-action-sheet id="t-action-sheet" bind:selected="onActionSheetSelect" bind:close="onCloseMenu" />
 
   <!-- 历史管理弹窗 -->
   <history-manager
@@ -112,6 +104,9 @@
     bind:clearall="onClearAllMessages"
     bind:close="onCloseHistoryManager"
   />
+
+  <!-- Toast -->
+  <t-toast id="t-toast" />
 
   <!-- Input Area -->
   <view class="input-area">

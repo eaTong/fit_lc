@@ -11,6 +11,11 @@
     "adjustment-card": "/components/chat/adjustment-card/adjustment-card",
     "analysis-card": "/components/chat/analysis-card/analysis-card",
     "celebration": "/components/celebration/celebration",
-    "history-manager": "/components/history-manager/history-manager"
+    "history-manager": "/components/history-manager/history-manager",
+    "t-action-sheet": "tdesign-miniprogram/action-sheet/action-sheet",
+    "t-toast": "tdesign-miniprogram/toast/toast",
+    "t-dialog": "tdesign-miniprogram/dialog/dialog",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-empty": "tdesign-miniprogram/empty/empty"
   }
 }

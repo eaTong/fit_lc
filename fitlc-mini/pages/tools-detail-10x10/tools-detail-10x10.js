@@ -1,5 +1,6 @@
 const { recordActions } = require('../../store/actions');
 const storage = require('../../utils/storage');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -113,7 +114,7 @@ Page({
         });
       })
       .catch(err => {
-        console.error('search exercises failed:', err);
+        logger.error('search exercises failed:', err);
         this.setData({
           exerciseResults: [],
           showExerciseList: true,
@@ -338,7 +339,7 @@ Page({
       this.saveToLocal(workoutData);
       this.goBack();
     }).catch(err => {
-      console.error('save failed:', err);
+      logger.error('save failed:', err);
       // 保存失败时仍保存到本地
       this.saveToLocal(workoutData);
       this.goBack();

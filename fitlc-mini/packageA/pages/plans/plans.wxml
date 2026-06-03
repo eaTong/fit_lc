@@ -1,31 +1,16 @@
 <view class="page-container">
-  <!-- Tab Switcher -->
-  <view class="tab-switcher">
-    <view
-      wx:for="{{statusTabs}}"
-      wx:key="id"
-      class="tab-item {{activeTab === item.id ? 'active' : ''}}"
-      data-id="{{item.id}}"
-      bindtap="onTabChange"
-    >
-      <text class="tab-label">{{item.label}}</text>
-    </view>
-  </view>
+  <!-- Tab Switcher - using t-tabs -->
+  <t-tabs value="{{activeTab}}" bind:change="onTabChange">
+    <t-tab-panel wx:for="{{statusTabs}}" wx:key="id" label="{{item.label}}" value="{{item.id}}" />
+  </t-tabs>
 
   <!-- Loading -->
-  <view wx:if="{{isLoading}}" class="loading-container">
-    <text class="loading-text">加载中...</text>
-  </view>
+  <t-loading wx:if="{{isLoading}}" theme="circular" size="medium" text="加载中..." />
 
   <!-- Empty State -->
-  <view wx:elif="{{filteredPlans.length === 0}}" class="empty-state">
-    <text class="empty-icon">📋</text>
-    <text class="empty-title">暂无{{activeTab === 'all' ? '' : statusTabs[activeTab].label}}计划</text>
-    <text class="empty-desc">开始创建你的第一个健身计划吧</text>
-    <view class="empty-btn" bindtap="onCreatePlan">
-      <text class="btn-text">生成新计划</text>
-    </view>
-  </view>
+  <t-empty wx:elif="{{filteredPlans.length === 0}}" icon="folder" description="暂无计划，开始创建你的第一个健身计划吧">
+    <t-button slot="action" theme="primary" size="medium" bind:tap="onCreatePlan">生成新计划</t-button>
+  </t-empty>
 
   <!-- Plan Cards -->
   <view wx:else class="plans-list">

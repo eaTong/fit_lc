@@ -1,3 +1,4 @@
+const logger = require('../../utils/logger');
 const storage = require('../../utils/storage');
 
 Page({
