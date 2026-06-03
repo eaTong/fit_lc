@@ -1,5 +1,9 @@
 {
   "navigationBarTitleText": "设置",
   "navigationBarBackgroundColor": "#0A0A0A",
-  "navigationBarTextStyle": "white"
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "t-cell-group": "tdesign-miniprogram/cell-group/cell-group",
+    "t-cell": "tdesign-miniprogram/cell/cell"
+  }
 }

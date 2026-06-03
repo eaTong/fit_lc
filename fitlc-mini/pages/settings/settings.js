@@ -1,5 +1,6 @@
 const { userActions } = require('../../store/actions');
 const { authActions } = require('../../store/actions');
+const logger = require('../../utils/logger');
 
 Page({
   data: {
@@ -7,18 +8,20 @@ Page({
   },
 
   onLoad() {
-    if (!authActions.checkAuth()) {
-      wx.redirectTo({ url: '/pages/login/login' });
-      return;
-    }
-    this.loadData();
+    authActions.checkAuth().then(isAuth => {
+      if (!isAuth) {
+        wx.redirectTo({ url: '/pages/login/login' });
+        return;
+      }
+      this.loadData();
+    });
   },
 
   loadData() {
     userActions.fetchProfile().then(profile => {
       this.setData({ profile });
     }).catch(err => {
-      console.error('load settings data failed:', err);
+      logger.error('load settings data failed:', err);
     });
   },
 
@@ -38,7 +41,7 @@ Page({
           wx.showToast({ title: '上传成功', icon: 'success' });
         }).catch(err => {
           wx.hideLoading();
-          console.error('upload avatar failed:', err);
+          logger.error('upload avatar failed:', err);
           wx.showToast({ title: '上传失败', icon: 'none' });
         });
       }
@@ -158,7 +161,7 @@ Page({
       this.setData({ profile });
       wx.showToast({ title: '更新成功', icon: 'success' });
     }).catch(err => {
-      console.error('update profile failed:', err);
+      logger.error('update profile failed:', err);
       wx.showToast({ title: '更新失败', icon: 'none' });
     });
   },
@@ -170,7 +173,7 @@ Page({
       this.setData({ latestMetrics: metrics });
       wx.showToast({ title: '更新成功', icon: 'success' });
     }).catch(err => {
-      console.error('update metric failed:', err);
+      logger.error('update metric failed:', err);
       wx.showToast({ title: '更新失败', icon: 'none' });
     });
   },
@@ -180,7 +183,7 @@ Page({
       this.setData({ latestMetrics: metrics });
       wx.showToast({ title: '记录成功', icon: 'success' });
     }).catch(err => {
-      console.error('add metric failed:', err);
+      logger.error('add metric failed:', err);
       wx.showToast({ title: '记录失败', icon: 'none' });
     });
   },
