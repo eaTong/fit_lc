@@ -1,56 +1,106 @@
-# Dependencies
+# ============ Dependencies ============
 node_modules/
 
-# Environment variables
+# ============ Environment variables ============
 .env
 .env.local
 .env.test
 .env.*.local
 
-# Build outputs
+# ============ Build outputs ============
 dist/
 build/
+out/
+*.tsbuildinfo
 
-# IDE
+# ============ IDE / Editor ============
 .idea/
 .vscode/
 *.swpjixu
 *.swo
+*.swn
+.vs/
 
-# OS
+# ============ OS ============
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Logs
+# ============ Logs ============
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Test coverage
+# ============ Test & Coverage ============
 coverage/
+*.lcov
+.nyc_output/
 
-# Playwright
+# ============ Playwright / E2E ============
 .playwright-mcp/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.last-run.json
+test-results/
 
-# Superpowers
+# ============ Cache ============
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.cache/
+.turbo/
+.nx/cache/
+
+# ============ Tooling / Workspace ============
 .superpowers/
+.workbuddy/
+.claude/worktrees/
 
-# Backend
+# ============ Backend (Node + Prisma) ============
 backend/node_modules/
+backend/dist/
+backend/coverage/
 backend/logs/
 backend/test-results/
 backend/prisma/test.db
+backend/prisma/*.db
+backend/prisma/*.db-journal
 
 # AI 生成的数据
 backend/output/*.json
 !backend/output/.gitkeep
+backend/scripts/output/
 
-# Frontend
+# 上传的临时文件
+backend/public/uploads/
+backend/tmp/
+
+# ============ Frontend (React + Vite) ============
 frontend/node_modules/
 frontend/dist/
+frontend/coverage/
 frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/.env
+frontend/.env.local
 
-# Mini Program
+# ============ WeChat Mini Program (fitlc-mini) ============
 fitlc-mini/node_modules/
+# npm 构建产物
+fitlc-mini/miniprogram_npm/
+fitlc-mini/test-results/
+fitlc-mini/coverage/
+fitlc-mini/dist/
+# 微信开发者工具私有配置（本地 AppID / 编译选项等）
+fitlc-mini/project.private.config.json
+fitlc-mini/.eslintcache
 
-
+# ============ Root-level scratch dirs ============
 tmp/
+scripts/.tmp/
