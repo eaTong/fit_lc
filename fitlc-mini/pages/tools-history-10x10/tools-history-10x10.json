@@ -1,4 +1,13 @@
 {
   "navigationBarTitleText": "10*10历史",
-  "usingComponents": {}
+  "navigationBarBackgroundColor": "#0A0A0A",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "t-tabs": "tdesign-miniprogram/tabs/tabs",
+    "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
+    "t-cell-group": "tdesign-miniprogram/cell-group/cell-group",
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-empty": "tdesign-miniprogram/empty/empty"
+  }
 }

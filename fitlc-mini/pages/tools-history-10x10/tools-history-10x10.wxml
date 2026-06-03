@@ -1,34 +1,55 @@
 <view class="container">
   <!-- 时间筛选 -->
-  <view class="filter-tabs">
-    <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="all">全部</view>
-    <view class="filter-tab {{filter === 'week' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="week">本周</view>
-    <view class="filter-tab {{filter === 'month' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="month">本月</view>
-  </view>
+  <t-tabs
+    value="{{filter}}"
+    bind:change="onFilterChange"
+    theme="card"
+  >
+    <t-tab-panel value="all" label="全部" />
+    <t-tab-panel value="week" label="本周" />
+    <t-tab-panel value="month" label="本月" />
+  </t-tabs>
 
   <!-- 历史列表 -->
-  <view class="history-list">
-    <block wx:for="{{filteredHistory}}" wx:key="id">
-      <view class="history-item" bindtap="onItemTap" data-id="{{item.id}}">
-        <view class="item-main">
-          <view class="item-left">
-            <text class="item-name">{{item.exerciseName}}</text>
-            <text class="item-stats">{{item.sets}}组 / {{item.reps}}次</text>
-          </view>
-          <view class="item-right">
-            <text class="item-date">{{item.dateText}}</text>
-            <text class="item-duration">{{item.durationText}}</text>
-          </view>
-        </view>
-        <view class="item-tags">
-          <text class="tag" wx:if="{{item.savedToServer}}">已同步</text>
-          <text class="tag unsynced" wx:else>未同步</text>
-        </view>
-      </view>
-    </block>
+  <view class="history-content">
+    <t-cell-group
+      wx:if="{{filteredHistory.length > 0}}"
+      theme="card"
+    >
+      <t-cell
+        wx:for="{{filteredHistory}}"
+        wx:key="id"
+        title="{{item.exerciseName}}"
+        description="{{item.sets}}组 / {{item.reps}}次"
+        note="{{item.dateText}}"
+        arrow
+        hover
+        data-id="{{item.id}}"
+        data-action="tap"
+        bind:click="onItemTap"
+        bind:longpress="onItemLongPress"
+      >
+        <t-tag
+          wx:if="{{item.savedToServer}}"
+          slot="right-icon"
+          theme="success"
+          size="small"
+          variant="light"
+        >已同步</t-tag>
+        <t-tag
+          wx:else
+          slot="right-icon"
+          theme="warning"
+          size="small"
+          variant="light"
+        >未同步</t-tag>
+      </t-cell>
+    </t-cell-group>
 
-    <view class="empty" wx:if="{{filteredHistory.length === 0}}">
-      <text class="empty-text">暂无记录</text>
-    </view>
+    <t-empty
+      wx:else
+      icon="view-list"
+      description="暂无记录"
+    />
   </view>
 </view>

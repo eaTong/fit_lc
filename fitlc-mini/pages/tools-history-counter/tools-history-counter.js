@@ -1,3 +1,4 @@
+const logger = require('../../utils/logger');
 const { recordActions } = require('../../store/actions');
 const storage = require('../../utils/storage');
 
@@ -82,8 +83,7 @@ Page({
   },
 
   onFilterChange(e) {
-    const filter = e.currentTarget.dataset.filter;
-    this.setData({ filter });
+    this.setData({ filter: e.detail.value });
     this.applyFilter();
   },
 
@@ -92,6 +92,10 @@ Page({
     wx.navigateTo({
       url: `/pages/tools-detail-counter/tools-detail-counter?recordId=${recordId}`
     });
+  },
+
+  onItemLongPress(e) {
+    this.onDelete({ currentTarget: { dataset: { id: e.currentTarget.dataset.id } } });
   },
 
   onDelete(e) {
