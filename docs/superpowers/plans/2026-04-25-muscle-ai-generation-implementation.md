@@ -51,7 +51,7 @@ async function generateMuscleDetails(muscle, parentMuscle) {
   const model = new ChatAnthropic({
     apiKey: process.env.MINIMAX_API_KEY,
     baseURL: "https://api.minimaxi.com/anthropic/v1",
-    model: "MiniMax-M2.7",
+    model: "MiniMax-M3",
     temperature: 0.7,
     maxTokens: 1024,
   });

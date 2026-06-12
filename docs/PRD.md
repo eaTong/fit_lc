@@ -53,7 +53,7 @@
 | 前端 | React 18 + Vite + TailwindCSS + Zustand + Axios + React Router v6 |
 | 后端 | Node.js + Express.js + Prisma ORM |
 | 数据库 | MySQL 8.0 |
-| AI | LangChain.js + MiniMax Chat 模型 (Abab6/M2.7) |
+| AI | LangChain.js + MiniMax Chat 模型 (Abab6/M3) |
 | 认证 | JWT (JSON Web Token) |
 
 ---

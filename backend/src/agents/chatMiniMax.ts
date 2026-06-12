@@ -10,7 +10,7 @@ const MINIMAX_BASE_URL = "https://api.minimax.chat/v1";
 export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}): ChatOpenAI {
   return new ChatOpenAI({
     apiKey: process.env.MINIMAX_API_KEY || '',
-    model: "MiniMax-M2.7",
+    model: "MiniMax-M3",
     temperature: fields.temperature ?? 0.7,
     maxTokens: fields.maxTokens ?? 4096,
     configuration: {
@@ -43,7 +43,7 @@ export class ChatMiniMax extends ChatOpenAI {
 
     super({
       apiKey,
-      model: (fields.model as string) || "MiniMax-M2.7",
+      model: (fields.model as string) || "MiniMax-M3",
       temperature: fields.temperature ?? 0.7,
       maxTokens: fields.maxTokens ?? 4096,
       configuration: {
