@@ -455,7 +455,7 @@ partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
 | date | DATETIME | 训练日期时间 |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
-| idempotency_key | VARCHAR(64) | 是 | 客户端去重键。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
+| idempotency_key | VARCHAR(64) | 客户端去重键（可空）。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
 
 **索引：**
 - `uniq_user_idempotency_workout` (user_id, idempotency_key) UNIQUE
@@ -481,7 +481,7 @@ partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
 | date | DATETIME | 测量日期时间（支持同一天多次记录） |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
-| idempotency_key | VARCHAR(64) | 是 | 客户端去重键。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
+| idempotency_key | VARCHAR(64) | 客户端去重键（可空）。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
 
 **索引：**
 - `uniq_user_idempotency_measurement` (user_id, idempotency_key) UNIQUE
