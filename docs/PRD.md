@@ -455,6 +455,10 @@ partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
 | date | DATETIME | 训练日期时间 |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
+| idempotency_key | VARCHAR(64) | 是 | 客户端去重键。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
+
+**索引：**
+- `uniq_user_idempotency_workout` (user_id, idempotency_key) UNIQUE
 
 #### 3.4.2 训练动作 (workout_exercises)
 | 字段 | 类型 | 说明 |
@@ -477,6 +481,10 @@ partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
 | date | DATETIME | 测量日期时间（支持同一天多次记录） |
 | createdAt | DATETIME | 创建时间 |
 | deletedAt | DATETIME | 软删除时间（NULL=未删除） |
+| idempotency_key | VARCHAR(64) | 是 | 客户端去重键。相同 (user_id, idempotency_key) 重复写入会被拒绝。MySQL NULL 不参与唯一性约束 |
+
+**索引：**
+- `uniq_user_idempotency_measurement` (user_id, idempotency_key) UNIQUE
 
 **支持同一天多次记录：** 体重(weight)和体脂率(bodyFat)可以一天记录多次（如早晩各一次），通过时间戳区分。
 
@@ -960,6 +968,14 @@ GROUP BY m.group
 |------|------|------|------|
 | GET | /messages | 获取最近聊天记录 | 是 |
 | POST | /message | 发送AI消息 | 是 |
+
+**POST /api/chat/message 请求体：**
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| content | string | 是 | 用户消息文本 |
+| imageUrls | string[] | 否 | 图片 URL 列表 |
+| history | ChatMessage[] | 否 | 历史对话（用于恢复上下文） |
+| idempotencyKey | string | 否 | 客户端生成的 UUID，用于幂等去重。建议前端在每次"发送"按钮点击时生成新 UUID 并随 message 一并提交。相同 user_id + idempotencyKey 的 saveWorkout / saveMeasurement Tool 调用只产生 1 条 DB 记录，重放时 Tool 返回 `isReplay: true` 短路结果 |
 
 ### 7.3 记录模块 `/api/records`
 | 方法 | 路径 | 说明 | 认证 |

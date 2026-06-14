@@ -10,6 +10,7 @@ import prisma from '../config/prisma';
 import { achievementService } from '../services/achievementService';
 import { statsService } from '../services/statsService';
 import { validateToolInput, formatValidationError } from './utils/validation';
+import { saveMeasurementWithIdempotency } from '../services/saveMeasurementService';
 
 // 类型定义
 type BodyPart = "chest" | "waist" | "hips" | "biceps" | "thighs" | "calves" | "other" | "weight" | "bodyFat";
@@ -23,6 +24,7 @@ interface ToolInput {
   userId: number;
   date?: string;
   measurements: MeasurementInput[];
+  idempotency_key?: string;
 }
 
 // 有效的身体部位
@@ -41,6 +43,9 @@ export const saveMeasurementTool = new DynamicStructuredTool({
 
   支持部位：chest(胸), waist(腰), hips(臀), biceps(臂), thighs(腿), calves(小腿), weight(体重kg), bodyFat(体脂率%)
 
+  【可选字段】
+  - idempotency_key: 客户端生成的去重键。同一 user_id + idempotency_key 重复调用只保存一次。LLM 不要自己编造此字段，仅当用户或上游系统显式传入时使用。
+
   输入：date (YYYY-MM-DD 或 YYYY-MM-DDTHH:mm:ss，不提供默认今天), measurements数组。
   注意：userId 会由系统自动注入。
   体重和体脂率可以一天记录多次（使用不同时间戳）。`,
@@ -50,9 +55,10 @@ export const saveMeasurementTool = new DynamicStructuredTool({
       body_part: z.enum(["chest", "waist", "hips", "biceps", "biceps_l", "biceps_r", "thighs", "thigh_l", "thigh_r", "calves", "calf_l", "calf_r", "weight", "bodyFat"])
         .describe("身体部位：chest/waist/hips/biceps/biceps_l/biceps_r/thighs/thigh_l/thigh_r/calves/calf_l/calf_r/weight/bodyFat"),
       value: z.number().describe("数值(cm)或(kg/%)")
-    }))
+    })),
+    idempotency_key: z.string().optional().describe("客户端生成的去重键，LLM 不应自行构造"),
   }),
-  func: async ({ userId, date, measurements }: ToolInput) => {
+  func: async ({ userId, date, measurements, idempotency_key }: ToolInput) => {
     try {
       // 预校验输入
       const validation = validateToolInput('save_measurement', { userId, date, measurements });
@@ -79,40 +85,35 @@ export const saveMeasurementTool = new DynamicStructuredTool({
         dateObj = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
       }
 
-      // 使用事务保存围度记录（确保原子性）
-      const result = await prisma.$transaction(async (tx) => {
-        // 转换格式：body_part -> bodyPart
-        const items = measurements
+      // 1. 幂等写入（service 层：命中 key 时直接返回旧记录，不再写入）
+      const { measurement: result, isReplay } = await saveMeasurementWithIdempotency({
+        userId,
+        date: dateObj.toISOString(),
+        measurements: measurements
           .filter(m => m && m.body_part !== undefined && m.value !== undefined)
-          .map(m => ({
-            bodyPart: m.body_part,
-            value: new Decimal(m.value.toString())
-          }));
-
-        const measurement = await tx.bodyMeasurement.create({
-          data: {
-            userId,
-            date: dateObj,
-            items: {
-              create: items
-            }
-          },
-          include: {
-            items: true
-          }
-        });
-
-        return {
-          id: measurement.id,
-          date: finalDate,
-          measurements: measurements.map(m => ({
-            body_part: m.body_part,
-            value: m.value
-          })),
-          message: `已保存：${measurements.map(m => `${m.body_part} ${m.value}cm`).join('，')}`
-        };
+          .map(m => ({ body_part: m.body_part, value: m.value })),
+        idempotencyKey: idempotency_key,
       });
 
+      // 2. 重放命中：短路返回，避免重复触发累计统计 / 徽章 / 里程碑
+      if (isReplay) {
+        return JSON.stringify({
+          aiReply: `✅ 已经保存过这次围度记录了（${finalDate}），无需重复提交。`,
+          dataType: 'measurement',
+          status: 'success',
+          isReplay: true,
+          result: {
+            id: result.id,
+            date: finalDate,
+            measurements: measurements.map(m => ({
+              body_part: m.body_part,
+              value: m.value
+            })),
+          },
+        });
+      }
+
+      // 3. 首次写入：继续走原有累计统计 / 徽章 / 里程碑流程
       // 更新累计统计（在独立事务中）
       await statsService.updateAggregatedStats(userId);
 
@@ -137,7 +138,8 @@ export const saveMeasurementTool = new DynamicStructuredTool({
         achievementMsg += `\n\n🎯 **里程碑达成！** ${milestoneNames}`;
       }
 
-      const aiReply = `${result.message}${achievementMsg}`;
+      const message = `已保存：${measurements.map(m => `${m.body_part} ${m.value}cm`).join('，')}`;
+      const aiReply = `${message}${achievementMsg}`;
 
       return JSON.stringify({
         aiReply,
@@ -145,7 +147,10 @@ export const saveMeasurementTool = new DynamicStructuredTool({
         result: {
           id: result.id,
           date: finalDate,
-          measurements: result.measurements,
+          measurements: measurements.map(m => ({
+            body_part: m.body_part,
+            value: m.value
+          })),
           isFirstMeasurement,
           achievements: achievements.length > 0 || milestones.length > 0 ? {
             badges: achievements.map(b => b.name),

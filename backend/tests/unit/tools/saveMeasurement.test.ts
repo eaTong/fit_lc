@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import { saveMeasurementTool } from '../../../src/tools/saveMeasurement';
 import { saveService } from '../../../src/services/saveService';
+import { saveMeasurementWithIdempotency } from '../../../src/services/saveMeasurementService';
 
 // Mock dependencies
 jest.mock('../../../src/services/saveService', () => ({
@@ -13,6 +14,14 @@ jest.mock('../../../src/services/saveService', () => ({
       message: '已保存：chest 94cm'
     })
   }
+}));
+
+// Mock the new idempotent saveMeasurementService (used by the tool since Sprint1 T2)
+jest.mock('../../../src/services/saveMeasurementService', () => ({
+  saveMeasurementWithIdempotency: jest.fn().mockResolvedValue({
+    measurement: { id: 1, date: new Date('2026-05-01'), userId: 1, idempotencyKey: null },
+    isReplay: false
+  })
 }));
 
 jest.mock('../../../src/services/statsService', () => ({
