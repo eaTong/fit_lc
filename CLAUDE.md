@@ -174,7 +174,7 @@ React 18 + Vite + TypeScript + TailwindCSS + Zustand + Axios + React Router v6 +
 ```
 backend/src/
 ├── agents/
-│   ├── fitnessAgent.ts      # 主 Agent (LangChain Agent)
+│   ├── fitnessAgentV2.ts    # 主 Agent (LangChain Agent, V2)
 │   ├── chatFactory.ts       # Chat 模型工厂
 │   ├── chatMiniMax.ts       # MiniMax Chat 实现
 │   ├── chatZhipu.ts         # 智谱 Chat 实现
