@@ -328,6 +328,18 @@ Page({
       const realUserMsg = { ...messages.find(m => m.id === tempId), id: realId };
       const newMessages = messages.map(m => m.id === tempId ? realUserMsg : m);
       newMessages.push({ ...assistantMsg, id: realId + '-assistant' });
+
+      // 图片解析降级提示：当后端 visionError 存在时，在 AI 消息下方追加系统提示
+      if (assistantMsg.visionError) {
+        newMessages.push({
+          id: `sys-${Date.now()}-vision`,
+          role: 'system',
+          type: 'visionWarning',
+          content: `📷 图片暂时未能解析（${assistantMsg.visionError}），请用文字补充`,
+          createdAt: new Date().toISOString()
+        });
+      }
+
       this.setMessages(newMessages);
     }
 

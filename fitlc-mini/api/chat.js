@@ -62,6 +62,7 @@ const chatActions = {
         needsClarification: needsClarification,
         clarificationEnded: clarificationEnded,
         clarificationSessionId: sessionId,
+        visionError: res.visionError || undefined,
         createdAt: new Date().toISOString()
       };
       return { assistantMsg, error: res.error };

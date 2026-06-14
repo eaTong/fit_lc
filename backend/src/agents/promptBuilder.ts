@@ -18,7 +18,7 @@ interface UserContext {
  * @param userContext 用户上下文
  * @param historySummary 历史消息摘要（可选，用于压缩后的长对话）
  */
-export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null): SystemMessage {
+export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null, visionError?: string | null): SystemMessage {
   const {
     today: todayStr,
     yesterday: yesterdayStr,
@@ -85,12 +85,25 @@ ${userContext.context_text}
 💪 卧推也稳步提升，80kg比上周重了5kg，力量增长曲线非常漂亮！
 继续保持这个节奏，下次深蹲可以挑战102.5kg 🔥"`;
 
+  // Vision 失败降级提示（仅当本轮对话存在 visionError 时注入）
+  let visionFailureSection = '';
+  if (visionError) {
+    visionFailureSection = `\n【系统通知 - 图片解析不可用】
+本轮对话中用户发送了图片，但图片解析服务暂时不可用（${visionError}）。
+请按以下方式处理：
+1. 不要假装看到了图片，不要编造图片内容
+2. 对用户表达歉意（"图片暂时看不到"），并请求用户用文字描述
+3. 基于用户的文字部分继续提供帮助
+`;
+  }
+
   const fullPrompt = `你是健身数据记录助手。用中文回答。
 
 ${coachPersona}
 
 ${historySection}
 ${contextSection}
+${visionFailureSection}
 
 【日期参考 - 今天：${todayStr}】
 当用户使用相对日期时，必须根据以下规则计算实际日期：

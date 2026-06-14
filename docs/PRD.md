@@ -183,6 +183,23 @@ VisionPreprocessor 插件拦截
 - `AI_VISION_PROVIDER=zhipu`（固定使用 Zhipu）
 - `AI_VISION_MODEL=GLM-4V-Flash`（免费视觉模型）
 
+#### 3.1.11.1 图片解析降级策略（Graceful Degradation）
+
+当 Vision 服务（智谱 GLM-4V-Flash）出现故障时（401/429/超时/内容过滤等），Agent 不再直接终止整条对话，而是采用降级策略继续响应：
+
+1. **不终止对话**：`runAgentV2` 不在 vision 报错时 return；改为把 `processedMessage` 重置为"用户原始 message"（去掉【图片解析结果】前缀），主 LLM 继续基于文字部分帮助用户。
+2. **提示注入**：在 system prompt 中追加"图片解析不可用"提示，要求主 LLM：
+   - 不要假装看到了图片，不要编造图片内容
+   - 对用户表达歉意（"图片暂时看不到"），并请求用户用文字描述
+   - 基于用户的文字部分继续提供帮助
+3. **错误透传**：响应体 `visionError` 字段说明失败原因，前端 / 小程序可在 UI 提示。
+4. **前端展示**：小程序在 AI 消息下方追加 `role: 'system', type: 'visionWarning'` 的系统提示，告知用户"图片暂时未能解析，请用文字补充"。
+
+**影响范围：**
+- 后端：`backend/src/agents/fitnessAgentV2.ts`、`backend/src/agents/promptBuilder.ts`
+- 前端：`fitlc-mini/api/chat.js`（透传 visionError）、`fitlc-mini/pages/chat/chat.js`（展示降级提示）
+- 测试：`backend/tests/unit/agents/fitnessAgentV2.visionDegrade.test.ts`
+
 #### 3.1.12 saveWorkout 必填字段验证
 Tool 在调用前会验证动作信息完整性：
 
