@@ -3,6 +3,9 @@ const logger = require('./logger');
 
 const CACHE_KEY = 'fitlc_messages';
 
+// clarification session key
+const CLARIFICATION_SESSION_KEY = 'fitlc_clarification';
+
 // 工具历史记录的 key 前缀
 const TOOLS_HISTORY_PREFIX = 'tools_history_';
 
@@ -72,6 +75,63 @@ function saveToolsHistory(toolType, history) {
 }
 
 /**
+ * 保存 clarification session
+ * @param {string} sessionId - session ID
+ * @param {Object} data - session 数据 { toolName, partialInput, missingFields }
+ */
+function saveClarificationSession(sessionId, data) {
+  try {
+    const sessionData = {
+      sessionId,
+      toolName: data.toolName,
+      partialInput: data.partialInput,
+      missingFields: data.missingFields,
+      savedAt: Date.now()
+    };
+    wx.setStorageSync(CLARIFICATION_SESSION_KEY, JSON.stringify(sessionData));
+    return true;
+  } catch (e) {
+    logger.error('saveClarificationSession failed:', e);
+    return false;
+  }
+}
+
+/**
+ * 获取 clarification session
+ * @returns {Object|null} session 数据
+ */
+function getClarificationSession() {
+  try {
+    const data = wx.getStorageSync(CLARIFICATION_SESSION_KEY);
+    if (!data) return null;
+    const session = JSON.parse(data);
+    // 5 分钟过期
+    if (Date.now() - session.savedAt > 5 * 60 * 1000) {
+      wx.removeStorageSync(CLARIFICATION_SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch (e) {
+    logger.error('getClarificationSession failed:', e);
+    return null;
+  }
+}
+
+/**
+ * 清除 clarification session
+ * @returns {boolean} 是否清除成功
+ */
+function clearClarificationSession() {
+  try {
+    wx.removeStorageSync(CLARIFICATION_SESSION_KEY);
+    return true;
+  } catch (e) {
+    logger.error('clearClarificationSession failed:', e);
+    return false;
+  }
+}
+
+/**
  * 获取最近使用的动作
  * @returns {Array} 最近动作数组，每个元素 {id, name, category, equipment}
  */
@@ -108,5 +168,8 @@ module.exports = {
   getToolsHistory,
   saveToolsHistory,
   getRecentExercises,
-  saveRecentExercises
+  saveRecentExercises,
+  saveClarificationSession,
+  getClarificationSession,
+  clearClarificationSession
 };
