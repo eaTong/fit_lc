@@ -57,6 +57,7 @@ export class ZhipuChat {
 
     this.client = axios.create({
       baseURL: 'https://open.bigmodel.cn/api/paas/v4',
+      timeout: 25_000, // 25s 单次请求
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',

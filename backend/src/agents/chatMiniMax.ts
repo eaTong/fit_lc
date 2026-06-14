@@ -13,6 +13,8 @@ export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxToken
     model: "MiniMax-M3",
     temperature: fields.temperature ?? 0.7,
     maxTokens: fields.maxTokens ?? 4096,
+    timeout: 30_000,        // 单次 HTTP 30s
+    maxRetries: 2,          // 底层 SDK 重试 2 次
     configuration: {
       baseURL: MINIMAX_BASE_URL,
     },
@@ -46,6 +48,8 @@ export class ChatMiniMax extends ChatOpenAI {
       model: (fields.model as string) || "MiniMax-M3",
       temperature: fields.temperature ?? 0.7,
       maxTokens: fields.maxTokens ?? 4096,
+      timeout: 30_000,        // 单次 HTTP 30s
+      maxRetries: 2,          // 底层 SDK 重试 2 次
       configuration: {
         baseURL: MINIMAX_BASE_URL,
       },
