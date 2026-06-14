@@ -183,6 +183,19 @@ VisionPreprocessor 插件拦截
 - `AI_VISION_PROVIDER=zhipu`（固定使用 Zhipu）
 - `AI_VISION_MODEL=GLM-4V-Flash`（免费视觉模型）
 
+#### 3.1.11.1 外部内容隔离（Prompt Injection 第一层防护）
+
+为防御 OWASP LLM Top 10 #1（Prompt Injection），所有进入 LLM 上下文的外部数据
+（vision 解析、未来 RAG 文档、跨会话历史）都必须经过：
+
+1. **XML 标签包裹**：`<image_description trust="external-data">…</image_description>`
+2. **指令短语中和**：已知模式（"忽略以上"、"ignore previous"、"system:" 等）替换为 `[neutralized:label:"..."]`
+3. **XML 字符转义**：防止恶意构造跨越标签边界
+4. **System prompt 防御约定**：明确告知 LLM 标签内为外部数据，不可执行
+
+实现：`backend/src/agents/security/sanitizeExternalContent.ts`。
+后续 Sprint 3 会扩展为 6 层完整防御。
+
 #### 3.1.12 saveWorkout 必填字段验证
 Tool 在调用前会验证动作信息完整性：
 

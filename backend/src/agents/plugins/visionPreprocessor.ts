@@ -6,6 +6,7 @@
 
 import axios from 'axios';
 import { createZhipuVisionChat } from '../chatZhipu';
+import { wrapAsExternalContent, sanitizeExternalContent } from '../security/sanitizeExternalContent';
 
 export interface VisionPreprocessorResult {
   message: string;
@@ -73,8 +74,13 @@ export async function preprocessVision(
     // 构建直接可返回的 reply - 健身教练视角的分析回复
     const reply = `📸 **图片分析结果**\n\n${imageAnalysis}\n\n---\n💡 如果你想基于这张图片制定训练计划或记录身体围度，请直接告诉我。`;
 
-    // 同时把分析结果注入到消息中，供后续参考
-    const enrichedMessage = `【图片解析结果】\n${imageAnalysis}\n\n用户原始消息：${message}`;
+    // 用 XML 标签包裹外部内容 + 中和指令短语，防御间接 Prompt Injection
+    const safeImageBlock = wrapAsExternalContent(imageAnalysis, {
+      tag: 'image_description',
+      source: 'vision-model:glm-4v-flash',
+    });
+    const safeUserBlock = `<user_message>\n${sanitizeExternalContent(message)}\n</user_message>`;
+    const enrichedMessage = `${safeImageBlock}\n\n${safeUserBlock}`;
 
     return {
       message: enrichedMessage,
