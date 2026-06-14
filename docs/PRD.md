@@ -665,6 +665,17 @@ partialInput: { exercises: [{ name: "卧推", weight: 80 }] }
 ### 4.3 批量生成脚本
 支持断点续传的批量生成工具，输出JSON文件供管理员审核后导入数据库。
 
+### 4.4 AI 可观测性（Langfuse）
+
+后端通过 Langfuse 自动捕获每次对话的全链路 trace：
+
+- **Trace 维度**：userId、sessionId、agentVersion、imageCount
+- **Span 维度**：LLM 调用（prompt、completion、tokens、cost、latency）、tool 调用
+- **环境变量**：`LANGFUSE_ENABLED` / `LANGFUSE_HOST` / `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY`
+- **降级**：未配置时静默 no-op，不阻塞业务
+
+后台地址：`<LANGFUSE_HOST>/project/<project-id>/traces`
+
 ---
 
 ## 5. 激励与成就系统
