@@ -1,16 +1,17 @@
 import { ChatOpenAI } from "@langchain/openai";
 import type { OpenAIChatInput } from "@langchain/openai";
+import { getModelName, requireApiKey } from "../config/aiConfig";
 
 const MINIMAX_BASE_URL = "https://api.minimax.chat/v1";
 
 /**
  * 创建 MiniMax ChatOpenAI 实例
- * MiniMax 提供 OpenAI 兼容 API
+ * 模型 ID 统一通过 aiConfig.getModelName('chat') 取，避免硬编码漂移。
  */
 export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}): ChatOpenAI {
   return new ChatOpenAI({
-    apiKey: process.env.MINIMAX_API_KEY || '',
-    model: "MiniMax-M3",
+    apiKey: requireApiKey('minimax'),
+    model: getModelName('chat'),
     temperature: fields.temperature ?? 0.7,
     maxTokens: fields.maxTokens ?? 4096,
     configuration: {
@@ -21,7 +22,7 @@ export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxToken
 }
 
 /**
- * Create a cached model instance for MiniMax using OpenAI-compatible API
+ * 单例缓存
  */
 let cachedModel: ChatOpenAI | null = null;
 
@@ -29,9 +30,15 @@ export async function createModel(): Promise<ChatOpenAI> {
   if (cachedModel) {
     return cachedModel;
   }
-
   cachedModel = createMiniMaxModel();
   return cachedModel;
+}
+
+/**
+ * 测试用：重置单例缓存
+ */
+export function _resetCachedModel(): void {
+  cachedModel = null;
 }
 
 // Legacy export for backwards compatibility
@@ -39,11 +46,11 @@ export class ChatMiniMax extends ChatOpenAI {
   minimaxApiKey: string;
 
   constructor(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}) {
-    const apiKey = (fields.apiKey as string) || process.env.MINIMAX_API_KEY || '';
+    const apiKey = (fields.apiKey as string) || requireApiKey('minimax');
 
     super({
       apiKey,
-      model: (fields.model as string) || "MiniMax-M3",
+      model: (fields.model as string) || getModelName('chat'),
       temperature: fields.temperature ?? 0.7,
       maxTokens: fields.maxTokens ?? 4096,
       configuration: {
