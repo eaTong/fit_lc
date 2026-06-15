@@ -1,13 +1,15 @@
 import { Router, Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { runAgentV2 as runAgent } from '../agents/fitnessAgentV2';
+import { runAgentV2 as runAgentV2 } from '../agents/fitnessAgentV2';
 import { runAgentV2StreamWithTimeout } from '../agents/fitnessAgentV2Stream';
+import { runAgentV3 } from '../agents/v3';
 import { guardHistory } from '../agents/security/historyGuard';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
 import { classifyInjectionRisk } from '../agents/security/injectionClassifier';
 import { setupSSEResponse, sendSSEEvent, endSSE, sendSSEError } from '../utils/sse';
 import { isTokenEvent, isEndEvent } from '../agents/streamEvents';
+import { shouldUseV3 } from '../config/featureFlags';
 import prisma from '../config/prisma';
 
 const router = Router();
@@ -177,15 +179,33 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     // Apply history guard (cap messages + tokens, sanitize user messages)
     const safeHistory = guardHistory(historyMessages || []);
 
-    // Call agent with context, history and optional images
-    const { reply, toolData, visionError } = await runAgent(
-      userId,
-      message,
-      userContext,
-      safeHistory,
-      imageUrls || [],
-      securityHint ? { securityHint } : undefined
-    );
+    // 根据 feature flag 选择 agent 版本
+    const useV3 = shouldUseV3(userId);
+
+    let reply = '';
+    let toolData = null;
+    let visionError: string | undefined;
+
+    if (useV3) {
+      // V3 Agent (LangGraph)
+      const result = await runAgentV3(userId, message, userContext, safeHistory, imageUrls || []);
+      reply = result.reply;
+      toolData = result.toolData;
+      visionError = result.visionError;
+    } else {
+      // V2 Agent (legacy)
+      const result = await runAgentV2(
+        userId,
+        message,
+        userContext,
+        safeHistory,
+        imageUrls || [],
+        securityHint ? { securityHint } : undefined
+      );
+      reply = result.reply;
+      toolData = result.toolData;
+      visionError = result.visionError;
+    }
 
     // Extract savedData from toolData for DB storage and context
     const savedData = toolData?.result?.id ? { id: toolData.result.id, type: toolData.dataType } : null;
