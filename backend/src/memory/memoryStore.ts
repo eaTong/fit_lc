@@ -6,6 +6,8 @@
 import { IMemoryStore, Memory, MemorySearchResult, MemoryType } from './memoryTypes';
 import prisma from '../config/prisma';
 
+export type { Memory, MemoryType };
+
 /**
  * MySQL 记忆存储实现
  */
