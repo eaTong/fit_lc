@@ -128,23 +128,18 @@ export async function _runAgentV2Inner(
   let visionError = visionResult.error || undefined;
   console.log('[Step 1] Processed message:', processedMessage.substring(0, 200));
 
-  // 如果 vision 报错，直接返回错误，不继续执行后续流程
+  // 如果 vision 失败：降级（不终止），让主 LLM 基于文字继续帮助用户
+  // visionError 会通过 promptBuilder 注入到 system prompt，并通过返回值透传给前端
   if (visionError) {
-    console.log('[FitnessAgentV2] Vision preprocessing failed, returning error early');
-    return {
-      reply: `图片解析失败了：${visionError}\n\nAI无法分析这张图片，你可以换个图片试试，或者直接描述你的健身需求。`,
-      toolData: null,
-      visionError
-    };
-  }
-
-  // 如果 vision 成功并且有直接返回的 reply，直接返回，不再调用主模型
-  if (visionResult.reply) {
-    console.log('[FitnessAgentV2] Vision preprocessing succeeded with direct reply, returning early');
+    console.warn('[FitnessAgentV2] Vision failed, degrading to text-only:', visionError);
+    processedMessage = message; // 用用户原始 message，不带【图片解析结果】前缀
+  } else if (visionResult.reply) {
+    // vision 成功且 plugin 决定直接返回（图片分析独立回复，无需主 LLM）
+    console.log('[FitnessAgentV2] Vision succeeded with direct reply, returning early');
     return {
       reply: visionResult.reply,
       toolData: visionResult.toolData || null,
-      visionError: undefined
+      visionError: undefined,
     };
   }
 
@@ -244,7 +239,7 @@ export async function _runAgentV2Inner(
 
   // 2. 构建消息
   console.log('[Step 2] Building messages...');
-  const systemPrompt = buildSystemPrompt(userContext, historySummary);
+  const systemPrompt = buildSystemPrompt(userContext, historySummary, visionError);
   const history = buildHistoryMessages(
     compressedHistory.map(m => ({ role: m.role, content: m.content }))
   );
@@ -287,7 +282,8 @@ export async function _runAgentV2Inner(
       console.log('[Step 5] ToolData:', JSON.stringify(fallbackResult.toolData)?.substring(0, 200));
       return {
         reply: fallbackResult.reply,
-        toolData: fallbackResult.toolData
+        toolData: fallbackResult.toolData,
+        visionError,
       };
     }
 
@@ -296,7 +292,8 @@ export async function _runAgentV2Inner(
     console.log('[Step 5] Returning text response');
     return {
       reply: extractText(response.content),
-      toolData: null
+      toolData: null,
+      visionError,
     };
   }
 
