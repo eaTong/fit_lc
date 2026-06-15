@@ -40,39 +40,7 @@ const AGENT_TOTAL_TIMEOUT_MS = parseInt(process.env.AGENT_TOTAL_TIMEOUT_MS_TEST 
 // 每次发送 token 之间的延迟（控制推送速度，避免前端渲染过快）
 const TOKEN_DELAY_MS = 15;
 
-/**
- * 按句子/段落 chunk，避免逐字推送太快
- */
-function* chunkBySentence(text: string, chunkSize: number = 20): Generator<string> {
-  if (!text) return;
-
-  // 按标点分割
-  const sentences = text.split(/([。！？；\n])/);
-  let buffer = '';
-
-  for (const part of sentences) {
-    if (/[。！？；\n]/.test(part)) {
-      // 标点符号，加入并 yield
-      buffer += part;
-      if (buffer.length >= chunkSize) {
-        yield buffer;
-        buffer = '';
-      } else {
-        yield buffer;
-        buffer = '';
-      }
-    } else {
-      buffer += part;
-      if (buffer.length >= chunkSize) {
-        yield buffer;
-        buffer = '';
-      }
-    }
-  }
-
-  // 剩余
-  if (buffer) yield buffer;
-}
+import { chunkBySentence, sleep } from './streamChunker';
 
 /**
  * 获取绑定工具的模型
@@ -231,9 +199,4 @@ export async function runAgentV2StreamWithTimeout(
   // 这里返回 generator，由 Express 路由控制超时
 
   return gen;
-}
-
-// 辅助函数
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
