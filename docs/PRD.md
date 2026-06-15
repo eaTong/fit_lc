@@ -2,9 +2,10 @@
 
 > **注意：** 本文档为正式版 PRD，记录已实现的功能。全部需求（包括未实现的）请参见 [PRD-planning.md](./PRD-planning.md)。
 
-**版本：** 2.1
-**日期：** 2026-05-07
+**版本：** 3.0
+**日期：** 2026-06-16
 **状态：** 已上线
+**更新说明：** Sprint 1-7 全部完成，新增 6 层 PI 防御 / SSE 流式 / V3 LangGraph / Long-term Memory / LLM 化 Plan / 可观测体系
 
 ---
 
@@ -972,6 +973,8 @@ users 1 ───< user_roles >──── 1 roles
 | user_milestones | 用户里程碑记录 | id, userId, milestoneId, progress, achievedAt |
 | chat_messages | 对话历史 | id, userId, role, content, savedData, imageUrls, createdAt |
 | album_photos | 相册照片 | id, userId, ossUrl, thumbnailUrl, chatMessageId, createdAt, deletedAt |
+| **user_memory** | 长期记忆（Sprint 7） | id, userId, type, content, importance, createdAt, expiresAt |
+| **idempotency_key** (复合索引) | 幂等键（Sprint 1） | userId, idempotencyKey, toolName |
 
 #### 6.2.1 肌肉群训练量统计
 
@@ -1032,6 +1035,10 @@ GROUP BY m.group
 | imageUrls | string[] | 否 | 图片 URL 列表 |
 | history | ChatMessage[] | 否 | 历史对话（用于恢复上下文） |
 | idempotencyKey | string | 否 | 客户端生成的 UUID，用于幂等去重。建议前端在每次"发送"按钮点击时生成新 UUID 并随 message 一并提交。相同 user_id + idempotencyKey 的 saveWorkout / saveMeasurement Tool 调用只产生 1 条 DB 记录，重放时 Tool 返回 `isReplay: true` 短路结果 |
+
+**POST /api/chat/stream 请求体：**
+- 与 `/api/chat/message` 相同
+- **响应**：`text/event-stream`，SSE 事件流（详见 §11.3）
 
 ### 7.3 记录模块 `/api/records`
 | 方法 | 路径 | 说明 | 认证 |
@@ -1199,6 +1206,161 @@ GROUP BY m.group
 - 外键约束确保关联有效
 - 软删除保留历史数据
 - 事务保证数据一致性
+
+---
+
+## 11. AI 体系增强（Sprint 1-7）
+
+### 11.1 双版本 Agent 架构
+
+| 版本 | 状态 | 触发 |
+|------|------|------|
+| **V2** (`fitnessAgentV2.ts`) | 主用 | 默认 |
+| **V3** (`v3/graph.ts`, LangGraph) | 灰度 | `FF_USE_V3=true` 或 `FF_V3_PERCENT>0` |
+
+V3 特性：
+- StateGraph 状态机（4 节点：vision → llmCall → toolDispatch → finalReply）
+- Checkpoint 持久化（MemorySaver）
+- HITL（save 类工具中断待用户确认）
+- 流式事件更细粒度
+
+### 11.2 6 层 Prompt Injection 防御
+
+| 层 | 模块 | 作用 |
+|----|------|------|
+| **L1** | `injectionClassifier.ts` | glm-4-flash 分类 benign/suspicious/malicious |
+| **L2** | `sanitizeExternalContent.ts` | XML 标签包裹 + 30+ 指令短语中和 |
+| **L3** | `toolGuard.ts` | 角色白名单 + zod 参数范围 |
+| **L4** | `outputSanitizer.ts` | 输出 Markdown 外链/图片过滤 |
+| **L5** | `historyGuard.ts` | 20 msgs / 8000 tokens 切窗 + sanitize |
+| **CI** | `red-team.yml` | 红队评测阻断 PR (>5% 攻击成功率) |
+
+**L1 行为**：
+- `malicious` → HTTP 200 + 友好拒绝（不抛 4xx，避免泄露过滤存在）
+- `suspicious` → system prompt 注入 `securityHint`
+- `benign` → 继续
+- 分类器失败 → fail-open（不阻塞主流程）
+
+**L2 标签类型**：
+- `<image_description source="vision-model:glm-4v-flash">`
+- `<history_message source="chat-history">`
+- `<external_content source="rag-doc">`
+
+### 11.3 SSE 流式输出（Sprint 4）
+
+**端点**：`POST /api/chat/stream`
+
+**SSE Headers**：
+```
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+X-Accel-Buffering: no  // 禁用 nginx 缓冲
+```
+
+**事件类型**（按顺序）：
+```
+{ "type": "start" }
+{ "type": "vision_start" }
+{ "type": "vision_done", "analysisPreview": "..." }
+{ "type": "thinking" }
+{ "type": "token", "delta": "..." }    // 多次
+{ "type": "tool_call", "tool": "save_workout" }
+{ "type": "tool_result", "tool": "...", "success": true, "preview": "..." }
+{ "type": "final", "toolData": {...}, "visionError": "..." }
+{ "type": "done" }
+```
+
+**性能目标**：TTFT < 500ms，token 间延迟 ~15ms
+
+**客户端支持**：
+- Web：EventSource / fetch + ReadableStream
+- 小程序：`wx.request` + `enableChunked: true`（iOS SDK < 2.10 fallback）
+
+### 11.4 幂等性保证（Sprint 1）
+
+`saveWorkout` / `saveMeasurement` 工具接受 `idempotencyKey` 参数：
+- 重复请求相同 key → 返回首次结果，不重复写入
+- 复合唯一索引 `(userId, idempotencyKey)`
+- 防止重复点击 / 网络重试导致数据重复
+
+### 11.5 Long-term Memory（Sprint 7）
+
+**Memory 类型**：
+| 类型 | 标签 | 示例 |
+|------|------|------|
+| `episodic` | 重要经历 | "上周膝盖受伤" |
+| `semantic` | 事实知识 | "我不能做深蹲" |
+| `procedural` | 习惯偏好 | "我习惯早上训练" |
+
+**存储**：MySQL `user_memory` 表
+
+**召回流程**：
+1. 每次对话后 → 异步 LLM 抽取记忆（fire-and-forget）
+2. 下次对话开始 → 按当前消息 + importance 过滤召回 Top-K
+3. 注入 system prompt 的【长期记忆】段落
+
+**重要性评分**：1-10（健康/安全信息 = 10，临时偏好 = 5-6）
+
+### 11.6 generatePlan LLM 化（Sprint 7）
+
+**变更**：从纯规则引擎升级为 LLM 生成 + 规则 fallback
+
+**流程**：
+```
+用户请求生成计划
+    ↓
+1. 召回相关 Memory（伤病/偏好）
+    ↓
+2. planLLMService.generatePlanLLM()
+   - 注入用户画像 + 记忆 + 动作库
+   - 结构化输出（zod 校验）
+   - 失败时 → 规则引擎 fallback
+    ↓
+3. 保存计划 + 返回
+```
+
+**REASONING_* 环境变量**：
+- `REASONING_API_KEY`
+- `REASONING_MODEL`
+- `REASONING_BASE_URL`
+
+### 11.7 Langfuse 可观测性（Sprint 1-2）
+
+**自动捕获**：
+- Trace 维度：userId、sessionId、agentVersion、imageCount
+- Span：LLM（prompt、completion、tokens、cost、latency）、tool
+- 失败静默 no-op（无 API key 不阻塞）
+
+**手动 trace**：
+- 顶层 `getLangfuse().trace()` 记录 userInput + finalReply
+- SIGTERM/SIGINT hook 自动 flush
+
+### 11.8 Feature Flags 配置
+
+| Flag | 默认 | 说明 |
+|------|------|------|
+| `FF_USE_V3` | false | 全局启用 V3 Agent |
+| `FF_V3_PERCENT` | 0 | 按 userId % 灰度比例 |
+| `FF_ENABLE_HITL` | false | V3 工具执行前需用户确认 |
+| `FF_ENABLE_CHECKPOINT` | true | LangGraph 状态持久化 |
+| `LANGFUSE_ENABLED` | true | 关闭可禁用 Langfuse |
+
+### 11.9 错误码与超时
+
+| 错误码 | 说明 | 行为 |
+|--------|------|------|
+| `400` | 参数缺失 | 立即返回 |
+| `401` | 未登录 | 跳转登录 |
+| `429` | 限流（20/min/user） | 提示稍后重试 |
+| `500` | 后端异常 | 友好错误 |
+| `200 + blocked: true` | L1 拦截 | 软拒绝，不暴露过滤 |
+
+**超时配置**：
+- ChatOpenAI 单次 HTTP: 30s
+- Agent 总超时: 35s
+- SSE 连接: 30s（小程序）
+- Vision API: 25s
 
 ---
 
