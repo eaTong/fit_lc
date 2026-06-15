@@ -8,6 +8,7 @@ import { statsService } from '../services/statsService';
 import { planService } from '../services/planService';
 import { planRepository } from '../repositories/planRepository';
 import { aggregatedStatsRepository } from '../repositories/aggregatedStatsRepository';
+import { saveWorkoutWithIdempotency } from '../services/saveWorkoutService';
 
 // Types for the tool
 interface ExerciseInput {
@@ -23,6 +24,7 @@ interface ToolInput {
   userId: number;
   date?: string;
   exercises: ExerciseInput[];
+  idempotency_key?: string;
 }
 
 export const saveWorkoutTool = new DynamicStructuredTool({
@@ -38,6 +40,9 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       - duration: 有氧训练（如"跑步30分钟"）
       - distance: 有氧训练（如"跑了5公里"）
     * 如果是徒手训练（俯卧撑、引体向上等），至少需要 sets + reps
+
+  【可选字段】
+  - idempotency_key: 客户端生成的去重键。同一 user_id + idempotency_key 重复调用只保存一次。LLM 不要自己编造此字段，仅当用户或上游系统显式传入时使用。
 
   【信息不完整时】
   如果用户输入缺少上述必填字段，请先追问用户补充完整信息再调用此 Tool。
@@ -61,41 +66,45 @@ export const saveWorkoutTool = new DynamicStructuredTool({
       weight: z.number().optional().describe("重量(kg)"),
       duration: z.number().optional().describe("时长(分钟)"),
       distance: z.number().optional().describe("距离(公里)")
-    }))
+    })),
+    idempotency_key: z.string().optional().describe("客户端生成的去重键，LLM 不应自行构造"),
   }),
-  func: async ({ userId, date, exercises }: ToolInput) => {
+  func: async ({ userId, date, exercises, idempotency_key }: ToolInput) => {
     try {
       // 如果没有提供日期，默认使用今天
       const finalDate = date || new Date().toISOString().split('T')[0];
 
-      // 使用单一事务保存训练和检查 PR（确保原子性）
-      const result = await prisma.$transaction(async (tx) => {
-        // 1. 创建训练记录
-        const workout = await tx.workout.create({
-          data: {
-            userId,
-            date: new Date(finalDate)
-          }
-        });
-
-        // 2. 创建训练动作
-        for (const exercise of exercises) {
-          await tx.workoutExercise.create({
-            data: {
-              workoutId: workout.id,
-              exerciseName: exercise.name,
-              sets: exercise.sets ?? null,
-              reps: exercise.reps ?? null,
-              weight: exercise.weight ?? null,
-              duration: exercise.duration ?? null,
-              distance: exercise.distance ?? null
-            }
-          });
-        }
-
-        return workout;
+      // 1. 幂等写入（service 层：命中 key 时直接返回旧记录，不再写入）
+      const { workout: result, isReplay } = await saveWorkoutWithIdempotency({
+        userId,
+        date: finalDate,
+        exercises,
+        idempotencyKey: idempotency_key,
       });
 
+      // 2. 重放命中：短路返回，避免重复触发 PR/成就/同步
+      if (isReplay) {
+        return JSON.stringify({
+          aiReply: `✅ 已经保存过这条训练记录了（${finalDate} ${exercises.map(e => e.name).join('、')}），无需重复提交。`,
+          dataType: 'workout',
+          status: 'success',
+          isReplay: true,
+          result: {
+            id: result.id,
+            date: finalDate,
+            exercises: exercises.map(e => ({
+              name: e.name,
+              sets: e.sets,
+              reps: e.reps,
+              weight: e.weight,
+              duration: e.duration,
+              distance: e.distance
+            })),
+          },
+        });
+      }
+
+      // 3. 首次写入：继续走原有 PR / 成就 / 同步 / richContext 流程
       // 生成 AI 即时反馈（不影响数据一致性，在事务外）
       const feedback = await generateWorkoutFeedback(userId, result.id);
 

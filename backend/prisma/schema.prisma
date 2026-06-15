@@ -67,10 +67,13 @@ model Workout {
   createdAt DateTime   @default(now()) @map("created_at")
   deletedAt DateTime?  @map("deleted_at")
 
+  idempotencyKey String?  @map("idempotency_key") @db.VarChar(64)
+
   user      User              @relation(fields: [userId], references: [id])
   exercises WorkoutExercise[]
   personalRecords PersonalRecord[]
 
+  @@unique([userId, idempotencyKey], name: "uniq_user_idempotency_workout")
   @@index([userId])
   @@index([date])
   @@map("workouts")
@@ -99,9 +102,12 @@ model BodyMeasurement {
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
 
+  idempotencyKey String?  @map("idempotency_key") @db.VarChar(64)
+
   user  User              @relation(fields: [userId], references: [id])
   items MeasurementItem[]
 
+  @@unique([userId, idempotencyKey], name: "uniq_user_idempotency_measurement")
   @@index([userId])
   @@index([date])
   @@map("body_measurements")
