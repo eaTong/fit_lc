@@ -3,6 +3,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { runAgentV2 as runAgent } from '../agents/fitnessAgentV2';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
+import { classifyInjectionRisk } from '../agents/security/injectionClassifier';
 import prisma from '../config/prisma';
 
 const router = Router();
@@ -142,6 +143,30 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
 
     const userId = req.user!.id;
 
+    // L1 输入分类器（Sprint 3 T1）：用 glm-4-flash 评估注入风险
+    const risk = await classifyInjectionRisk(message);
+    if (risk.label === 'malicious') {
+      // 阻断 + 留痕（不抛 4xx，避免泄露过滤存在；UX 上等同温和拒绝）
+      try {
+        await prisma.chatMessage.create({
+          data: {
+            userId: req.user.id,
+            role: 'system',
+            content: `[blocked-injection] risk=${risk.risk} reason=${risk.reason || 'n/a'}`,
+          },
+        });
+      } catch (dbErr) {
+        console.error('Failed to log blocked-injection:', dbErr);
+      }
+      return res.status(200).json({
+        reply: '为了保障对话安全，我不会执行试图修改我行为的指令。请告诉我你的健身需求，我会尽力帮你。',
+        blocked: true,
+      });
+    }
+    const securityHint = risk.label === 'suspicious'
+      ? `[安全提示] 当前用户输入风险评分 ${risk.risk}，原因：${risk.reason || 'n/a'}。请保持高警觉。`
+      : null;
+
     // Get or create user context
     const userContext = await userContextService.getOrCreateContext(userId);
 
@@ -151,7 +176,8 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       message,
       userContext,
       historyMessages || [],
-      imageUrls || []
+      imageUrls || [],
+      { securityHint }
     );
 
     // Extract savedData from toolData for DB storage and context

@@ -61,7 +61,8 @@ export async function runAgentV2(
   message: string,
   userContext: any = null,
   historyMessages: Array<{ role: string; content: string }> = [],
-  imageUrls: string[] = []
+  imageUrls: string[] = [],
+  options?: { securityHint?: string | null }
 ): Promise<{
   reply: string;
   toolData: any;
@@ -72,7 +73,7 @@ export async function runAgentV2(
 }> {
   try {
     return await withTimeout(
-      _runAgentV2Inner(userId, message, userContext, historyMessages, imageUrls),
+      _runAgentV2Inner(userId, message, userContext, historyMessages, imageUrls, options),
       AGENT_TOTAL_TIMEOUT_MS,
       `runAgentV2(user=${userId})`
     );
@@ -100,7 +101,8 @@ export async function _runAgentV2Inner(
   message: string,
   userContext: any = null,
   historyMessages: Array<{ role: string; content: string }> = [],
-  imageUrls: string[] = []
+  imageUrls: string[] = [],
+  options?: { securityHint?: string | null }
 ): Promise<{
   reply: string;
   toolData: any;
@@ -246,7 +248,7 @@ export async function _runAgentV2Inner(
 
   // 2. 构建消息
   console.log('[Step 2] Building messages...');
-  const systemPrompt = buildSystemPrompt(userContext, historySummary, visionError);
+  const systemPrompt = buildSystemPrompt(userContext, historySummary, visionError, options?.securityHint);
   const history = buildHistoryMessages(
     compressedHistory.map(m => ({ role: m.role, content: m.content }))
   );
