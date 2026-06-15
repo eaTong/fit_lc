@@ -5,6 +5,7 @@ const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const { parseToHtml, parseToText } = require('../../utils/markdown');
 const logger = require('../../utils/logger');
+const { sendSSEStream } = require('../../utils/sseStream');
 
 Page({
   data: {
@@ -307,7 +308,129 @@ Page({
     }
   },
 
-  // 处理发送结果
+  // 流式发送消息（使用 SSE）
+  onSendStream() {
+    const message = this.data.inputValue.trim();
+    const pendingImages = this.data.pendingImages;
+    const messages = this.data.messages;
+
+    if (!message && pendingImages.length === 0) return;
+    if (this.data.isLoading) return;
+
+    // 生成临时ID
+    const timestamp = Date.now();
+    const counter = (this._messageCounter || 0) + 1;
+    this._messageCounter = counter;
+    const tempId = `temp-${timestamp}-${counter}`;
+
+    // 先显示用户消息
+    const uploadedImageUrls = pendingImages.filter(img => img.uploaded && img.url).map(img => img.url);
+    const userMessage = {
+      id: tempId,
+      role: 'user',
+      content: message,
+      imageUrls: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    // 创建空的 assistant 消息（用于流式填充）
+    const assistantMessage = {
+      id: `temp-${timestamp}-assistant`,
+      role: 'assistant',
+      content: '',  // 初始为空，逐步填充
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedMessages = [...messages, userMessage, assistantMessage];
+    this.setData({
+      isLoading: true,
+      inputValue: '',
+      messages: updatedMessages
+    });
+    getApp().store.setState({ chatMessages: updatedMessages });
+    this.scrollToBottom();
+
+    // 准备历史消息（用于流式API）
+    const historyMessages = messages.slice(-10).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    // 流式发送
+    sendSSEStream(message, uploadedImageUrls, {
+      historyMessages,
+      onToken: (delta) => {
+        // 逐步追加内容
+        const msgs = this.data.messages;
+        const lastIdx = msgs.length - 1;
+        if (lastIdx >= 0 && msgs[lastIdx].role === 'assistant') {
+          const newContent = msgs[lastIdx].content + delta;
+          const newMessages = [...msgs];
+          newMessages[lastIdx] = { ...newMessages[lastIdx], content: newContent };
+          this.setData({ messages: newMessages });
+          getApp().store.setState({ chatMessages: newMessages });
+          this.scrollToBottom();
+        }
+      },
+      onStart: () => {
+        console.log('[SSE] Stream started');
+      },
+      onThinking: () => {
+        // 显示思考中状态
+        const msgs = this.data.messages;
+        const lastIdx = msgs.length - 1;
+        if (lastIdx >= 0) {
+          const newMessages = [...msgs];
+          newMessages[lastIdx] = { ...newMessages[lastIdx], status: 'thinking' };
+          this.setData({ messages: newMessages });
+        }
+      },
+      onToolCall: (event) => {
+        console.log('[SSE] Tool call:', event.tool);
+      },
+      onToolResult: (event) => {
+        console.log('[SSE] Tool result:', event.success);
+      },
+      onFinal: (event) => {
+        // 保存 toolData
+        const msgs = this.data.messages;
+        const lastIdx = msgs.length - 1;
+        if (lastIdx >= 0) {
+          const newMessages = [...msgs];
+          newMessages[lastIdx] = {
+            ...newMessages[lastIdx],
+            toolData: event.toolData,
+            visionError: event.visionError
+          };
+          this.setData({ messages: newMessages });
+        }
+      },
+      onDone: () => {
+        this.setData({ isLoading: false });
+        console.log('[SSE] Stream done');
+      },
+      onError: (event) => {
+        // 显示错误
+        const msgs = this.data.messages;
+        const lastIdx = msgs.length - 1;
+        if (lastIdx >= 0) {
+          const newMessages = [...msgs];
+          newMessages[lastIdx] = {
+            ...newMessages[lastIdx],
+            content: event.message || '出错了，请重试'
+          };
+          this.setData({ messages: newMessages, isLoading: false });
+        }
+      }
+    }).then(result => {
+      // 完成
+      this.setData({ isLoading: false });
+    }).catch(err => {
+      this.handleSendError(err, tempId);
+    });
+  },
+
+  // 处理发送结果（非流式）
   handleSendResult(result, tempId) {
     const { assistantMsg, error } = result;
     const messages = this.data.messages;
