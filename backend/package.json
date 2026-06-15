@@ -15,7 +15,8 @@
     "test:chat:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/chat/end-to-end",
     "test:setup": "node scripts/setup-test-db.js",
     "test:cleanup": "node scripts/cleanup-test-db.js",
-    "init-db": "node scripts/init-db.js"
+    "init-db": "node scripts/init-db.js",
+    "red-team": "npx tsx tests/security/redTeam.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.45",

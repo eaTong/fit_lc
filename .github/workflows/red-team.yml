@@ -1,0 +1,36 @@
+name: Red Team
+on:
+  pull_request:
+    paths:
+      - 'backend/src/agents/**'
+      - 'backend/src/tools/**'
+      - 'backend/tests/security/**'
+  workflow_dispatch:
+
+jobs:
+  red-team:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+          npx prisma generate
+        env:
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+          LANGFUSE_ENABLED: 'false'
+      - name: Run red team tests
+        run: cd backend && npm run red-team
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: red-team-results
+          path: backend/tests/security/results/
