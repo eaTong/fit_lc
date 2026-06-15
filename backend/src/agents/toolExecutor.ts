@@ -5,6 +5,7 @@
 
 import { validateToolInput, formatValidationError, ValidationResult } from '../tools/utils/validation';
 import { isCircuitOpen, recordSuccess, recordFailure, toolKey } from './circuitBreaker';
+import { guardToolCall, UserRole } from './security/toolGuard';
 
 // Tool imports
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -61,7 +62,8 @@ export function categorizeTool(toolName: string): ToolCategory {
  */
 export async function executeToolWithRetry(
   toolCall: ToolCall,
-  userId: number
+  userId: number,
+  userRole?: UserRole
 ): Promise<ToolExecutionResult> {
   const { name: toolName, input, id: toolCallId } = toolCall;
   const tool = toolMap[toolName];
@@ -77,7 +79,7 @@ export async function executeToolWithRetry(
   }
 
   // 预校验
-  const enrichedInput = { userId, ...input };
+  let enrichedInput = { userId, ...input };
   const validation = validateToolInput(toolName, enrichedInput);
 
   if (!validation.valid) {
@@ -90,6 +92,19 @@ export async function executeToolWithRetry(
       retries: 0
     };
   }
+
+  // 工具白名单和参数范围校验
+  const guard = guardToolCall(userRole || 'normal', toolName, enrichedInput);
+  if (!guard.allowed) {
+    return {
+      success: false,
+      toolName,
+      toolCallId,
+      error: guard.reason,
+      retries: 0
+    };
+  }
+  enrichedInput = guard.normalizedArgs;
 
   // 检查熔断器
   const circuitKey = toolKey(toolName);
@@ -181,7 +196,8 @@ export async function executeToolWithRetry(
  */
 export async function executeToolsBatch(
   toolCalls: ToolCall[],
-  userId: number
+  userId: number,
+  userRole?: UserRole
 ): Promise<{
   results: ToolExecutionResult[];
   successCount: number;
@@ -193,7 +209,7 @@ export async function executeToolsBatch(
 
   // 并行执行各类别
   const executeInCategory = async (calls: ToolCall[]) => {
-    return Promise.all(calls.map(call => executeToolWithRetry(call, userId)));
+    return Promise.all(calls.map(call => executeToolWithRetry(call, userId, userRole)));
   };
 
   const [saveResults, queryResults, planResults, analyzeResults] = await Promise.all([
