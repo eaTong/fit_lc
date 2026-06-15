@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { runAgentV2 as runAgent } from '../agents/fitnessAgentV2';
+import { runAgentV2StreamWithTimeout } from '../agents/fitnessAgentV2Stream';
 import { guardHistory } from '../agents/security/historyGuard';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
 import { classifyInjectionRisk } from '../agents/security/injectionClassifier';
+import { setupSSEResponse, sendSSEEvent, endSSE, sendSSEError } from '../utils/sse';
+import { isTokenEvent, isEndEvent } from '../agents/streamEvents';
 import prisma from '../config/prisma';
 
 const router = Router();
@@ -233,6 +236,127 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     console.error('Chat error:', err);
     // Log error details server-side but return generic message to client
     res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+/**
+ * @swagger
+ * /chat/stream:
+ *   post:
+ *     summary: 流式发送聊天消息 (SSE)
+ *     tags: [聊天]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: SSE 流式响应
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: [start, vision_start, vision_done, thinking, token, tool_call, tool_result, final, done, error]
+ */
+router.post('/stream', chatRateLimiter, async (req: Request, res: Response) => {
+  try {
+    const { message, imageUrls, historyMessages } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const userId = req.user!.id;
+
+    // Setup SSE response
+    setupSSEResponse(res);
+
+    // L1 分类器检查
+    const risk = await classifyInjectionRisk(message);
+    if (risk.label === 'malicious') {
+      sendSSEEvent(res, { type: 'error', message: '为了保障对话安全，我不会执行试图修改我行为的指令。' });
+      endSSE(res);
+      return;
+    }
+    const securityHint = risk.label === 'suspicious'
+      ? `[安全提示] 当前用户输入风险评分 ${risk.risk}，原因：${risk.reason || 'n/a'}。请保持高警觉。`
+      : null;
+
+    // Get user context
+    const userContext = await userContextService.getOrCreateContext(userId);
+    const safeHistory = guardHistory(historyMessages || []);
+
+    // Run streaming agent
+    const stream = await runAgentV2StreamWithTimeout(
+      userId,
+      message,
+      userContext,
+      safeHistory,
+      imageUrls || [],
+      { securityHint }
+    );
+
+    let finalReply = '';
+    let toolData: any = null;
+    let visionError: string | undefined;
+
+    for await (const event of stream) {
+      // 保存最终数据
+      if (event.type === 'final') {
+        toolData = event.toolData;
+        visionError = event.visionError;
+      }
+      if (event.type === 'token') {
+        finalReply += event.delta;
+      }
+
+      // 发送事件到客户端
+      sendSSEEvent(res, event);
+
+      // 刷新连接，避免 nginx 超时
+      if (event.type === 'token') {
+        res.flush();
+      }
+
+      // 结束条件
+      if (isEndEvent(event)) {
+        break;
+      }
+    }
+
+    endSSE(res);
+
+    // 保存到数据库（异步，不阻塞流式响应）
+    try {
+      const escapedMessage = escapeHtml(message);
+      const escapedReply = escapeHtml(finalReply);
+      const savedData = toolData?.result?.id ? { id: toolData.result.id, type: toolData.dataType } : null;
+
+      await prisma.chatMessage.create({
+        data: { userId, role: 'user', content: escapedMessage },
+      });
+
+      await prisma.chatMessage.create({
+        data: {
+          userId,
+          role: 'assistant',
+          content: escapedReply,
+          savedData: savedData as any,
+          isFromCoach: false,
+        },
+      });
+    } catch (dbErr) {
+      console.error('Failed to save chat messages:', dbErr);
+    }
+
+    // Refresh context
+    setImmediate(() => {
+      const dialogue = `用户：${escapeHtml(message)}\nAI：${escapeHtml(finalReply)}`;
+      userContextService.refreshContextWithLock(userId, dialogue);
+    });
+  } catch (err) {
+    console.error('Chat stream error:', err);
+    sendSSEError(res, '处理消息时出错，请稍后重试');
   }
 });
 
