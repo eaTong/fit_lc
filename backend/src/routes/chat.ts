@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { runAgentV2 as runAgent } from '../agents/fitnessAgentV2';
+import { guardHistory } from '../agents/security/historyGuard';
 import { userContextService } from '../services/userContextService';
 import { albumService } from '../services/albumService';
 import prisma from '../config/prisma';
@@ -145,12 +146,15 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
     // Get or create user context
     const userContext = await userContextService.getOrCreateContext(userId);
 
+    // Apply history guard (cap messages + tokens, sanitize user messages)
+    const safeHistory = guardHistory(historyMessages || []);
+
     // Call agent with context, history and optional images
     const { reply, toolData, visionError } = await runAgent(
       userId,
       message,
       userContext,
-      historyMessages || [],
+      safeHistory,
       imageUrls || []
     );
 
