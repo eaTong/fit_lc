@@ -177,7 +177,7 @@ router.post('/message', chatRateLimiter, async (req: Request, res: Response) => 
       userContext,
       historyMessages || [],
       imageUrls || [],
-      { securityHint }
+      securityHint ? { securityHint } : undefined
     );
 
     // Extract savedData from toolData for DB storage and context
