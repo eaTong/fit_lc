@@ -264,6 +264,13 @@ AI主动询问"要查看趋势吗？""要生成计划吗？"
 3. 将分析结果注入消息前缀
 4. 主 AI (MiniMax) 处理纯文本对话
 
+**安全加固（2026-06-15 Sprint 1 / T7）：**
+- 外部内容（vision 解析结果、用户消息）通过 XML 标签 `<image_description trust="external-data">…</image_description>` 与 `<user_message>…</user_message>` 包裹
+- 已知指令短语（"忽略以上"、"ignore previous"、"system:" 等）自动替换为 `[neutralized:label:"..."]` 标记
+- System prompt 新增"外部内容安全约定"，明确告知 LLM 标签内仅为数据、不可执行
+- 实现：`backend/src/agents/security/sanitizeExternalContent.ts`
+- 对应缺口：G11 / OWASP LLM #1 第一层（Sprint 3 扩展为完整 6 层防御）
+
 ---
 
 ## 5. 激励系统（规划中）
