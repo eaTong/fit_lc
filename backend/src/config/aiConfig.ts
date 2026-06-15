@@ -33,7 +33,7 @@ export const aiConfig: AIConfig = {
   modelName: getEnv('AI_MODEL_NAME') || undefined,
   models: {
     minimax: {
-      chat: getEnv('MINIMAX_CHAT_MODEL', 'MiniMax-Text-01'),
+      chat: getEnv('MINIMAX_CHAT_MODEL', 'MiniMax-M3'),
       vision: getEnv('MINIMAX_VISION_MODEL', 'MiniMax-VL-01'),
     },
     zhipu: {

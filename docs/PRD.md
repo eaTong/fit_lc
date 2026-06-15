@@ -861,6 +861,21 @@ Router → Service → Repository
 }
 ```
 
+### 5.5 AI 模型配置
+
+模型 ID 统一通过环境变量管理，禁止在代码中硬编码：
+
+| 环境变量 | 默认值 | 用途 |
+|---|---|---|
+| `AI_PROVIDER` | `minimax` | AI 服务商 |
+| `MINIMAX_CHAT_MODEL` | `MiniMax-M3` | MiniMax 主对话模型 |
+| `MINIMAX_VISION_MODEL` | `MiniMax-VL-01` | MiniMax 视觉模型 |
+| `ZHIPU_CHAT_MODEL` | `glm-4-plus` | 智谱主对话模型 |
+| `ZHIPU_VISION_MODEL` | `glm-4v-flash` | 智谱视觉模型 |
+| `AI_MODEL_NAME` | `undefined` | 全局覆盖（最高优先级） |
+
+代码访问：`getModelName('chat' | 'vision')` (`backend/src/config/aiConfig.ts:50`)
+
 ---
 
 ## 7. 数据库设计
