@@ -5,7 +5,7 @@ const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const { parseToHtml, parseToText } = require('../../utils/markdown');
 const logger = require('../../utils/logger');
-const { sendSSEStream } = require('../../utils/sseStream');
+const { isChunkedSupported } = require('../../utils/sseStream');
 
 Page({
   data: {
@@ -356,8 +356,8 @@ Page({
       content: m.content
     }));
 
-    // 流式发送
-    sendSSEStream(message, uploadedImageUrls, {
+    // 流式发送（通过 chatActions.sendMessageStream）
+    chatActions.sendMessageStream(message, uploadedImageUrls, {
       historyMessages,
       onToken: (delta) => {
         // 逐步追加内容
@@ -373,7 +373,7 @@ Page({
         }
       },
       onStart: () => {
-        console.log('[SSE] Stream started');
+        console.log('[SSE] Stream started, chunked:', isChunkedSupported());
       },
       onThinking: () => {
         // 显示思考中状态
@@ -425,6 +425,9 @@ Page({
     }).then(result => {
       // 完成
       this.setData({ isLoading: false });
+      if (result.fallback) {
+        console.warn('[SSE] Used fallback mode (chunked not supported)');
+      }
     }).catch(err => {
       this.handleSendError(err, tempId);
     });

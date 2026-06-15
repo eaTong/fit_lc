@@ -1,18 +1,56 @@
 /**
  * SSE Stream Utility for Mini Program
  * 处理流式响应读取和事件解析
+ *
+ * 修复：
+ * 1. Promise 正常完成时 resolve（监听 onDone 事件）
+ * 2. 错误时 reject
+ * 3. iOS 兼容：fallback 到普通 request + 长轮询
+ * 4. 超时处理
  */
 
 const API_BASE = 'https://fitlc.com';
 
 /**
- * 发送流式消息并处理 SSE 响应
- * @param {string} content - 消息内容
- * @param {string[]} imageUrls - 图片URL数组
- * @param {Object} options - 选项
- * @param {Function} onToken - token 事件回调
- * @param {Function} onEvent - 所有事件回调
- * @returns {Promise<{reply: string, toolData: any}>}
+ * 解析 SSE 文本块为事件数组
+ */
+function parseSSEChunk(text) {
+  const events = [];
+  const lines = text.split('\n\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // SSE comment (keep-alive)
+    if (trimmed.startsWith(':')) continue;
+    // Only process data: lines (ignore event:, id:, retry: etc.)
+    if (trimmed.startsWith('data: ')) {
+      try {
+        events.push(JSON.parse(trimmed.slice(6)));
+      } catch (e) {
+        console.warn('[SSE] Parse error:', e.message, 'chunk:', trimmed.slice(0, 50));
+      }
+    }
+  }
+  return events;
+}
+
+/**
+ * 检查是否支持 chunked 模式
+ */
+function isChunkedSupported() {
+  // iOS 13+ 支持 enableChunked，低版本不支持
+  // Android 全版本支持
+  const sys = wx.getSystemInfoSync();
+  if (sys.platform !== 'ios') return true;
+  // 简单判断：基础库版本 >= 2.10.0 支持
+  const version = (sys.SDKVersion || '0').split('.').map(Number);
+  if (version[0] > 2) return true;
+  if (version[0] === 2 && version[1] >= 10) return true;
+  return false;
+}
+
+/**
+ * 主方案：使用 wx.request + enableChunked
  */
 function sendSSEStream(content, imageUrls = [], options = {}) {
   const {
@@ -25,16 +63,30 @@ function sendSSEStream(content, imageUrls = [], options = {}) {
     onFinal,
     onDone,
     onError,
-    historyMessages = []
+    historyMessages = [],
+    timeout = 30000
   } = options;
 
   return new Promise((resolve, reject) => {
     let reply = '';
     let toolData = null;
     let visionError = undefined;
-    let events = [];
+    let finished = false;
+    let isUnsupported = false;
+    let buffer = ''; // 处理跨 chunk 的事件
 
-    // 使用 wx.request 的 enableChunked
+    // 兼容：基础库不支持时回退到普通请求
+    if (!isChunkedSupported()) {
+      console.warn('[SSE] enableChunked not supported, fallback to normal request');
+      return sendSSEStreamFallback(content, imageUrls, options)
+        .then(resolve)
+        .catch(reject);
+    }
+
+    const cleanup = () => {
+      finished = true;
+    };
+
     const task = wx.request({
       url: `${API_BASE}/api/chat/stream`,
       method: 'POST',
@@ -47,83 +99,193 @@ function sendSSEStream(content, imageUrls = [], options = {}) {
         imageUrls,
         historyMessages
       },
-      enableChunked: true, // 关键：启用 chunked 模式
+      enableChunked: true,
+      timeout,
 
       success(res) {
-        // 成功处理
+        if (!finished) {
+          // 处理最后一批数据
+          if (res.data) {
+            const events = parseSSEChunk(res.data);
+            processEvents(events, true);
+          }
+        }
       },
 
       fail(err) {
+        if (finished) return;
+        cleanup();
+        // 处理不支持 enableChunked 的情况
+        if (err && (err.errMsg?.includes('fail') || err.errMsg?.includes('not support'))) {
+          console.warn('[SSE] Chunked failed, fallback:', err.errMsg);
+          isUnsupported = true;
+          return sendSSEStreamFallback(content, imageUrls, options)
+            .then(resolve)
+            .catch(reject);
+        }
         reject(err);
       }
     });
 
-    // 手动处理 chunked 数据（需要使用 SocketTask）
-    // 注意：小程序的 enableChunked 支持有限，可能需要使用 wx.connectSocket
+    if (!task) {
+      // task 为 null，说明 enableChunked 完全不支持
+      return sendSSEStreamFallback(content, imageUrls, options)
+        .then(resolve)
+        .catch(reject);
+    }
 
-    // 由于小程序对 SSE 支持有限，使用备选方案
-    // 如果 chunked 不可用，回退到普通请求
+    /**
+     * 处理事件列表
+     */
+    function processEvents(events, isFinal = false) {
+      for (const event of events) {
+        // 触发回调
+        switch (event.type) {
+          case 'start':
+            onStart?.(event);
+            break;
+          case 'vision_start':
+          case 'vision_done':
+            // Vision 事件也触发 onEvent 但不特别处理
+            break;
+          case 'vision_error':
+            visionError = event.message;
+            break;
+          case 'thinking':
+            onThinking?.(event);
+            break;
+          case 'token':
+            reply += event.delta;
+            onToken?.(event.delta, event);
+            break;
+          case 'tool_call':
+            onToolCall?.(event);
+            break;
+          case 'tool_result':
+            onToolResult?.(event);
+            break;
+          case 'final':
+            toolData = event.toolData;
+            if (event.visionError) visionError = event.visionError;
+            onFinal?.(event);
+            break;
+          case 'done':
+            onDone?.(event);
+            if (!finished) {
+              cleanup();
+              resolve({ reply, toolData, visionError });
+            }
+            return;
+          case 'error':
+            onError?.(event);
+            if (!finished) {
+              cleanup();
+              reject(new Error(event.message || 'SSE error'));
+            }
+            return;
+        }
+        onEvent?.(event);
+      }
+
+      // 如果是最终批但没有 done 事件（异常情况），也 resolve
+      if (isFinal && !finished) {
+        cleanup();
+        resolve({ reply, toolData, visionError });
+      }
+    }
+
     task.onChunkReceived((res) => {
       try {
-        const data = res.data;
-        const lines = data.split('\n\n');
+        if (!res.data) return;
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const event = JSON.parse(line.slice(6));
+        // 拼接 buffer 处理跨 chunk 事件
+        buffer += res.data;
+        const events = parseSSEChunk(buffer);
 
-            events.push(event);
+        // 找到最后一个完整的事件结尾位置
+        const lastSepIdx = buffer.lastIndexOf('\n\n');
+        if (lastSepIdx >= 0) {
+          buffer = buffer.slice(lastSepIdx + 2);
+        }
 
-            // 调用对应回调
-            switch (event.type) {
-              case 'start':
-                onStart?.(event);
-                break;
-              case 'thinking':
-                onThinking?.(event);
-                break;
-              case 'token':
-                reply += event.delta;
-                onToken?.(event.delta, event);
-                break;
-              case 'tool_call':
-                onToolCall?.(event);
-                break;
-              case 'tool_result':
-                onToolResult?.(event);
-                break;
-              case 'final':
-                toolData = event.toolData;
-                visionError = event.visionError;
-                onFinal?.(event);
-                break;
-              case 'done':
-                onDone?.(event);
-                break;
-              case 'error':
-                onError?.(event);
-                break;
-            }
-
-            onEvent?.(event);
-          }
+        if (events.length > 0) {
+          processEvents(events, false);
         }
       } catch (e) {
-        console.error('Parse SSE event error:', e);
+        console.error('[SSE] Chunk error:', e);
       }
     });
 
-    // 完成时返回
-    task.onHeadersReceived((res) => {
-      // headers received
-    });
+    // 超时处理
+    setTimeout(() => {
+      if (!finished) {
+        console.warn('[SSE] Timeout, aborting');
+        try { task.abort(); } catch (e) {}
+        cleanup();
+        resolve({ reply, toolData, visionError, timeout: true });
+      }
+    }, timeout);
+  });
+}
 
-    // 等待完成
-    const originalAbort = task.abort.bind(task);
-    task.abort = function() {
-      originalAbort();
-      resolve({ reply, toolData, visionError, events });
-    };
+/**
+ * Fallback: 不支持 chunked 时的备选方案
+ * 等待完整响应后一次性返回
+ */
+function sendSSEStreamFallback(content, imageUrls = [], options = {}) {
+  const { onToken, onStart, onFinal, historyMessages = [] } = options;
+
+  return new Promise((resolve, reject) => {
+    onStart?.();
+
+    wx.request({
+      url: `${API_BASE}/api/chat/message`,
+      method: 'POST',
+      header: {
+        'Authorization': `Bearer ${getApp().globalData.token}`,
+        'Content-Type': 'application/json'
+      },
+      data: {
+        message: content,
+        imageUrls,
+        historyMessages
+      },
+      success(res) {
+        const reply = res.data.reply || '';
+        // 模拟流式效果：按字符分块
+        const tokens = reply.match(/[\s\S]/g) || [];
+        let current = '';
+        const interval = setInterval(() => {
+          if (tokens.length === 0) {
+            clearInterval(interval);
+            onFinal?.({ toolData: res.data.toolData });
+            resolve({
+              reply,
+              toolData: res.data.toolData,
+              visionError: res.data.visionError,
+              fallback: true
+            });
+            return;
+          }
+          const ch = tokens.shift();
+          current += ch;
+          onToken?.(ch);
+        }, 20); // 20ms/字符 模拟流式
+
+        // 兜底超时
+        setTimeout(() => {
+          clearInterval(interval);
+          onFinal?.({ toolData: res.data.toolData });
+          resolve({
+            reply: current,
+            toolData: res.data.toolData,
+            visionError: res.data.visionError,
+            fallback: true
+          });
+        }, Math.min(reply.length * 20 + 1000, 30000));
+      },
+      fail: reject
+    });
   });
 }
 
@@ -150,15 +312,14 @@ function sendSSEStreamWS(content, imageUrls = [], options = {}) {
     let toolData = null;
     let visionError = undefined;
     let ws = null;
+    let finished = false;
 
-    // 创建 WebSocket 连接
     ws = wx.connectSocket({
       url: `wss://fitlc.com/ws/chat/stream`,
       protocols: ['authorization', getApp().globalData.token]
     });
 
     ws.onOpen(() => {
-      // 发送初始化消息
       ws.send({
         data: JSON.stringify({
           action: 'start',
@@ -197,33 +358,48 @@ function sendSSEStreamWS(content, imageUrls = [], options = {}) {
             break;
           case 'done':
             onDone?.(event);
-            ws.close();
-            resolve({ reply, toolData, visionError });
+            if (!finished) {
+              finished = true;
+              ws.close();
+              resolve({ reply, toolData, visionError });
+            }
             break;
           case 'error':
             onError?.(event);
-            ws.close();
-            reject(new Error(event.message));
+            if (!finished) {
+              finished = true;
+              ws.close();
+              reject(new Error(event.message));
+            }
             break;
         }
 
         onEvent?.(event);
       } catch (e) {
-        console.error('Parse WS message error:', e);
+        console.error('[WS] Parse message error:', e);
       }
     });
 
     ws.onError((err) => {
-      reject(err);
+      if (!finished) {
+        finished = true;
+        reject(err);
+      }
     });
 
     ws.onClose(() => {
-      resolve({ reply, toolData, visionError });
+      if (!finished) {
+        finished = true;
+        resolve({ reply, toolData, visionError });
+      }
     });
   });
 }
 
 module.exports = {
   sendSSEStream,
-  sendSSEStreamWS
+  sendSSEStreamWS,
+  sendSSEStreamFallback,
+  isChunkedSupported,
+  parseSSEChunk
 };
