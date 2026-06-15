@@ -1,11 +1,15 @@
 /**
  * Chat Model Factory
  * Creates the appropriate chat model based on AI_PROVIDER env var
+ *
+ * Sprint 5 T2: zhipu provider explicitly rejected for main chat (no tool calling)
+ * Sprint 5 T3: provider fallback support (optional secondary model)
  */
 
 import { getCurrentProvider } from '../config/aiConfig';
 import { createMiniMaxModel } from './chatMiniMax';
 import { createZhipuChat, createZhipuVisionChat } from './chatZhipu';
+import { createFallbackModel } from './chatFallback';
 
 /**
  * Get the appropriate chat model based on configuration
@@ -17,95 +21,32 @@ export async function createChatModel(callbacks?: any[]) {
   const provider = getCurrentProvider();
 
   if (provider === 'minimax') {
-    return createMiniMaxModel({ callbacks });
+    const primary = createMiniMaxModel({ callbacks });
+    const fallback = createFallbackModel();
+
+    // 如果有 fallback，包装 withFallbacks
+    if (fallback) {
+      console.log('[chatFactory] Primary minimax + fallback enabled');
+      try {
+        // @ts-ignore - withFallbacks API
+        return primary.withFallbacks({ fallbacks: [fallback] });
+      } catch (e) {
+        console.warn('[chatFactory] withFallbacks failed, using primary only:', (e as Error).message);
+        return primary;
+      }
+    }
+    return primary;
   } else if (provider === 'zhipu') {
-    // zhipu 包装暂不支持 callbacks（在 S5 修复），先 noop 透传
-    return createZhipuLangChainModel();
+    // Sprint 5 T2: zhipu 不支持 main chat (tool calling)，明确拒绝
+    // zhipu 只用于 vision 和 classifier（直接通过 chatZhipu 模块调用）
+    throw new Error(
+      'Zhipu provider does not support main chat (tool calling required). ' +
+      'Set AI_PROVIDER=minimax, or use chatZhipu directly for vision tasks.'
+    );
   }
 
   throw new Error(`Unsupported AI provider: ${provider}`);
 }
 
-/**
- * Create a Zhipu model that provides a LangChain-compatible interface
- * This wraps the Zhipu API to work with the existing Agent tool-calling pattern
- */
-async function createZhipuLangChainModel() {
-  const zhipuChat = createZhipuChat();
-
-  // Create a wrapper that mimics LangChain's ChatModel interface
-  //noinspection JSUnusedLocalSymbols
-  const model = {
-    bindTools: function(_tools: any) {
-      return model;
-    },
-    invoke: async function(input: any) {
-      // Handle LangChain message format
-      const messages = extractMessagesFromInput(input);
-
-      try {
-        const result = await zhipuChat.chat(messages as any, {
-          temperature: 0.7,
-        });
-
-        return {
-          content: result.content,
-          additional_kwargs: {},
-          response_metadata: {
-            usage: result.usage,
-          },
-        };
-      } catch (error) {
-        console.error('Zhipu chat error:', error);
-        throw error;
-      }
-    },
-    _getConfig: function() {
-      return {};
-    },
-  };
-
-  return model;
-}
-
-/**
- * Extract messages from various LangChain input formats
- */
-function extractMessagesFromInput(input: any): Array<{ role: string; content: string | { text: string; images?: string[] } }> {
-  const messages: Array<{ role: string; content: string | { text: string; images?: string[] } }> = [];
-
-  if (!input) return messages;
-
-  // Handle array of messages
-  if (Array.isArray(input)) {
-    for (const item of input) {
-      if (item._getType) {
-        // LangChain message object
-        const type = item._getType();
-        if (type === 'human') {
-          // Check if it's multimodal content with images
-          if (item.content && typeof item.content === 'object' && item.content.images) {
-            messages.push({ role: 'user', content: { text: item.content.text || '', images: item.content.images } });
-          } else {
-            const content = typeof item.content === 'string' ? item.content : JSON.stringify(item.content);
-            messages.push({ role: 'user', content });
-          }
-        } else if (type === 'ai') {
-          messages.push({ role: 'assistant', content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
-        } else if (type === 'system') {
-          messages.push({ role: 'system', content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
-        }
-      } else if (item.role && item.content) {
-        if (item.content && typeof item.content === 'object' && item.content.images) {
-          messages.push({ role: item.role, content: { text: item.content.text || '', images: item.content.images } });
-        } else {
-          messages.push({ role: item.role, content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content) });
-        }
-      }
-    }
-  }
-
-  return messages;
-}
-
+// Re-export zhipu vision/utility functions for use by vision/classifier modules
 export { createZhipuChat, createZhipuVisionChat };

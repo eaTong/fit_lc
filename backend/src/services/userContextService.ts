@@ -5,6 +5,7 @@ import { measurementRepository } from '../repositories/measurementRepository';
 import { planRepository } from '../repositories/planRepository';
 import { userRepository } from '../repositories/userRepository';
 import { createModel } from '../agents/chatMiniMax';
+import { withLock } from '../infrastructure/distributedLock';
 
 interface AIMessageContent {
   type: 'text';
@@ -13,12 +14,6 @@ interface AIMessageContent {
 
 interface AIMessage {
   content: string | AIMessageContent[];
-}
-
-const locks = new Map<number, boolean>();
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function extractText(response: AIMessage): string {
@@ -41,14 +36,17 @@ export const userContextService = {
   },
 
   async refreshContextWithLock(userId: number, latestDialogue: string) {
-    while (locks.get(userId)) {
-      await sleep(100);
-    }
-    locks.set(userId, true);
-    try {
-      await this.refreshContext(userId, latestDialogue);
-    } finally {
-      locks.delete(userId);
+    // 使用分布式锁（Redis 或进程内 fallback）
+    const result = await withLock(
+      `uc:lock:${userId}`,
+      30_000, // 30s TTL
+      async () => {
+        await this.refreshContext(userId, latestDialogue);
+      },
+      10_000 // 最多等待 10s
+    );
+    if (result === null) {
+      console.warn(`[userContextService] Failed to acquire lock for user ${userId}, skipping refresh`);
     }
   },
 
