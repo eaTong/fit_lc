@@ -1,6 +1,7 @@
 // Chat API - 对话相关 API
 const { request, get, post } = require('./client');
 const storage = require('../utils/storage');
+const { sendSSEStream } = require('../utils/sseStream');
 
 // Chat Actions
 const chatActions = {
