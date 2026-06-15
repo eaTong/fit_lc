@@ -54,6 +54,27 @@ export function getModelName(type: 'chat' | 'vision'): string {
   return aiConfig.models[aiConfig.provider][type];
 }
 
+/**
+ * 获取推理模型的 API Key（用于 generatePlan LLM 化，Sprint 7 T6）
+ */
+export function getReasoningApiKey(): string {
+  return process.env.REASONING_API_KEY || process.env.MINIMAX_API_KEY || '';
+}
+
+/**
+ * 获取推理模型名称
+ */
+export function getReasoningModel(): string {
+  return process.env.REASONING_MODEL || process.env.MINIMAX_CHAT_MODEL || 'MiniMax-M3';
+}
+
+/**
+ * 获取推理模型 Base URL
+ */
+export function getReasoningBaseUrl(): string {
+  return process.env.REASONING_BASE_URL || 'https://api.minimax.chat/v1';
+}
+
 export function requireApiKey(provider: AIProvider): string {
   if (provider === 'minimax') {
     if (!aiConfig.minimaxApiKey) {

@@ -3,6 +3,8 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import { planService } from '../services/planService';
 import { exerciseRepository } from '../repositories/exerciseRepository';
 import { validateToolInput, formatValidationError } from './utils/validation';
+import { generatePlanLLM, PlanLLMInput, PlanLLMContext } from '../services/planLLMService';
+import { recallMemory, buildMemoryContext } from '../memory/memoryRecall';
 
 // Types matching the Zod schema
 type Goal = 'bulk' | 'cut' | 'maintain';
@@ -353,50 +355,103 @@ export const generatePlanTool = new DynamicStructuredTool({
         });
       }
 
-      // Generate exercises based on user profile
-      const exercises = await generateExercisesForProfile(user_profile);
+      let planResult: any;
+      let aiReply: string;
 
-      // Create plan in database
-      const planId = await planService.createPlan(userId, user_profile, exercises);
+      // 尝试 LLM 生成
+      try {
+        // 收集上下文：记忆 + 近期训练
+        const memories = await recallMemory(userId, 'training preferences injuries goals', { minImportance: 5 });
+        const memoryContext = buildMemoryContext(memories);
 
-      // Generate response message
-      const goalText = user_profile.goal === 'bulk' ? '增肌' : user_profile.goal === 'cut' ? '减脂' : '保持';
-      const expText = user_profile.experience === 'beginner' ? '初级' : user_profile.experience === 'intermediate' ? '中级' : '高级';
+        const llmInput: PlanLLMInput = {
+          goal: user_profile.goal,
+          frequency: user_profile.frequency,
+          experience: user_profile.experience,
+          equipment: user_profile.equipment,
+          targetMuscles: user_profile.targetMuscles,
+          conditions: user_profile.conditions,
+          durationWeeks: user_profile.duration_weeks,
+        };
 
-      let message = `健身计划已生成！\n\n`;
-      message += `计划周期：${user_profile.duration_weeks}周\n`;
-      message += `训练频率：每周${user_profile.frequency}次\n`;
-      message += `目标：${goalText}\n`;
-      message += `经验水平：${expText}\n\n`;
+        const llmCtx: PlanLLMContext = {
+          recentWorkouts: '',
+          memories: memoryContext || '暂无',
+          profile: `目标:${user_profile.goal}, 经验:${user_profile.experience}, 体重:${user_profile.body_weight}kg`,
+          allowedExercises: [],
+        };
 
-      // 按训练日分组展示
-      const byDay: Record<string, string[]> = {};
-      for (const ex of exercises) {
-        if (!byDay[ex.dayOfWeek]) byDay[ex.dayOfWeek] = [];
-        byDay[ex.dayOfWeek].push(ex.exerciseName);
-      }
+        const llmPlan = await generatePlanLLM(llmInput, llmCtx);
 
-      message += `训练安排：\n`;
-      const dayNames = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-      for (const [day, dayExercises] of Object.entries(byDay)) {
-        message += `${dayNames[parseInt(day)] || day}：${dayExercises.join('、')}\n`;
-      }
+        // 转换 LLM 输出为数据库格式
+        const exercises = llmPlan.schedule.flatMap(day =>
+          day.exercises.map(ex => ({
+            exerciseId: null,
+            exerciseName: ex.name,
+            dayOfWeek: day.dayOfWeek,
+            targetMuscles: day.focus,
+            sets: ex.sets,
+            reps: ex.reps,
+            weight: null,
+            duration: null,
+            restSeconds: ex.restSeconds,
+            orderIndex: 0,
+          }))
+        );
 
-      message += `\n你可以查看计划详情，或让我调整某些训练动作。`;
+        const planId = await planService.createPlan(userId, user_profile, exercises);
+        aiReply = llmPlan.rationale;
 
-      const schedule = [];
-      for (const [day, dayExercises] of Object.entries(byDay)) {
-        schedule.push({
-          dayOfWeek: parseInt(day),
-          dayName: dayNames[parseInt(day)] || day,
-          exercises: dayExercises
-        });
-      }
+        const dayNames = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        const schedule = llmPlan.schedule.map(d => ({
+          dayOfWeek: d.dayOfWeek,
+          dayName: dayNames[d.dayOfWeek] || `Day ${d.dayOfWeek}`,
+          exercises: d.exercises.map(e => e.name),
+        }));
 
-      return JSON.stringify({
-        aiReply: message,
-        dataType: 'plan',
-        result: {
+        planResult = {
+          planId,
+          planName: user_profile.name || 'AI 健身计划',
+          durationWeeks: llmPlan.durationWeeks,
+          frequency: llmPlan.weeklyFrequency,
+          goal: user_profile.goal === 'bulk' ? '增肌' : user_profile.goal === 'cut' ? '减脂' : '保持',
+          experience: user_profile.experience === 'beginner' ? '初级' : user_profile.experience === 'intermediate' ? '中级' : '高级',
+          schedule
+        };
+      } catch (llmError) {
+        console.warn('[generatePlan] LLM failed, falling back to rules:', (llmError as Error).message);
+
+        // Fallback: 规则引擎
+        const exercises = await generateExercisesForProfile(user_profile);
+        const planId = await planService.createPlan(userId, user_profile, exercises);
+
+        const goalText = user_profile.goal === 'bulk' ? '增肌' : user_profile.goal === 'cut' ? '减脂' : '保持';
+        const expText = user_profile.experience === 'beginner' ? '初级' : user_profile.experience === 'intermediate' ? '中级' : '高级';
+
+        aiReply = `健身计划已生成！\n\n计划周期：${user_profile.duration_weeks}周，训练频率：每周${user_profile.frequency}次，目标：${goalText}，经验水平：${expText}\n\n`;
+
+        const byDay: Record<string, string[]> = {};
+        for (const ex of exercises) {
+          if (!byDay[ex.dayOfWeek]) byDay[ex.dayOfWeek] = [];
+          byDay[ex.dayOfWeek].push(ex.exerciseName);
+        }
+
+        const dayNames = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        for (const [day, dayExercises] of Object.entries(byDay)) {
+          aiReply += `${dayNames[parseInt(day)] || day}：${dayExercises.join('、')}\n`;
+        }
+        aiReply += `\n你可以查看计划详情，或让我调整某些训练动作。`;
+
+        const schedule = [];
+        for (const [day, dayExercises] of Object.entries(byDay)) {
+          schedule.push({
+            dayOfWeek: parseInt(day),
+            dayName: dayNames[parseInt(day)] || day,
+            exercises: dayExercises
+          });
+        }
+
+        planResult = {
           planId,
           planName: user_profile.name || '健身计划',
           durationWeeks: user_profile.duration_weeks,
@@ -404,10 +459,16 @@ export const generatePlanTool = new DynamicStructuredTool({
           goal: goalText,
           experience: expText,
           schedule
-        }
+        };
+      }
+
+      return JSON.stringify({
+        aiReply,
+        dataType: 'plan',
+        result: planResult
       });
-    } catch (error) {
-      throw new Error(`生成健身计划失败: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`生成健身计划失败: ${(error as Error).message}`);
     }
   }
 });
