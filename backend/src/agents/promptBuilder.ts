@@ -17,8 +17,10 @@ interface UserContext {
  * 构建健身 Agent 系统提示词
  * @param userContext 用户上下文
  * @param historySummary 历史消息摘要（可选，用于压缩后的长对话）
+ * @param visionError Vision 失败信息（可选，用于降级提示）
+ * @param securityHint L1 输入分类器给出的安全提示（可选，仅在 suspicious 时注入）
  */
-export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null, visionError?: string | null): SystemMessage {
+export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null, visionError?: string | null, securityHint?: string | null): SystemMessage {
   const {
     today: todayStr,
     yesterday: yesterdayStr,
@@ -120,6 +122,14 @@ ${userContext.context_text}
 `;
   }
 
+  // L1 输入分类器给出的本轮安全提示（仅在 suspicious 时注入，Sprint 3 T1）
+  let securitySection = '';
+  if (securityHint) {
+    securitySection = `\n【当前轮次安全提示】
+${securityHint}
+`;
+  }
+
   const fullPrompt = `你是健身数据记录助手。用中文回答。
 
 ${coachPersona}
@@ -129,6 +139,7 @@ ${externalContentDefense}
 ${historySection}
 ${contextSection}
 ${visionFailureSection}
+${securitySection}
 
 【日期参考 - 今天：${todayStr}】
 当用户使用相对日期时，必须根据以下规则计算实际日期：
