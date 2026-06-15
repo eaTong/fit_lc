@@ -4,6 +4,7 @@
  */
 
 import { createChatModel } from './chatFactory';
+import { wrapAsExternalContent } from './security/sanitizeExternalContent';
 
 // 消息类型
 export interface Message {
@@ -239,8 +240,15 @@ export async function compressHistory(
 ): Promise<CompressionResult> {
   // 1. 快速路径：消息数量未超限
   if (messages.length <= config.maxRecentMessages) {
+    // 包装用户消息为外部内容标签（物理分离数据与指令）
+    const wrappedRecent = messages.map(msg => ({
+      ...msg,
+      content: msg.role === 'user'
+        ? wrapAsExternalContent(msg.content, { tag: 'history_message', source: 'chat-history' })
+        : msg.content
+    }));
     return {
-      recent: messages,
+      recent: wrappedRecent,
       summary: null,
       originalCount: messages.length,
       compressedCount: messages.length,
@@ -253,8 +261,15 @@ export async function compressHistory(
 
   // 3. 未超 token 限制，检查消息数量
   if (currentTokens < config.maxTokens && messages.length <= config.maxRecentMessages * 2) {
+    // 包装用户消息为外部内容标签（物理分离数据与指令）
+    const wrappedRecent = messages.map(msg => ({
+      ...msg,
+      content: msg.role === 'user'
+        ? wrapAsExternalContent(msg.content, { tag: 'history_message', source: 'chat-history' })
+        : msg.content
+    }));
     return {
-      recent: messages,
+      recent: wrappedRecent,
       summary: null,
       originalCount: messages.length,
       compressedCount: messages.length,
@@ -277,11 +292,19 @@ export async function compressHistory(
   // 6. 构建最终消息列表（去重 + 排序）
   const finalRecent = deduplicateAndSort([...toolResults, ...recent]);
 
+  // 7. 包装用户消息为外部内容标签（物理分离数据与指令）
+  const wrappedRecent = finalRecent.map(msg => ({
+    ...msg,
+    content: msg.role === 'user'
+      ? wrapAsExternalContent(msg.content, { tag: 'history_message', source: 'chat-history' })
+      : msg.content
+  }));
+
   return {
-    recent: finalRecent,
+    recent: wrappedRecent,
     summary,
     originalCount: messages.length,
-    compressedCount: finalRecent.length,
+    compressedCount: wrappedRecent.length,
     wasCompressed: true
   };
 }
