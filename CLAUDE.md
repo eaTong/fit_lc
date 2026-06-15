@@ -235,6 +235,10 @@ interface ToolResponse<T = any> {
 }
 ```
 
+### 可观测性
+
+每次对话通过 Langfuse 捕获 trace；本地开发可在 `.env` 设 `LANGFUSE_ENABLED=false` 关闭。
+
 ## 小程序 (fitlc-mini)
 
 ### 项目位置

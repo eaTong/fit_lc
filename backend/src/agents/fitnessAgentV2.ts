@@ -17,6 +17,8 @@ import { compressHistory, markToolMessages, Message } from './historyCompressor'
 import { clarificationManager } from './clarification';
 import { extractClarification补充 } from './clarification/extractClarification';
 import { withTimeout, TimeoutError } from '../utils/withTimeout';
+import { getLangfuse, createTraceCallbacks } from '../observability/langfuse';
+import type { TraceMetadata } from '../observability/langfuse.types';
 
 // 工具列表（用于 bindTools）
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -37,27 +39,15 @@ const tools = [
   analyzeExecutionTool
 ];
 
-// Agent 总超时兜底（防 tool/DB 慢调用累积导致 HTTP 挂死）
+// Agent 总超时兜底（防 tool/DB 慢调用累积导致 HTTP 挂死，Sprint 1 T4）
 // 默认 35s；可通过环境变量 AGENT_TOTAL_TIMEOUT_MS_TEST 注入（仅供测试用）
 const AGENT_TOTAL_TIMEOUT_MS = parseInt(process.env.AGENT_TOTAL_TIMEOUT_MS_TEST || '', 10) || 35_000;
 
-// 模型缓存
-let cachedModel: any = null;
-let modelPromise: Promise<any> | null = null;
-
-async function getModel() {
-  if (cachedModel) {
-    return cachedModel;
-  }
-  if (modelPromise) {
-    return modelPromise;
-  }
-  modelPromise = (async () => {
-    const model = await createChatModel();
-    cachedModel = model.bindTools(tools as any);
-    return cachedModel;
-  })();
-  return modelPromise;
+// 注：S1 T8 起不再缓存 bound model — 每次调用新 bind tools 以注入 callbacks
+// （ChatOpenAI 构造很轻量，可接受）
+async function getModel(callbacks?: any[]) {
+  const baseModel = await createChatModel(callbacks);
+  return baseModel.bindTools(tools as any);
 }
 
 /**
@@ -120,6 +110,23 @@ export async function _runAgentV2Inner(
   visionError?: string;
 }> {
   console.log('[FitnessAgentV2] Starting agent with message:', message.substring(0, 100));
+
+  // 0. Langfuse 观测：构造 trace + callback handler
+  const traceMeta: TraceMetadata = {
+    userId,
+    agentVersion: 'v2',
+    imageCount: imageUrls.length,
+    hasClarificationContext: false, // 会在 Step 1.6 之后更新
+  };
+  const callbacks = createTraceCallbacks(traceMeta);
+  // 顶层 trace：可选，CallbackHandler 已经会自动建 trace；这里手动建是为了能把 userInput 完整记录
+  const fuse = getLangfuse();
+  const langfuseTrace = fuse?.trace({
+    name: 'runAgentV2',
+    userId: String(userId),
+    metadata: traceMeta,
+    input: { message: message.slice(0, 500), imageUrls },
+  });
 
   // 1. Vision 预处理
   console.log('[Step 1] Vision preprocessing...');
@@ -251,10 +258,10 @@ export async function _runAgentV2Inner(
   console.log('[Step 2] Messages prepared:', messages.length, '(system +', history.length, 'history + 1 current)');
 
   // 3. LLM 调用
-  const model = await getModel();
+  const model = await getModel(callbacks);
   console.log('[Step 3] Invoking LLM...');
   console.log('[Step 3] Tool definitions:', tools.map(t => t.name).join(', '));
-  const response = await model.invoke(messages);
+  const response = await model.invoke(messages, { callbacks });
   console.log('[Step 3] LLM response received, content type:', typeof response.content);
 
   // 4. 提取工具调用
@@ -348,7 +355,7 @@ export async function _runAgentV2Inner(
     ...toolMessages
   ];
   console.log('[Step 8] Updated messages count:', updatedMessages.length);
-  const finalResponse = await model.invoke(updatedMessages);
+  const finalResponse = await model.invoke(updatedMessages, { callbacks });
 
   // 9. 提取最终回复
   const reply = extractText(finalResponse.content);
@@ -362,6 +369,8 @@ export async function _runAgentV2Inner(
   }
 
   console.log('[Complete] Agent finished. Success:', executionResult.successCount, 'Errors:', executionResult.errors.length);
+
+  langfuseTrace?.update({ output: { reply: reply?.slice(0, 500) } });
 
   return {
     reply,
@@ -457,10 +466,10 @@ function extractToolInterpretation(response: any, toolCalls: any[]): string {
 
 /**
  * 清除模型缓存（用于测试或重新加载配置）
+ * S1 T8 起无模块级缓存，此函数保留为 noop 以保持向后兼容
  */
 export function clearModelCache() {
-  cachedModel = null;
-  modelPromise = null;
+  // noop — 当前实现不缓存 model
 }
 
 /**

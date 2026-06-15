@@ -10,14 +10,16 @@ import { createZhipuChat, createZhipuVisionChat } from './chatZhipu';
 /**
  * Get the appropriate chat model based on configuration
  * Returns a LangChain-compatible model instance
+ *
+ * @param callbacks Optional LangChain callbacks (e.g. Langfuse CallbackHandler) to inject for observability
  */
-export async function createChatModel() {
+export async function createChatModel(callbacks?: any[]) {
   const provider = getCurrentProvider();
 
   if (provider === 'minimax') {
-    return createMiniMaxModel();
+    return createMiniMaxModel({ callbacks });
   } else if (provider === 'zhipu') {
-    // For Zhipu, we wrap it to provide a LangChain-compatible interface
+    // zhipu 包装暂不支持 callbacks（在 S5 修复），先 noop 透传
     return createZhipuLangChainModel();
   }
 

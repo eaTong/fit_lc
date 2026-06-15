@@ -6,20 +6,32 @@ const MINIMAX_BASE_URL = "https://api.minimax.chat/v1";
 
 /**
  * 创建 MiniMax ChatOpenAI 实例
- * 模型 ID 统一通过 aiConfig.getModelName('chat') 取，避免硬编码漂移。
+ * MiniMax 提供 OpenAI 兼容 API
+ *
+ * 模型 ID 统一通过 aiConfig.getModelName('chat') 取，避免硬编码漂移（Sprint 1 T1）。
+ * 30s 单次 HTTP 超时 + 2 次底层重试（Sprint 1 T4）。
+ * 新增 callbacks 可选参数（Sprint 1 Task 8 Langfuse 观测）。
+ * 接受 LangChain callbacks（如 Langfuse CallbackHandler）以透传至 invoke()。
  */
-export function createMiniMaxModel(fields: Partial<OpenAIChatInput> & { maxTokens?: number } = {}): ChatOpenAI {
+export interface CreateModelOptions extends Partial<OpenAIChatInput> {
+  maxTokens?: number;
+  callbacks?: any[];
+}
+
+export function createMiniMaxModel(fields: CreateModelOptions = {}): ChatOpenAI {
+  const { callbacks, ...openAiFields } = fields;
   return new ChatOpenAI({
     apiKey: requireApiKey('minimax'),
     model: getModelName('chat'),
-    temperature: fields.temperature ?? 0.7,
-    maxTokens: fields.maxTokens ?? 4096,
-    timeout: 30_000,        // 单次 HTTP 30s
-    maxRetries: 2,          // 底层 SDK 重试 2 次
+    temperature: openAiFields.temperature ?? 0.7,
+    maxTokens: openAiFields.maxTokens ?? 4096,
+    timeout: 30_000,        // Sprint 1 T4: 单次 HTTP 30s
+    maxRetries: 2,          // Sprint 1 T4: 底层 SDK 重试 2 次
+    callbacks,               // Sprint 1 T8: Langfuse CallbackHandler
     configuration: {
       baseURL: MINIMAX_BASE_URL,
     },
-    ...fields,
+    ...openAiFields,
   });
 }
 

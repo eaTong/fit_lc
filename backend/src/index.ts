@@ -26,6 +26,7 @@ import { errorResponse } from './utils/error';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
+import { shutdownLangfuse } from './observability/langfuse';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -175,3 +176,17 @@ app.use((err: any, req: any, res: any, next: any) => {
 app.listen(PORT, () => {
   console.log(`七练后端服务运行于端口 ${PORT}`);
 });
+
+// S1 T8: 进程退出时 flush langfuse pending events
+const gracefulShutdown = async (signal: string) => {
+  console.log(`[index] received ${signal}, flushing langfuse...`);
+  try {
+    await shutdownLangfuse();
+  } catch (e: any) {
+    console.error('[index] langfuse shutdown error:', e?.message);
+  }
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
