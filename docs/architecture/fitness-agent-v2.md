@@ -248,23 +248,22 @@ console.log(result.toolData); // { dataType: 'workout', result: {...} }
 
 ## 7. 版本对比
 
-| 特性 | V1 (fitnessAgent.ts) | V2 (fitnessAgentV2.ts) |
-|------|----------------------|------------------------|
-| 工具执行 | 串行 | 批量并行 |
-| 校验 | 分散在工具内部 | 统一校验层 |
-| 重试 | 无 | 3次重试+指数退避 |
-| Fallback | 内联简单逻辑 | 独立模块 |
-| 熔断 | 无 | 有 |
-| Prompt | 内联 | 独立模块 |
-| 历史压缩 | 无 | Hybrid 方案 |
-| 代码行数 | ~530 | ~240（更简洁） |
+| 特性 | V2 (fitnessAgentV2.ts) |
+|------|------------------------|
+| 工具执行 | 批量并行 |
+| 校验 | 统一校验层 |
+| 重试 | 3次重试+指数退避 |
+| Fallback | 独立模块 |
+| 熔断 | 有 |
+| Prompt | 独立模块 |
+| 历史压缩 | Hybrid 方案 |
+| 代码行数 | ~240（更简洁） |
 
 ## 8. 文件索引
 
 ```
 backend/src/
 ├── agents/
-│   ├── fitnessAgent.ts          # V1 (deprecated, 保留兼容)
 │   ├── fitnessAgentV2.ts       # V2 主入口
 │   ├── promptBuilder.ts        # Prompt 构建
 │   ├── toolExecutor.ts         # 工具执行器

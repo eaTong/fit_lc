@@ -26,7 +26,7 @@ export async function createChatModel() {
 
 /**
  * Create a Zhipu model that provides a LangChain-compatible interface
- * This wraps the Zhipu API to work with the existing fitnessAgent tool-calling pattern
+ * This wraps the Zhipu API to work with the existing Agent tool-calling pattern
  */
 async function createZhipuLangChainModel() {
   const zhipuChat = createZhipuChat();
