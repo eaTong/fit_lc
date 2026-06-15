@@ -5,16 +5,23 @@ import { HumanMessage } from '@langchain/core/messages';
 import { createChatModel } from '../../chatFactory';
 import { extractToolCallsFromResponse } from '../../toolExecutor';
 import { buildSystemPrompt, buildHistoryMessages } from '../../promptBuilder';
+import { saveWorkoutTool } from '../../../tools/saveWorkout';
+import { saveMeasurementTool } from '../../../tools/saveMeasurement';
+import { queryWorkoutTool } from '../../../tools/queryWorkout';
+import { queryMeasurementTool } from '../../../tools/queryMeasurement';
+import { generatePlanTool } from '../../../tools/generatePlan';
+import { adjustPlanTool } from '../../../tools/adjustPlan';
+import { analyzeExecutionTool } from '../../../tools/analyzeExecution';
 import type { AgentState } from '../state';
 
 const tools = [
-  require('../../../tools/saveWorkout').saveWorkoutTool,
-  require('../../../tools/saveMeasurement').saveMeasurementTool,
-  require('../../../tools/queryWorkout').queryWorkoutTool,
-  require('../../../tools/queryMeasurement').queryMeasurementTool,
-  require('../../../tools/generatePlan').generatePlanTool,
-  require('../../../tools/adjustPlan').adjustPlanTool,
-  require('../../../tools/analyzeExecution').analyzeExecutionTool,
+  saveWorkoutTool,
+  saveMeasurementTool,
+  queryWorkoutTool,
+  queryMeasurementTool,
+  generatePlanTool,
+  adjustPlanTool,
+  analyzeExecutionTool,
 ];
 
 export async function llmCallNode(state: AgentState): Promise<Partial<AgentState>> {

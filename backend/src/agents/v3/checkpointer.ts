@@ -1,8 +1,9 @@
 /**
  * V3 Checkpoint - 状态持久化
+ * 使用 LangGraph 内置 MemorySaver
  */
 
-import { MemorySaver } from '@langchain/langgraph/checkpointer';
+import { MemorySaver } from '@langchain/langgraph';
 
 /**
  * 内存 Checkpoint - 开发/测试用
