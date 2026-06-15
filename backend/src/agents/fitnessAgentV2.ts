@@ -19,6 +19,8 @@ import { extractClarification补充 } from './clarification/extractClarification
 import { withTimeout, TimeoutError } from '../utils/withTimeout';
 import { getLangfuse, createTraceCallbacks } from '../observability/langfuse';
 import type { TraceMetadata } from '../observability/langfuse.types';
+import { recallMemory, buildMemoryContext } from '../memory/memoryRecall';
+import { extractMemory } from '../memory/memoryExtractor';
 
 // 工具列表（用于 bindTools）
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -246,9 +248,22 @@ export async function _runAgentV2Inner(
     }
   }
 
+  // 1.5 Memory 召回（Sprint 7）：获取用户长期记忆
+  console.log('[Step 1.5] Recalling long-term memory...');
+  let memoryContext = '';
+  try {
+    const memories = await recallMemory(userId, processedMessage, { minImportance: 5 });
+    if (memories.length > 0) {
+      memoryContext = buildMemoryContext(memories);
+      console.log('[Step 1.5] Memory recalled:', memories.length, 'items');
+    }
+  } catch (e) {
+    console.warn('[Step 1.5] Memory recall failed:', (e as Error).message);
+  }
+
   // 2. 构建消息
   console.log('[Step 2] Building messages...');
-  const systemPrompt = buildSystemPrompt(userContext, historySummary, visionError, options?.securityHint);
+  const systemPrompt = buildSystemPrompt(userContext, historySummary, visionError, options?.securityHint, memoryContext);
   const history = buildHistoryMessages(
     compressedHistory.map(m => ({ role: m.role, content: m.content }))
   );
@@ -373,6 +388,17 @@ export async function _runAgentV2Inner(
   console.log('[Complete] Agent finished. Success:', executionResult.successCount, 'Errors:', executionResult.errors.length);
 
   langfuseTrace?.update({ output: { reply: reply?.slice(0, 500) } });
+
+  // Memory 抽取（Sprint 7）：后台异步保存记忆
+  try {
+    extractMemory(userId, message, reply).then(result => {
+      if (result.extracted > 0) {
+        console.log('[Memory] Extracted', result.extracted, 'new memories');
+      }
+    }).catch(e => console.warn('[Memory] Extraction failed:', e.message));
+  } catch (e) {
+    console.warn('[Memory] Extraction error:', (e as Error).message);
+  }
 
   return {
     reply,

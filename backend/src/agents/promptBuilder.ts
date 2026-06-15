@@ -19,8 +19,9 @@ interface UserContext {
  * @param historySummary 历史消息摘要（可选，用于压缩后的长对话）
  * @param visionError Vision 失败信息（可选，用于降级提示）
  * @param securityHint L1 输入分类器给出的安全提示（可选，仅在 suspicious 时注入）
+ * @param memoryContext 长期记忆上下文（可选，Sprint 7 新增）
  */
-export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null, visionError?: string | null, securityHint?: string | null): SystemMessage {
+export function buildSystemPrompt(userContext: UserContext | null, historySummary?: string | null, visionError?: string | null, securityHint?: string | null, memoryContext?: string | null): SystemMessage {
   const {
     today: todayStr,
     yesterday: yesterdayStr,
@@ -123,6 +124,11 @@ ${userContext.context_text}
   }
 
   // L1 输入分类器给出的本轮安全提示（仅在 suspicious 时注入，Sprint 3 T1）
+  let memorySection = "";
+  if (memoryContext) {
+    memorySection = `\n【长期记忆】\n${memoryContext}\n（以上是用户的历史偏好和重要信息，帮助提供个性化回复）\n`;
+  }
+
   let securitySection = '';
   if (securityHint) {
     securitySection = `\n【当前轮次安全提示】
@@ -140,6 +146,7 @@ ${historySection}
 ${contextSection}
 ${visionFailureSection}
 ${securitySection}
+${memorySection}
 
 【日期参考 - 今天：${todayStr}】
 当用户使用相对日期时，必须根据以下规则计算实际日期：
