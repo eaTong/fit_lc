@@ -1,0 +1,55 @@
+name: LLM Evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/src/agents/**'
+      - 'backend/src/tools/**'
+      - 'backend/tests/eval/**'
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+          npx prisma generate
+        env:
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+          LANGFUSE_ENABLED: 'false'
+
+      - name: Run evaluation
+        run: cd backend && npm run eval
+        id: eval
+        env:
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+          LANGFUSE_ENABLED: 'false'
+
+      - name: Check pass rate
+        run: |
+          PASS_RATE=$(cat eval-pass-rate.txt 2>/dev/null || echo "0")
+          if (( $(echo "$PASS_RATE < 80" | bc -l) )); then
+            echo "❌ Pass rate $PASS_RATE% is below 80% threshold"
+            exit 1
+          fi
+          echo "✅ Pass rate $PASS_RATE% meets threshold"
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: backend/tests/eval/results/
