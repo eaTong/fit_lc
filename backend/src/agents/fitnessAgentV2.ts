@@ -16,6 +16,7 @@ import { buildSystemPrompt, buildHistoryMessages } from './promptBuilder';
 import { compressHistory, markToolMessages, Message } from './historyCompressor';
 import { clarificationManager } from './clarification';
 import { extractClarification补充 } from './clarification/extractClarification';
+import { withTimeout, TimeoutError } from '../utils/withTimeout';
 
 // 工具列表（用于 bindTools）
 import { saveWorkoutTool } from '../tools/saveWorkout';
@@ -35,6 +36,10 @@ const tools = [
   adjustPlanTool,
   analyzeExecutionTool
 ];
+
+// Agent 总超时兜底（防 tool/DB 慢调用累积导致 HTTP 挂死）
+// 默认 35s；可通过环境变量 AGENT_TOTAL_TIMEOUT_MS_TEST 注入（仅供测试用）
+const AGENT_TOTAL_TIMEOUT_MS = parseInt(process.env.AGENT_TOTAL_TIMEOUT_MS_TEST || '', 10) || 35_000;
 
 // 模型缓存
 let cachedModel: any = null;
@@ -56,10 +61,51 @@ async function getModel() {
 }
 
 /**
- * 运行健身 Agent V2
- * 历史消息超过阈值时自动压缩
+ * 运行健身 Agent V2（带 35s 总超时兜底）
+ * - 单次 LLM 调用由 ChatOpenAI 自身 timeout 30s 保护
+ * - 整体流程（LLM × 2 + tool × N）由 withTimeout 35s 兜底
+ * - 超时时返回降级 reply，避免 HTTP 请求挂死到 nginx 502
  */
 export async function runAgentV2(
+  userId: number,
+  message: string,
+  userContext: any = null,
+  historyMessages: Array<{ role: string; content: string }> = [],
+  imageUrls: string[] = []
+): Promise<{
+  reply: string;
+  toolData: any;
+  errors?: string[];
+  clarificationEnded?: boolean;
+  needsClarification?: boolean;
+  visionError?: string;
+}> {
+  try {
+    return await withTimeout(
+      _runAgentV2Inner(userId, message, userContext, historyMessages, imageUrls),
+      AGENT_TOTAL_TIMEOUT_MS,
+      `runAgentV2(user=${userId})`
+    );
+  } catch (e: any) {
+    if (e instanceof TimeoutError) {
+      console.error('[FitnessAgentV2] Total timeout exceeded:', e.message);
+      return {
+        reply: '抱歉，AI 响应有点慢，请稍等几秒再试一次。如果一直不行，可以换个简短的描述。',
+        toolData: null,
+        errors: [e.message],
+      };
+    }
+    throw e;
+  }
+}
+
+/**
+ * 运行健身 Agent V2
+ * 历史消息超过阈值时自动压缩
+ *
+ * 注：导出（不仅是内部函数）便于测试时 mock。
+ */
+export async function _runAgentV2Inner(
   userId: number,
   message: string,
   userContext: any = null,
